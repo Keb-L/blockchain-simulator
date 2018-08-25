@@ -5,3 +5,4 @@ class Node():
         self.local_blocktree = []
         self.orphans = set()
         self.events = []
+
