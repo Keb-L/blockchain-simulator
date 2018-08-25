@@ -1,4 +1,5 @@
 import random, time
+from messages import Transaction
 
 def poisson(rate, duration, start_time, nodes):
     data = []
@@ -6,8 +7,8 @@ def poisson(rate, duration, start_time, nodes):
 
     while timestamp<duration+start_time: 
         timestamp = timestamp + random.expovariate(rate)
-        source = random.choice(nodes)
-        data.append((timestamp, source.node_id))
+        tx = Transaction(random.choice(nodes))
+        data.append((timestamp, tx))
 
     return data
 
@@ -17,7 +18,7 @@ def deterministic(rate, duration, start_time, nodes):
 
     while timestamp<duration+start_time: 
         timestamp = timestamp + rate
-        source = random.choice(nodes)
-        data.append((timestamp, source.node_id))
+        tx = Transaction(random.choice(nodes))
+        data.append((timestamp, tx))
 
     return data

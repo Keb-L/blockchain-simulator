@@ -21,8 +21,8 @@ if __name__=='__main__':
             help='probability of error in transaction confirmation; default is 0.0')
 
     parser.add_option('-f', '--block_proposal_rate', type='float',
-            action='store', dest='block_proposal_rate', default=1.0,
-            help='rate of block proposals; default is 1.0')
+            action='store', dest='block_proposal_rate', default=0.5,
+            help='rate of block proposals; default is 0.5')
 
     parser.add_option('-T', '--duration', type='int',
             action='store', dest='duration', default=60,
@@ -38,8 +38,14 @@ if __name__=='__main__':
         n = Node(node_id)
         c.add_node(n)
     
-    poisson_dataset = generate_dataset.poisson(0.1, 60, c.clock, c.nodes)
-    deterministic_dataset = generate_dataset.deterministic(0.1, 60, c.clock, c.nodes)
+    # generate mock poisson and deterministic dataset
+    poisson_dataset = generate_dataset.poisson(0.1, options.duration, c.clock, c.nodes)
+    deterministic_dataset = generate_dataset.deterministic(0.1, options.duration, c.clock, c.nodes)
 
-    print(poisson_dataset)
-    print(deterministic_dataset)
+    # generate proposal events
+    c.generate_proposals(options.block_proposal_rate, options.duration)
+    # set transaction dataset
+    c.set_transactions(deterministic_dataset)
+
+    # run simulation
+    c.run()
