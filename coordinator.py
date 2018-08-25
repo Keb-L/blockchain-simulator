@@ -1,5 +1,8 @@
+import time
+
 class Coordinator():
     def __init__(self):
+        self.clock = time.time()
         self.proposals = []
         self.txs = []
 

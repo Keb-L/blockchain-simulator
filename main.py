@@ -31,12 +31,15 @@ if __name__=='__main__':
 
     (options, args) = parser.parse_args(sys.argv[1:])
 
-    global_coordinator = Coordinator()
+    c = Coordinator()
 
     # generate num_nodes nodes
     for node_id in range(0, options.num_nodes): 
         n = Node(node_id)
-        global_coordinator.add_node(n)
+        c.add_node(n)
     
-    print(generate_dataset.poisson(0.1, 50, global_coordinator.nodes))
-    print(generate_dataset.deterministic(0.1, 50, global_coordinator.nodes))
+    poisson_dataset = generate_dataset.poisson(0.1, 60, c.clock, c.nodes)
+    deterministic_dataset = generate_dataset.deterministic(0.1, 60, c.clock, c.nodes)
+
+    print(poisson_dataset)
+    print(deterministic_dataset)

@@ -1,20 +1,23 @@
-import time, random
+import random, time
 
-def poisson(q, size, nodes):
-    intervals = [random.expovariate(q) for i in range(size)]
-    timestamp = time.time()
+def poisson(rate, duration, start_time, nodes):
     data = []
-    for t in intervals:
-        timestamp = timestamp+t
+    timestamp = start_time
+
+    while timestamp<duration+start_time: 
+        timestamp = timestamp + random.expovariate(rate)
         source = random.choice(nodes)
         data.append((timestamp, source.node_id))
+
     return data
 
-def deterministic(q, size, nodes):
-    timestamp = time.time()
+def deterministic(rate, duration, start_time, nodes):
     data = []
-    for t in range(0, size):
-        timestamp = timestamp+t
+    timestamp = start_time
+
+    while timestamp<duration+start_time: 
+        timestamp = timestamp + rate
         source = random.choice(nodes)
         data.append((timestamp, source.node_id))
+
     return data
