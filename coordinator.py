@@ -19,6 +19,9 @@ class Coordinator():
 
     def set_transactions(self, dataset):
         self.txs = dataset
+        with open('./logs/data.log', 'w+') as f:
+            for d in dataset:
+                f.write(f'time: {d[0]}, id: {d[1].id}, source: {d[1].source.node_id}\n')
 
     def run(self, max_block_size):
         tx_i = 0

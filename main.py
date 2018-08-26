@@ -35,9 +35,8 @@ if __name__=='__main__':
     shutil.rmtree('./logs')
     os.mkdir('./logs')
 
-    c = Coordinator()
+    c = Coordinator() 
     nodes = []
-
     # generate num_nodes nodes
     for node_id in range(0, options.num_nodes): 
         n = Node(node_id)
@@ -58,7 +57,6 @@ if __name__=='__main__':
     c.generate_proposals(options.block_proposal_rate, options.duration)
     # set transaction dataset
     c.set_transactions(deterministic_dataset)
-    
 
     # run simulation
     c.run(options.max_block_size)

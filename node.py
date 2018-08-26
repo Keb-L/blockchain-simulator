@@ -44,7 +44,8 @@ class Node():
         new_block = Block(chain.id)
         chain.add_child(new_block)
 
-        for tx_i in range(0, len(self.local_txs)):
+        tx_i = 0
+        while tx_i<len(self.local_txs):
             # if we exceed current time, exit loop
             if self.local_txs[tx_i][0]>current_time:
                 break
@@ -53,6 +54,7 @@ class Node():
                 break
             else:
                 new_block.add_tx(self.local_txs[tx_i][1])
+                tx_i+=1
 
         # broadcast to rest of network
         self.broadcast(new_block)
