@@ -13,8 +13,8 @@ if __name__=='__main__':
             help='number of nodes in network; default is 1')
 
     parser.add_option('-b', '--block_size', type='int',
-            action='store', dest='max_block_size', default=1,
-            help='maximum number of transactions in a block; default is 1')
+            action='store', dest='max_block_size', default=3,
+            help='maximum number of transactions in a block; default is 3')
 
     parser.add_option('-e', '--epsilon', type='float',
             action='store', dest='epsilon', default=0.0,
@@ -61,4 +61,4 @@ if __name__=='__main__':
     
 
     # run simulation
-    c.run()
+    c.run(options.max_block_size)

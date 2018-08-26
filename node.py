@@ -1,11 +1,12 @@
 import logging
+from messages import Block
 
 class Node():
     def __init__(self, node_id):
         self.node_id = node_id
 
         self.local_txs = []
-        self.local_blocktree = []
+        self.local_blocktree = Block(None)
         self.orphans = set()
         self.buffer = []
         self.neighbors = []
@@ -33,5 +34,17 @@ class Node():
         for neighbor in self.neighbors:
             neighbor.add_to_buffer(event)
 
-    def propose(self, event):
+    def propose(self, current_time, max_block_size):
         self.logger.info('Proposing at %s', event) 
+
+        tx_i = 0
+        new_block = Block()
+        while self.local_txs[tx_i][0]<current_time and len(new_block.txs)<max_block_size:
+            new_block.add_tx(self.local_txs[tx_i][1])
+            tx_i+=1
+
+        # update local transactions
+        self.local_txs = self.local_txs[tx_i:]
+
+
+

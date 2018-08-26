@@ -20,7 +20,7 @@ class Coordinator():
     def set_transactions(self, dataset):
         self.txs = dataset
 
-    def run(self):
+    def run(self, max_block_size):
         tx_i = 0
         p_i = 0
 
@@ -30,7 +30,9 @@ class Coordinator():
             if tx_i==len(self.txs):
                 # process proposal
                 self.clock = self.proposals[p_i]
-                self.process_proposal()
+                # choose proposer uniformly at random
+                proposer = random.choice(self.nodes)
+                proposer.propose(self.proposals[p_i], max_block_size)
                 p_i+=1
             # out of all proposals
             elif p_i==len(self.proposals):
@@ -56,6 +58,5 @@ class Coordinator():
                     self.clock = self.proposals[p_i]
                     # choose proposer uniformly at random
                     proposer = random.choice(self.nodes)
-                    proposer.propose(self.proposals[p_i])
+                    proposer.propose(self.proposals[p_i], max_block_size)
                     p_i+=1
-        
