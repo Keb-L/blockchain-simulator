@@ -35,16 +35,27 @@ class Node():
             neighbor.add_to_buffer(event)
 
     def propose(self, current_time, max_block_size):
-        self.logger.info('Proposing at %s', event) 
+        self.logger.info('Proposing at %s', current_time) 
 
-        tx_i = 0
-        new_block = Block()
-        while self.local_txs[tx_i][0]<current_time and len(new_block.txs)<max_block_size:
-            new_block.add_tx(self.local_txs[tx_i][1])
-            tx_i+=1
+        # find selected chain based on schema
+        chain, length = self.local_blocktree.longest_chain()
+
+        # append new block to appropriate chain
+        new_block = Block(chain.id)
+        chain.add_child(new_block)
+
+        for tx_i in range(0, len(self.local_txs)):
+            # if we exceed current time, exit loop
+            if self.local_txs[tx_i][0]>current_time:
+                break
+            # if we exceed max block size, exit loop
+            elif len(new_block.txs)<max_block_size:
+                break
+            else:
+                new_block.add_tx(self.local_txs[tx_i][1])
+
+        # broadcast to rest of network
+        self.broadcast(new_block)
 
         # update local transactions
         self.local_txs = self.local_txs[tx_i:]
-
-
-
