@@ -1,4 +1,4 @@
-import hashlib as hasher
+import uuid 
 
 class Block():
     def __init__(self, parent_id):
@@ -10,4 +10,4 @@ class Block():
 class Transaction():
     def __init__(self, source):
         self.source = source
-        self.id = hasher.sha256()
+        self.id = uuid.uuid4().hex
