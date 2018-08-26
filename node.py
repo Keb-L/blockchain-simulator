@@ -1,5 +1,6 @@
 import logging
 from messages import Block
+from network import fixed_latency
 
 class Node():
     def __init__(self, node_id):
@@ -22,12 +23,14 @@ class Node():
         self.neighbors.append(neighbor_node)
 
     def add_to_buffer(self, event):
+        # add network delay
+        event['time']+=fixed_latency()
         self.buffer.append(event)
 
     def add_to_local_txs(self, tx):
         self.logger.info('Adding %s to local transaction queue at %s',
-                (tx[1].source.node_id,
-            tx[1].id), tx[0]) 
+                (tx['tx'].source.node_id,
+            tx['tx'].id), tx['time']) 
         self.local_txs.append(tx)
 
     def broadcast(self, event):
@@ -47,17 +50,17 @@ class Node():
         tx_i = 0
         while tx_i<len(self.local_txs):
             # if we exceed current time, exit loop
-            if self.local_txs[tx_i][0]>current_time:
+            if self.local_txs[tx_i]['time']>current_time:
                 break
             # if we exceed max block size, exit loop
             elif len(new_block.txs)<max_block_size:
                 break
             else:
-                new_block.add_tx(self.local_txs[tx_i][1])
+                new_block.add_tx(self.local_txs[tx_i]['tx'])
                 tx_i+=1
 
         # broadcast to rest of network
-        self.broadcast(new_block)
+        self.broadcast({'time': current_time, 'block': new_block})
 
         # update local transactions
         self.local_txs = self.local_txs[tx_i:]

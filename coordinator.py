@@ -15,13 +15,13 @@ class Coordinator():
         timestamp = self.clock
         while timestamp<duration+start_time: 
             timestamp = timestamp + random.expovariate(rate)
-            self.proposals.append(timestamp)
+            self.proposals.append({'time': timestamp})
 
     def set_transactions(self, dataset):
         self.txs = dataset
         with open('./logs/data.log', 'w+') as f:
             for d in dataset:
-                f.write(f'time: {d[0]}, id: {d[1].id}, source: {d[1].source.node_id}\n')
+                f.write(f'time: {d["time"]}, id: {d["tx"].id}, source: {d["tx"].source.node_id}\n')
 
     def run(self, max_block_size):
         tx_i = 0
@@ -32,7 +32,7 @@ class Coordinator():
             # out of all transactions
             if tx_i==len(self.txs):
                 # process proposal
-                self.clock = self.proposals[p_i]
+                self.clock = self.proposals[p_i]['time']
                 # choose proposer uniformly at random
                 proposer = random.choice(self.nodes)
                 proposer.propose(self.proposals[p_i], max_block_size)
@@ -40,26 +40,26 @@ class Coordinator():
             # out of all proposals
             elif p_i==len(self.proposals):
                 tx = self.txs[tx_i]
-                source_node = tx[1].source
+                source_node = tx['tx'].source
                 source_node.broadcast(tx)
-                self.clock = tx[0]
+                self.clock = tx['time']
                 tx_i+=1
             else:
-                if self.txs[tx_i][0] < self.proposals[p_i]:
+                if self.txs[tx_i]['time'] < self.proposals[p_i]['time']:
                     # transaction processing occurs when a node is selected to
                     # be a proposer, so don't do anything but increment
                     # transaction index and move global clock
                     tx = self.txs[tx_i]
-                    source_node = tx[1].source
+                    source_node = tx['tx'].source
                     source_node.add_to_local_txs(tx)
                     source_node.broadcast(tx)
-                    self.clock = tx[0]
+                    self.clock = tx['time']
                     tx_i+=1
                 # proposal before transaction
                 else:
                     # process proposal
-                    self.clock = self.proposals[p_i]
+                    self.clock = self.proposals[p_i]['time']
                     # choose proposer uniformly at random
                     proposer = random.choice(self.nodes)
-                    proposer.propose(self.proposals[p_i], max_block_size)
+                    proposer.propose(self.proposals[p_i]['time'], max_block_size)
                     p_i+=1
