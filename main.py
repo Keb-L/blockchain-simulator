@@ -1,4 +1,4 @@
-import sys
+import sys, os, shutil
 from optparse import OptionParser
 from coordinator import Coordinator
 from node import Node
@@ -25,18 +25,30 @@ if __name__=='__main__':
             help='rate of block proposals; default is 0.5')
 
     parser.add_option('-T', '--duration', type='int',
-            action='store', dest='duration', default=60,
-            help='duration of experiment is seconds; default is 60 seconds')
+            action='store', dest='duration', default=5,
+            help='duration of experiment is seconds; default is 5 seconds')
 
 
     (options, args) = parser.parse_args(sys.argv[1:])
 
+    # Setup logging directory 
+    shutil.rmtree('./logs')
+    os.mkdir('./logs')
+
     c = Coordinator()
+    nodes = []
 
     # generate num_nodes nodes
     for node_id in range(0, options.num_nodes): 
         n = Node(node_id)
+        nodes.append(n)
         c.add_node(n)
+    
+    # every node is a neighbor of the other for right now
+    for i in range (0, len(nodes)): 
+        for j in range(0, len(nodes)):
+            if i!=j:
+                nodes[i].add_neighbor(nodes[j])
     
     # generate mock poisson and deterministic dataset
     poisson_dataset = generate_dataset.poisson(0.1, options.duration, c.clock, c.nodes)
@@ -46,6 +58,7 @@ if __name__=='__main__':
     c.generate_proposals(options.block_proposal_rate, options.duration)
     # set transaction dataset
     c.set_transactions(deterministic_dataset)
+    
 
     # run simulation
     c.run()
