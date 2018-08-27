@@ -1,5 +1,5 @@
 import logging
-from messages import Block
+from blocktree import Block
 from network import fixed_latency, decker_wattenhorf
 
 class Node():
@@ -27,19 +27,18 @@ class Node():
 
     def add_to_local_txs(self, tx):
         self.logger.info('Adding %s to local transaction queue at %s',
-                (tx['tx'].source.node_id,
-            tx['tx'].id), tx['time']) 
+                (tx.source.node_id, tx.id), tx.timestamp) 
         self.local_txs.append(tx)
 
     def broadcast(self, event, max_block_size, delay_model):
         for neighbor in self.neighbors:
             # add network delay
             if delay_model=='Decker-Wattenhorf':
-                event['time']+=decker_wattenhorf(max_block_size)
+                event.timestamp+=decker_wattenhorf(max_block_size)
             neighbor.add_to_buffer(event)
 
-    def propose(self, current_time, max_block_size, fork_choice_rule, delay_model):
-        self.logger.info('Proposing at %s', current_time) 
+    def propose(self, proposal, max_block_size, fork_choice_rule, delay_model):
+        self.logger.info('Proposing at %s', proposal.timestamp) 
 
         # find selected chain based on schema
         if fork_choice_rule=='longest-chain':
@@ -52,18 +51,19 @@ class Node():
         tx_i = 0
         while tx_i<len(self.local_txs):
             # if we exceed current time, exit loop
-            if self.local_txs[tx_i]['time']>current_time:
+            if self.local_txs[tx_i].timestamp>proposal.timestamp:
                 break
             # if we exceed max block size, exit loop
             elif len(new_block.txs)<max_block_size:
                 break
             else:
-                new_block.add_tx(self.local_txs[tx_i]['tx'])
+                new_block.add_tx(self.local_txs[tx_i])
                 tx_i+=1
 
+        proposal.set_block(new_block)
+
         # broadcast to rest of network
-        self.broadcast({'time': current_time, 'block': new_block},
-                max_block_size, delay_model)
+        self.broadcast(proposal, max_block_size, delay_model)
 
         # update local transactions
         self.local_txs = self.local_txs[tx_i:]

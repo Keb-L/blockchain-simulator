@@ -27,7 +27,3 @@ class Block():
                 longest_chain_block = child_block
         return longest_chain_block, longest_chain_length
 
-class Transaction():
-    def __init__(self, source):
-        self.source = source
-        self.id = uuid.uuid4().hex
