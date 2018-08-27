@@ -41,7 +41,7 @@ class Coordinator():
             elif p_i==len(self.proposals):
                 tx = self.txs[tx_i]
                 source_node = tx['tx'].source
-                source_node.broadcast(tx)
+                source_node.broadcast(tx, max_block_size)
                 self.clock = tx['time']
                 tx_i+=1
             else:
@@ -52,7 +52,7 @@ class Coordinator():
                     tx = self.txs[tx_i]
                     source_node = tx['tx'].source
                     source_node.add_to_local_txs(tx)
-                    source_node.broadcast(tx)
+                    source_node.broadcast(tx, max_block_size)
                     self.clock = tx['time']
                     tx_i+=1
                 # proposal before transaction

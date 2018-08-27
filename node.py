@@ -1,6 +1,6 @@
 import logging
 from messages import Block
-from network import fixed_latency
+from network import fixed_latency, decker_wattenhorf
 
 class Node():
     def __init__(self, node_id):
@@ -23,8 +23,6 @@ class Node():
         self.neighbors.append(neighbor_node)
 
     def add_to_buffer(self, event):
-        # add network delay
-        event['time']+=fixed_latency()
         self.buffer.append(event)
 
     def add_to_local_txs(self, tx):
@@ -33,8 +31,10 @@ class Node():
             tx['tx'].id), tx['time']) 
         self.local_txs.append(tx)
 
-    def broadcast(self, event):
+    def broadcast(self, event, max_block_size):
         for neighbor in self.neighbors:
+            # add network delay
+            event['time']+=decker_wattenhorf(max_block_size)
             neighbor.add_to_buffer(event)
 
     def propose(self, current_time, max_block_size):
@@ -60,7 +60,7 @@ class Node():
                 tx_i+=1
 
         # broadcast to rest of network
-        self.broadcast({'time': current_time, 'block': new_block})
+        self.broadcast({'time': current_time, 'block': new_block}, max_block_size)
 
         # update local transactions
         self.local_txs = self.local_txs[tx_i:]
