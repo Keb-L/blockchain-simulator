@@ -1,20 +1,22 @@
 import time, random
 
 class Coordinator():
-    def __init__(self):
+    def __init__(self, params):
         self.clock = time.time()
         self.proposals = []
         self.txs = []
         self.nodes = []
 
+        self.params = params
+
     def add_node(self, node):
         self.nodes.append(node)
 
-    def generate_proposals(self, rate, duration):
+    def generate_proposals(self):
         start_time = self.clock
         timestamp = self.clock
-        while timestamp<duration+start_time: 
-            timestamp = timestamp + random.expovariate(rate)
+        while timestamp<self.params['duration']+start_time: 
+            timestamp = timestamp + random.expovariate(self.params['proposal_rate'])
             self.proposals.append({'time': timestamp})
 
     def set_transactions(self, dataset):
@@ -23,7 +25,7 @@ class Coordinator():
             for d in dataset:
                 f.write(f'time: {d["time"]}, id: {d["tx"].id}, source: {d["tx"].source.node_id}\n')
 
-    def run(self, max_block_size):
+    def run(self):
         tx_i = 0
         p_i = 0
 
@@ -35,13 +37,13 @@ class Coordinator():
                 self.clock = self.proposals[p_i]['time']
                 # choose proposer uniformly at random
                 proposer = random.choice(self.nodes)
-                proposer.propose(self.proposals[p_i], max_block_size)
+                proposer.propose(self.proposals[p_i], self.params['max_block_size'])
                 p_i+=1
             # out of all proposals
             elif p_i==len(self.proposals):
                 tx = self.txs[tx_i]
                 source_node = tx['tx'].source
-                source_node.broadcast(tx, max_block_size)
+                source_node.broadcast(tx, self.params['max_block_size'])
                 self.clock = tx['time']
                 tx_i+=1
             else:
@@ -52,7 +54,7 @@ class Coordinator():
                     tx = self.txs[tx_i]
                     source_node = tx['tx'].source
                     source_node.add_to_local_txs(tx)
-                    source_node.broadcast(tx, max_block_size)
+                    source_node.broadcast(tx, self.params['max_block_size'])
                     self.clock = tx['time']
                     tx_i+=1
                 # proposal before transaction
@@ -61,5 +63,6 @@ class Coordinator():
                     self.clock = self.proposals[p_i]['time']
                     # choose proposer uniformly at random
                     proposer = random.choice(self.nodes)
-                    proposer.propose(self.proposals[p_i]['time'], max_block_size)
+                    proposer.propose(self.proposals[p_i]['time'],
+                    self.params['max_block_size'])
                     p_i+=1
