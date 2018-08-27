@@ -87,3 +87,7 @@ class Coordinator():
                         self.params['fork_choice_rule'],
                         self.params['model'])
                     p_i+=1
+
+        # loop over all nodes and process buffer
+        for node in self.nodes:
+            node.process_buffer(float('Inf'))
