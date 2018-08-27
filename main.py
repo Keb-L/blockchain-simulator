@@ -14,6 +14,7 @@ def get_params(filename):
         params['proposal_rate'] = d['Block proposal rate parameter']
         params['dataset'] = d['Transaction dataset']
         params['model'] = d['Network model']
+        params['fork_choice_rule'] = d['Fork choice rule']
         params['duration'] = d['Duration (sec)']
     return params
 
