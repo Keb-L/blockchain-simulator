@@ -25,6 +25,18 @@ class Coordinator():
             for d in dataset:
                 f.write(f'time: {d["time"]}, id: {d["tx"].id}, source: {d["tx"].source.node_id}\n')
 
+    '''
+    Main simulation function
+    Coordinator checks head of proposal and tx queue and processes earlier
+    occurring event
+        - Coordinator moves global clock to next event timestamp
+        - If event is a proposal
+            - Choose a node uniformly at random
+            - Chosen node calls propose()
+        - If event is a tx
+            - Broadcast tx from source node
+        - After main loop, loop over all all nodes and process buffer
+    '''
     def run(self):
         tx_i = 0
         p_i = 0
