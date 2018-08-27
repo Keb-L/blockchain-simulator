@@ -1,14 +1,16 @@
 import uuid 
 
 class Block():
-    def __init__(self, parent_id):
-        self.parent_id = parent_id
+    def __init__(self):
         self.txs = []
         self.id = uuid.uuid4().hex
         self.children = set()
 
     def add_tx(self, tx):
         self.txs.append(tx)
+
+    def set_parent_id(self, parent_id):
+        self.parent_id = parent_id
 
     def add_child(self, block):
         self.children.add(block)
