@@ -2,7 +2,7 @@ import sys, os, shutil, json
 from optparse import OptionParser
 from coordinator import Coordinator
 from node import Node
-import generate_dataset
+import generate_tx_dataset
 
 def get_params(filename):
     params = {}
@@ -48,14 +48,16 @@ if __name__=='__main__':
             if i!=j:
                 nodes[i].add_neighbor(nodes[j])
     
-    # generate mock poisson and deterministic dataset
-    poisson_dataset = generate_dataset.poisson(0.1, params['duration'], c.clock, c.nodes)
-    deterministic_dataset = generate_dataset.deterministic(0.1, params['duration'], c.clock, c.nodes)
+    # generate mock poisson dataset
+    if params['dataset']=='poisson':
+        tx_dataset = generate_tx_dataset.poisson(0.1, params['duration'], c.clock, c.nodes)
+    elif params['dataset']=='deterministic':
+        tx_dataset = generate_tx_dataset.deterministic(0.1, params['duration'], c.clock, c.nodes)
 
     # generate proposal events
     c.generate_proposals(params['proposal_rate'], params['duration'])
     # set transaction dataset
-    c.set_transactions(deterministic_dataset)
+    c.set_transactions(tx_dataset)
 
     # run simulation
     c.run(params['max_block_size'])
