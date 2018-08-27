@@ -48,18 +48,22 @@ class Node():
                 self.add_to_local_txs(event)
             elif event._class__.__name__=='Proposal':
                 # blocks should be added to local block tree
+                self.logger.info('Adding %s to local transaction queue at %s',
+                        (tx.source.node_id, tx.id), tx.timestamp) 
                 copied_block = copy.deepcopy(event.block) 
                 # find selected chain based on schema
                 if fork_choice_rule=='longest-chain':
                     chain, length = self.local_blocktree.longest_chain()
                 copied_block.set_parent_id(chain.id)
                 chain.add_child(copied_block)
+                self.logger.info('Received and added new block %s at %s',
+                        copied_block.id,
+                        event.timestamp) 
             b_i+=1
         self.buffer = self.buffer[b_i:]
 
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model):
-        self.logger.info('Proposing at %s', proposal.timestamp) 
 
         # process propoer's buffer
         self.process_buffer(proposal.timestamp)
@@ -86,6 +90,8 @@ class Node():
                 tx_i+=1
 
         proposal.set_block(new_block)
+        self.logger.info('Proposing new block %s at %s', new_block.id,
+                proposal.timestamp) 
 
         # broadcast to rest of network
         self.broadcast(proposal, max_block_size, delay_model)
