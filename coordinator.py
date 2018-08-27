@@ -1,17 +1,17 @@
-import time, random
+import time, random, numpy as np
 from events import Proposal
 
 class Coordinator():
     def __init__(self, params):
         self.clock = time.time()
-        self.proposals = []
-        self.txs = []
-        self.nodes = []
+        self.proposals = np.array([])
+        self.txs = np.array([])
+        self.nodes = np.array([])
 
         self.params = params
 
     def add_node(self, node):
-        self.nodes.append(node)
+        self.nodes = np.append(self.nodes, node)
 
     def generate_proposals(self):
         start_time = self.clock
@@ -19,10 +19,10 @@ class Coordinator():
         while timestamp<self.params['duration']+start_time: 
             timestamp = timestamp + random.expovariate(self.params['proposal_rate'])
             proposal = Proposal(timestamp) 
-            self.proposals.append(proposal)
+            self.proposals = np.append(self.proposals, proposal)
 
     def set_transactions(self, dataset):
-        self.txs = dataset
+        self.txs = np.asarray(dataset)
         with open('./logs/data.log', 'w+') as f:
             for d in dataset:
                 f.write(f'time: {d.timestamp}, id: {d.id}, source: {d.source.node_id}\n')
@@ -44,9 +44,9 @@ class Coordinator():
         p_i = 0
 
         # run main loop
-        while tx_i<len(self.txs) and p_i<len(self.proposals):
+        while tx_i<self.txs.shape[0] and p_i<self.proposals.shape[0]:
             # out of all transactions
-            if tx_i==len(self.txs):
+            if tx_i==self.txs.shape[0]:
                 # process proposal
                 self.clock = self.proposals[p_i].timestamp
                 # choose proposer uniformly at random
@@ -57,7 +57,7 @@ class Coordinator():
                     self.params['model'])
                 p_i+=1
             # out of all proposals
-            elif p_i==len(self.proposals):
+            elif p_i==self.proposals.shape[0]:
                 tx = self.txs[tx_i]
                 source_node = tx.source
                 source_node.broadcast(tx, self.params['max_block_size'],

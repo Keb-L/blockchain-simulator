@@ -1,4 +1,4 @@
-import logging, copy
+import logging, copy, numpy as np
 from blocktree import Block
 from network import fixed_latency, decker_wattenhorf
 
@@ -6,11 +6,11 @@ class Node():
     def __init__(self, node_id):
         self.node_id = node_id
 
-        self.local_txs = []
+        self.local_txs = np.array([])
         self.local_blocktree = Block()
         self.orphans = set()
-        self.buffer = []
-        self.neighbors = []
+        self.buffer = np.array([])
+        self.neighbors = np.array([])
 
         handler = logging.FileHandler(f'./logs/{self.node_id}.log')        
 
@@ -20,15 +20,16 @@ class Node():
 
 
     def add_neighbor(self, neighbor_node):
-        self.neighbors.append(neighbor_node)
+        self.neighbors = np.append(self.neighbors, neighbor_node)
 
     def add_to_buffer(self, event):
-        self.buffer.append(event)
+        self.buffer = np.append(self.buffer, event)
 
     def add_to_local_txs(self, tx):
         self.logger.info('Adding %s to local transaction queue at %s',
                 (tx.source.node_id, tx.id), tx.timestamp) 
-        self.local_txs.append(tx)
+
+        self.local_txs = np.append(self.local_txs, tx)
 
     def broadcast(self, event, max_block_size, delay_model):
         for neighbor in self.neighbors:
@@ -64,7 +65,6 @@ class Node():
 
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model):
-
         # process propoer's buffer
         self.process_buffer(proposal.timestamp)
 

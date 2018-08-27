@@ -1,4 +1,4 @@
-import sys, os, shutil, json
+import sys, os, shutil, json, numpy as np
 from optparse import OptionParser
 from coordinator import Coordinator
 from node import Node
@@ -35,11 +35,11 @@ if __name__=='__main__':
     os.mkdir('./logs')
 
     c = Coordinator(params) 
-    nodes = []
+    nodes = np.array([])
     # generate num_nodes nodes
     for node_id in range(0, params['num_nodes']): 
         n = Node(node_id)
-        nodes.append(n)
+        np.append(nodes, n)
         c.add_node(n)
     
     # every node is a neighbor of the other for right now

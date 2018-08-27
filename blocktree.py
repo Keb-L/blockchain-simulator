@@ -1,8 +1,8 @@
-import uuid 
+import numpy as np, uuid
 
 class Block():
     def __init__(self):
-        self.txs = []
+        self.txs = np.array([])
         self.id = uuid.uuid4().hex
         self.children = set()
 
