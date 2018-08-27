@@ -31,17 +31,19 @@ class Node():
             tx['tx'].id), tx['time']) 
         self.local_txs.append(tx)
 
-    def broadcast(self, event, max_block_size):
+    def broadcast(self, event, max_block_size, delay_model):
         for neighbor in self.neighbors:
             # add network delay
-            event['time']+=decker_wattenhorf(max_block_size)
+            if delay_model=='Decker-Wattenhorf':
+                event['time']+=decker_wattenhorf(max_block_size)
             neighbor.add_to_buffer(event)
 
-    def propose(self, current_time, max_block_size):
+    def propose(self, current_time, max_block_size, fork_choice_rule, delay_model):
         self.logger.info('Proposing at %s', current_time) 
 
         # find selected chain based on schema
-        chain, length = self.local_blocktree.longest_chain()
+        if fork_choice_rule=='longest-chain':
+            chain, length = self.local_blocktree.longest_chain()
 
         # append new block to appropriate chain
         new_block = Block(chain.id)
@@ -60,7 +62,8 @@ class Node():
                 tx_i+=1
 
         # broadcast to rest of network
-        self.broadcast({'time': current_time, 'block': new_block}, max_block_size)
+        self.broadcast({'time': current_time, 'block': new_block},
+                max_block_size, delay_model)
 
         # update local transactions
         self.local_txs = self.local_txs[tx_i:]

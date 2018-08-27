@@ -49,13 +49,17 @@ class Coordinator():
                 self.clock = self.proposals[p_i]['time']
                 # choose proposer uniformly at random
                 proposer = random.choice(self.nodes)
-                proposer.propose(self.proposals[p_i], self.params['max_block_size'])
+                proposer.propose(self.proposals[p_i]['time'], 
+                    self.params['max_block_size'],
+                    self.params['fork_choice_rule'],
+                    self.params['model'])
                 p_i+=1
             # out of all proposals
             elif p_i==len(self.proposals):
                 tx = self.txs[tx_i]
                 source_node = tx['tx'].source
-                source_node.broadcast(tx, self.params['max_block_size'])
+                source_node.broadcast(tx, self.params['max_block_size'],
+                        self.params['model'])
                 self.clock = tx['time']
                 tx_i+=1
             else:
@@ -66,7 +70,8 @@ class Coordinator():
                     tx = self.txs[tx_i]
                     source_node = tx['tx'].source
                     source_node.add_to_local_txs(tx)
-                    source_node.broadcast(tx, self.params['max_block_size'])
+                    source_node.broadcast(tx, self.params['max_block_size'],
+                            self.params['model'])
                     self.clock = tx['time']
                     tx_i+=1
                 # proposal before transaction
@@ -76,5 +81,7 @@ class Coordinator():
                     # choose proposer uniformly at random
                     proposer = random.choice(self.nodes)
                     proposer.propose(self.proposals[p_i]['time'],
-                    self.params['max_block_size'])
+                        self.params['max_block_size'],
+                        self.params['fork_choice_rule'],
+                        self.params['model'])
                     p_i+=1
