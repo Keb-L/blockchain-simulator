@@ -1,0 +1,9 @@
+{
+  "Number of nodes": 1, 
+  "Block size (txs)": 1, 
+  "Probability of error in transaction confirmation": 0.0, 
+  "Block proposal rate parameter": 0.5, 
+  "Transaction dataset": "poisson",
+  "Network model": "Decker-Wattenhorf",
+  "Duration (sec)": 5
+}
