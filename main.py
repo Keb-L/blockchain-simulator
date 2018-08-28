@@ -1,4 +1,5 @@
 import sys, os, shutil, json, numpy as np
+from graph_tool.all import cairo_draw
 from optparse import OptionParser
 from coordinator import Coordinator
 from node import Node
@@ -40,8 +41,8 @@ if __name__=='__main__':
     nodes = np.array([])
     # generate num_nodes nodes
     for node_id in range(0, params['num_nodes']): 
-        n = Node(node_id)
-        np.append(nodes, n)
+        n = Node(node_id, params['fork_choice_rule'])
+        nodes = np.append(nodes, n)
         c.add_node(n)
     
     # every node is a neighbor of the other for right now
@@ -63,3 +64,6 @@ if __name__=='__main__':
 
     # run simulation
     c.run()
+
+    for n in nodes:
+        graphviz_draw(n.local_blocktree(), output="graph-draw-sfdp.pdf")

@@ -1,13 +1,16 @@
 import logging, copy, numpy as np
-from blocktree import Block
+from block import Block
 from network import fixed_latency, decker_wattenhorf
+from algorithms import *
 
 class Node():
-    def __init__(self, node_id):
+    def __init__(self, node_id, algorithm):
         self.node_id = node_id
 
+        if algorithm=='longest-chain':
+            self.local_blocktree = LongestChain()
+
         self.local_txs = np.array([])
-        self.local_blocktree = Block()
         self.orphans = set()
         self.buffer = np.array([])
         self.neighbors = np.array([])
@@ -53,10 +56,7 @@ class Node():
                         (tx.source.node_id, tx.id), tx.timestamp) 
                 copied_block = copy.deepcopy(event.block) 
                 # find selected chain based on schema
-                if fork_choice_rule=='longest-chain':
-                    chain, length = self.local_blocktree.longest_chain()
-                copied_block.set_parent_id(chain.id)
-                chain.add_child(copied_block)
+                self.local_blocktree.fork_choice_rule(copied_block)
                 self.logger.info('Received and added new block %s at %s',
                         copied_block.id,
                         event.timestamp) 
@@ -68,14 +68,10 @@ class Node():
         # process propoer's buffer
         self.process_buffer(proposal.timestamp)
 
-        # find selected chain based on schema
-        if fork_choice_rule=='longest-chain':
-            chain, length = self.local_blocktree.longest_chain()
-
         # append new block to appropriate chain
         new_block = Block()
-        new_block.set_parent_id(chain.id)
-        chain.add_child(new_block)
+        # find selected chain based on schema
+        self.local_blocktree.fork_choice_rule(new_block)
 
         tx_i = 0
         while tx_i<len(self.local_txs):
