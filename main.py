@@ -7,7 +7,9 @@ import generate_tx_dataset
 def get_params(filename):
     params = {}
     with open(f'{filename}') as f:
-        d = json.load(f)
+        contents = json.load(f)
+        setting_name = contents['setting-name']
+        d = contents[setting_name]
         params['num_nodes'] = d['Number of nodes'] 
         params['max_block_size'] = d['Block size (txs)']
         params['tx_error_prob'] = d['Probability of error in transaction confirmation']
