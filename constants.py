@@ -1,10 +1,3 @@
-import numpy as np
-
-'''
-Simple model of simple latency of 1 sec
-'''
-def fixed_latency():
-    return 1
 '''
 An approximation of network latency in the Bitcoin network based on the
 following paper: https://ieeexplore.ieee.org/document/6688704/.
@@ -18,7 +11,4 @@ From the green line in Fig 1, we can approximate the function as:
 
 We use this as a parameter into our exponential delay
 '''
-def decker_wattenhorf(num_txs):
-    from constants import SEC_PER_TRANSACTION
-    beta = SEC_PER_TRANSACTION * num_txs + 1
-    return np.random.exponential(beta)
+SEC_PER_TRANSACTION = 16.0/600
