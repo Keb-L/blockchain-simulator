@@ -1,5 +1,5 @@
 {
-  "setting-name": "default",
+  "setting-name": "small",
   "default":  {
     "Number of nodes": 1, 
     "Block size (txs)": 1, 
@@ -9,5 +9,15 @@
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
     "Duration (sec)": 5
+  },
+  "small":  {
+    "Number of nodes": 3, 
+    "Block size (txs)": 2, 
+    "Probability of error in transaction confirmation": 0.0, 
+    "Block proposal rate parameter": 0.5, 
+    "Transaction dataset": "poisson",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "longest-chain",
+    "Duration (sec)": 10
   }
 }

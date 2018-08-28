@@ -16,14 +16,18 @@ class Coordinator():
     def generate_proposals(self):
         start_time = self.clock
         timestamp = self.clock
-        while timestamp<self.params['duration']+start_time: 
-            timestamp = timestamp + random.expovariate(self.params['proposal_rate'])
-            proposal = Proposal(timestamp) 
-            self.proposals = np.append(self.proposals, proposal)
+        with open('./logs/data.log', 'w+') as f:
+            f.write('Proposals:\n')
+            while timestamp<self.params['duration']+start_time: 
+                timestamp = timestamp + random.expovariate(self.params['proposal_rate'])
+                proposal = Proposal(timestamp) 
+                self.proposals = np.append(self.proposals, proposal)
+                f.write(f'time: {proposal.timestamp}\n')
 
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
-        with open('./logs/data.log', 'w+') as f:
+        with open('./logs/data.log', 'a') as f:
+            f.write('Transactions:\n')
             for d in dataset:
                 f.write(f'time: {d.timestamp}, id: {d.id}, source: {d.source.node_id}\n')
 

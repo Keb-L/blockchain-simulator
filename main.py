@@ -1,5 +1,4 @@
 import sys, os, shutil, json, numpy as np
-from graph_tool.all import cairo_draw
 from optparse import OptionParser
 from coordinator import Coordinator
 from node import Node
@@ -64,6 +63,3 @@ if __name__=='__main__':
 
     # run simulation
     c.run()
-
-    for n in nodes:
-        graphviz_draw(n.local_blocktree(), output="graph-draw-sfdp.pdf")

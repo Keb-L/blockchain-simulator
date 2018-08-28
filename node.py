@@ -1,5 +1,6 @@
 import logging, copy, numpy as np
 from block import Block
+import graph_tool.all as gt
 from network import fixed_latency, decker_wattenhorf
 from algorithms import *
 
@@ -41,6 +42,9 @@ class Node():
                 event.timestamp+=decker_wattenhorf(max_block_size)
             neighbor.add_to_buffer(event)
 
+    def log_local_blocktree(self):
+        self.logger.info(f'\nLocal blocktree:\n{self.local_blocktree.graph_to_str()}') 
+
     def process_buffer(self, timestamp):
         b_i = 0
         while b_i<len(self.buffer):
@@ -50,10 +54,8 @@ class Node():
             if event.__class__.__name__=='Transaction':
                 # transactions should be added to local transaction queue
                 self.add_to_local_txs(event)
-            elif event._class__.__name__=='Proposal':
+            elif event.__class__.__name__=='Proposal':
                 # blocks should be added to local block tree
-                self.logger.info('Adding %s to local transaction queue at %s',
-                        (tx.source.node_id, tx.id), tx.timestamp) 
                 copied_block = copy.deepcopy(event.block) 
                 # find selected chain based on schema
                 self.local_blocktree.fork_choice_rule(copied_block)
@@ -62,6 +64,9 @@ class Node():
                         event.timestamp) 
             b_i+=1
         self.buffer = self.buffer[b_i:]
+
+        if timestamp==float('Inf'):
+            self.log_local_blocktree()
 
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model):

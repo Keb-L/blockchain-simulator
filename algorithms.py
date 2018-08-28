@@ -11,6 +11,12 @@ class Algorithm():
         self.root = self.tree.add_vertex()
         self.blocks[self.root] = Block()
 
+    def graph_to_str(self):
+        s = ''
+        for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
+            s+=f'{self.blocks[e.source()].id} -> {self.blocks[e.target()].id}\n'
+        return s
+
 class LongestChain(Algorithm):
     def fork_choice_rule(self, new_block):
         new_vertex = self.tree.add_vertex()
