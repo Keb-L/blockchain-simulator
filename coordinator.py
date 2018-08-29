@@ -1,6 +1,7 @@
 import time, random, numpy as np
 from node import Node
 from events import Proposal
+from algorithms import *
 
 class Coordinator():
     def __init__(self, params):
@@ -9,6 +10,9 @@ class Coordinator():
         self.nodes = np.array([])
 
         self.params = params
+
+        if params['fork_choice_rule']=='longest-chain':
+            self.global_blocktree = LongestChain()
 
     def add_node(self, node):
         self.nodes = np.append(self.nodes, node)
@@ -30,6 +34,18 @@ class Coordinator():
             f.write('Transactions:\n')
             for d in dataset:
                 f.write(f'time: {d.timestamp}, id: {d.id}, source: {d.source.node_id}\n')
+
+    def update_finalized_blocks(self, timestamp):
+        with open('./logs/data.log', 'a') as f:
+            f.write(f'Finalized blocks at {timestamp}:\n')
+            for v in self.global_blocktree.tree.vertices():
+                b = self.global_blocktree.blocks[v]
+                if self.global_blocktree.is_finalized(b, self.params['tx_error_prob']):
+                    s = f'{b.id}: '
+                    for tx in b.txs:
+                        s+=f'{tx.id},'
+                    s+='\n'
+                    f.write(s)
 
     '''
     Main simulation function
@@ -89,7 +105,8 @@ class Coordinator():
                     proposer.propose(self.proposals[p_i],
                         self.params['max_block_size'],
                         self.params['fork_choice_rule'],
-                        self.params['model'])
+                        self.params['model'], self.global_blocktree)
+                    self.update_finalized_blocks(self.proposals[p_i].timestamp)
                     p_i+=1
 
         # loop over all nodes and process buffer

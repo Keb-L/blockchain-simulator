@@ -69,7 +69,8 @@ class Node():
             self.log_local_blocktree()
 
 
-    def propose(self, proposal, max_block_size, fork_choice_rule, delay_model):
+    def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
+            global_blocktree):
         # process propoer's buffer
         self.process_buffer(proposal.timestamp)
 
@@ -93,6 +94,9 @@ class Node():
         proposal.set_block(new_block)
         self.logger.info('Proposing new block %s at %s', new_block.id,
                 proposal.timestamp) 
+
+        # add new block to global blocktree
+        global_blocktree.fork_choice_rule(new_block)
 
         # broadcast to rest of network
         self.broadcast(proposal, max_block_size, delay_model)
