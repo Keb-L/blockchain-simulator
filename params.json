@@ -12,7 +12,7 @@
   },
   "small":  {
     "Number of nodes": 3, 
-    "Block size (txs)": 2, 
+    "Block size (txs)": 100, 
     "Probability of error in transaction confirmation": 0.0, 
     "Block proposal rate parameter": 0.5, 
     "Transaction dataset": "poisson",
