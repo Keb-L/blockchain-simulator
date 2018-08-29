@@ -37,7 +37,7 @@ if __name__=='__main__':
     os.mkdir('./logs')
 
     c = Coordinator(params) 
-    nodes = np.empty(params['num_nodes'])
+    nodes = np.empty(params['num_nodes'], dtype=Node)
     # generate num_nodes nodes
     for node_id in range(0, params['num_nodes']): 
         n = Node(node_id, params['fork_choice_rule'])

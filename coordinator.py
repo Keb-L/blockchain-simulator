@@ -1,11 +1,12 @@
 import time, random, numpy as np
+from node import Node
 from events import Proposal
 
 class Coordinator():
     def __init__(self, params):
         self.clock = time.time()
         self.proposals = np.array([])
-        self.nodes = np.empty(params['num_nodes'])
+        self.nodes = np.array([])
 
         self.params = params
 
