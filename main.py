@@ -37,11 +37,11 @@ if __name__=='__main__':
     os.mkdir('./logs')
 
     c = Coordinator(params) 
-    nodes = np.array([])
+    nodes = np.empty(params['num_nodes'])
     # generate num_nodes nodes
     for node_id in range(0, params['num_nodes']): 
         n = Node(node_id, params['fork_choice_rule'])
-        nodes = np.append(nodes, n)
+        nodes[node_id] = n
         c.add_node(n)
     
     # every node is a neighbor of the other for right now

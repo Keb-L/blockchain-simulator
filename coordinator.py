@@ -5,8 +5,7 @@ class Coordinator():
     def __init__(self, params):
         self.clock = time.time()
         self.proposals = np.array([])
-        self.txs = np.array([])
-        self.nodes = np.array([])
+        self.nodes = np.empty(params['num_nodes'])
 
         self.params = params
 
