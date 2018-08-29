@@ -17,3 +17,9 @@ SEC_PER_TRANSACTION = 16.0/600
 Required depth for longest chain to consider a block to be finalized
 '''
 FINALIZATION_DEPTH = 6
+
+'''
+Transaction rate in transactions/sec used when generating a transaction
+dataset
+'''
+TX_RATE = 0.1

@@ -2,6 +2,7 @@ import sys, os, shutil, json, numpy as np
 from optparse import OptionParser
 from coordinator import Coordinator
 from node import Node
+from constants import TX_RATE
 import generate_tx_dataset
 
 def get_params(filename):
@@ -52,9 +53,9 @@ if __name__=='__main__':
     
     # generate mock poisson dataset
     if params['dataset']=='poisson':
-        tx_dataset = generate_tx_dataset.poisson(0.1, params['duration'], c.clock, c.nodes)
+        tx_dataset = generate_tx_dataset.poisson(TX_RATE, params['duration'], c.clock, c.nodes)
     elif params['dataset']=='deterministic':
-        tx_dataset = generate_tx_dataset.deterministic(0.1, params['duration'], c.clock, c.nodes)
+        tx_dataset = generate_tx_dataset.deterministic(TX_RATE, params['duration'], c.clock, c.nodes)
 
     # generate proposal events
     c.generate_proposals()
