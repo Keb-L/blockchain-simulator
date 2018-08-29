@@ -16,6 +16,10 @@ class Algorithm():
     def fork_choice_rule(self, new_block):
         pass
 
+    @abstractmethod
+    def is_finalized(self, block, epsilon):
+        pass
+
     def graph_to_str(self):
         s = ''
         for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
@@ -33,3 +37,19 @@ class LongestChain(Algorithm):
             parent_vertex = e.target()
         self.tree.add_edge(parent_vertex, new_vertex)
         return self.blocks[parent_vertex]
+
+    def is_finalized(self, block, epsilon):
+        # find vertex with selected block
+        v = list(self.blocks.keys())[list(self.blocks.values()).index(block)]
+
+        # find shortest distance in tree
+        depth = gt.shortest_distance(self.tree, source=self.root, target=v)
+
+        # compute whether or not there is an error in transaction confirmation
+        error = True if np.random.uniform(0, 1)<=1-epsilon else False 
+
+        # a block is finalized if depth is greater than or equal to 6 and there
+        # is no error
+        finalized = True if depth>=6 and not error else False
+
+        return finalized
