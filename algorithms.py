@@ -2,6 +2,7 @@ import numpy as np, uuid
 from graph_tool import *
 import graph_tool.all as gt
 from block import Block
+from abc import ABC, abstractmethod
 
 class Algorithm():
     def __init__(self):
@@ -10,6 +11,10 @@ class Algorithm():
 
         self.root = self.tree.add_vertex()
         self.blocks[self.root] = Block()
+
+    @abstractmethod
+    def fork_choice_rule(self, new_block):
+        pass
 
     def graph_to_str(self):
         s = ''
