@@ -3,10 +3,11 @@ from graph_tool import *
 import graph_tool.all as gt
 from block import Block
 from abc import ABC, abstractmethod
+from constants import FINALIZATION_DEPTH
 
 class Algorithm():
     def __init__(self):
-        self.tree = Graph()
+        self.tree = Graph(directed=False)
         self.blocks = self.tree.new_vertex_property('object')
 
         self.root = self.tree.add_vertex()
@@ -23,7 +24,7 @@ class Algorithm():
     def graph_to_str(self):
         s = ''
         for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
-            s+=f'{self.blocks[e.source()].id} -> {self.blocks[e.target()].id}\n'
+            s+=f'{self.blocks[e.source()].id} - {self.blocks[e.target()].id}\n'
         return s
 
 class LongestChain(Algorithm):
@@ -39,17 +40,17 @@ class LongestChain(Algorithm):
         return self.blocks[parent_vertex]
 
     def is_finalized(self, block, epsilon):
-        # find vertex with selected block
-        v = list(self.blocks.keys())[list(self.blocks.values()).index(block)]
+        # search for starting block
+        for v in self.tree.vertices():
+            if self.blocks[v]==block:
+                source = v
 
-        # find shortest distance in tree
-        depth = gt.shortest_distance(self.tree, source=self.root, target=v)
+        is_valid_depth = FINALIZATION_DEPTH in gt.shortest_distance(self.tree,
+                source, max_dist=FINALIZATION_DEPTH).get_array()
 
         # compute whether or not there is an error in transaction confirmation
-        error = True if np.random.uniform(0, 1)<=1-epsilon else False 
+        error = False if np.random.uniform(0, 1)<=1-epsilon else True
 
-        # a block is finalized if depth is greater than or equal to 6 and there
-        # is no error
-        finalized = True if depth>=6 and not error else False
+        finalized = True if is_valid_depth and not error else False
 
         return finalized
