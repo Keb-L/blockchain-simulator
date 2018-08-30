@@ -7,7 +7,7 @@ from constants import FINALIZATION_DEPTH
 
 class Algorithm():
     def __init__(self):
-        self.tree = Graph(directed=False)
+        self.tree = Graph()
         self.blocks = self.tree.new_vertex_property('object')
 
         self.root = self.tree.add_vertex()
@@ -19,6 +19,10 @@ class Algorithm():
 
     @abstractmethod
     def is_finalized(self, block, epsilon):
+        pass
+
+    @abstractmethod
+    def main_chain(self):
         pass
 
     def graph_to_str(self):
@@ -54,3 +58,22 @@ class LongestChain(Algorithm):
         finalized = True if is_valid_depth and not error else False
 
         return finalized
+
+    def main_chain(self):
+        # find leafs of tree by determining which nodes have out degree 0
+        out_degrees = self.tree.get_out_degrees(self.tree.get_vertices())
+        leaf_indices = np.where(out_degrees == 0)[0]
+        
+        # find main chain
+        max_len = 0
+        main_chain = np.array([])
+        index = 0 
+        for v in self.tree.vertices():
+            if index in leaf_indices:
+                chain = gt.shortest_path(self.tree, self.root, v)
+                if len(chain[0])>max_len:
+                    main_chain = chain[0]
+                    max_len = len(chain[0])
+            index+=1
+
+        return main_chain

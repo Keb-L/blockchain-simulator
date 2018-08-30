@@ -72,7 +72,5 @@ class TestBlockchainSimulator(unittest.TestCase):
         self.assertFalse(l.is_finalized(h_block, 0.0))
         self.assertFalse(l.is_finalized(i_block, 0.0))
 
-
-
 if __name__ == '__main__':
     unittest.main()

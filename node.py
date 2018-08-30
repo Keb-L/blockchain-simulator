@@ -79,6 +79,12 @@ class Node():
         # find selected chain based on schema
         self.local_blocktree.fork_choice_rule(new_block)
 
+        # find all txs in main chain
+        main_chain = self.local_blocktree.main_chain()
+        main_chain_txs = np.array([])
+        for v in main_chain:
+            main_chain_txs = np.append(main_chain_txs, self.local_blocktree.blocks[v].txs)
+
         tx_i = 0
         while tx_i<len(self.local_txs):
             # if we exceed current time, exit loop
@@ -87,7 +93,7 @@ class Node():
             # if we exceed max block size, exit loop
             elif len(new_block.txs)<max_block_size:
                 break
-            else:
+            elif self.local_txs[tx_i] not in main_chain_txs:
                 new_block.add_tx(self.local_txs[tx_i])
                 tx_i+=1
 
