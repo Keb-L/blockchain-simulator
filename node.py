@@ -90,7 +90,7 @@ class Node():
             elif self.local_txs[tx_i] not in main_chain_txs:
                 new_block.add_tx(self.local_txs[tx_i])
                 tx_str+=f'{self.local_txs[tx_i].id},'
-                tx_i+=1
+            tx_i+=1
 
         self.logger.info('%s: Block proposal event. Block id: %s; Txs: %s',
                 proposal.timestamp, new_block.id,
