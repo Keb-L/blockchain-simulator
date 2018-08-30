@@ -67,6 +67,8 @@ class Coordinator():
 
         # run main loop
         while tx_i<self.txs.shape[0] and p_i<self.proposals.shape[0]:
+            if (tx_i+p_i)%100==0:
+                print(float(tx_i+p_i)/(self.txs.shape[0]+self.proposals.shape[0]))
             # out of all transactions
             if tx_i==self.txs.shape[0]:
                 # process proposal
