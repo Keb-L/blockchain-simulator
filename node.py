@@ -30,9 +30,6 @@ class Node():
         self.buffer = np.append(self.buffer, event)
 
     def add_to_local_txs(self, tx):
-        self.logger.info('Adding %s to local transaction queue at %s',
-                (tx.source.node_id, tx.id), tx.timestamp) 
-
         self.local_txs = np.append(self.local_txs, tx)
 
     def broadcast(self, event, max_block_size, delay_model):
@@ -59,9 +56,8 @@ class Node():
                 copied_block = Block(event.block.txs, event.block.id) 
                 # find selected chain based on schema
                 self.local_blocktree.fork_choice_rule(copied_block)
-                self.logger.info('Received and added new block %s at %s',
-                        copied_block.id,
-                        event.timestamp) 
+                self.logger.info('%s: Block reception event. Block id: %s',
+                        event.timestamp, copied_block.id) 
             b_i+=1
         self.buffer = self.buffer[b_i:]
 
@@ -85,10 +81,8 @@ class Node():
         for v in main_chain:
             main_chain_txs = np.append(main_chain_txs, self.local_blocktree.blocks[v].txs)
 
-        self.logger.info('Proposing new block %s at %s', new_block.id,
-                proposal.timestamp) 
-
         tx_i = 0
+        tx_str = ''
         while tx_i<len(self.local_txs):
             # if we exceed current time, exit loop
             if self.local_txs[tx_i].timestamp>proposal.timestamp:
@@ -98,7 +92,12 @@ class Node():
                 break
             elif self.local_txs[tx_i] not in main_chain_txs:
                 new_block.add_tx(self.local_txs[tx_i])
+                tx_str+=f'{self.local_txs[tx_i].id},'
                 tx_i+=1
+
+        self.logger.info('%s: Block proposal event. Block id: %s; Txs: %s',
+                proposal.timestamp, new_block.id,
+                tx_str) 
 
         proposal.set_block(new_block)
 
