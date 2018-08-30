@@ -64,7 +64,6 @@ class Node():
         if timestamp==float('Inf'):
             self.log_local_blocktree()
 
-
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
             global_blocktree):
         # process propoer's buffer
@@ -72,8 +71,6 @@ class Node():
 
         # append new block to appropriate chain
         new_block = Block()
-        # find selected chain based on schema
-        self.local_blocktree.fork_choice_rule(new_block)
 
         # find all txs in main chain
         main_chain = self.local_blocktree.main_chain()
@@ -101,6 +98,8 @@ class Node():
 
         proposal.set_block(new_block)
 
+        # find selected chain based on schema and add block
+        self.local_blocktree.fork_choice_rule(new_block)
         # add new block to global blocktree
         global_blocktree.fork_choice_rule(new_block)
         # broadcast to rest of network
