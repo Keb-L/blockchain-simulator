@@ -28,7 +28,7 @@ class Algorithm():
     def graph_to_str(self):
         s = ''
         for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
-            s+=f'{self.blocks[e.source()].id} - {self.blocks[e.target()].id}\n'
+            s+=f'{self.blocks[e.source()].id} -> {self.blocks[e.target()].id}\n'
         return s
 
 class LongestChain(Algorithm):
