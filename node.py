@@ -56,7 +56,7 @@ class Node():
                 self.add_to_local_txs(event)
             elif event.__class__.__name__=='Proposal':
                 # blocks should be added to local block tree
-                copied_block = copy.deepcopy(event.block) 
+                copied_block = Block(event.block.txs, event.block.id) 
                 # find selected chain based on schema
                 self.local_blocktree.fork_choice_rule(copied_block)
                 self.logger.info('Received and added new block %s at %s',
@@ -85,25 +85,25 @@ class Node():
         for v in main_chain:
             main_chain_txs = np.append(main_chain_txs, self.local_blocktree.blocks[v].txs)
 
+        self.logger.info('Proposing new block %s at %s', new_block.id,
+                proposal.timestamp) 
+
         tx_i = 0
         while tx_i<len(self.local_txs):
             # if we exceed current time, exit loop
             if self.local_txs[tx_i].timestamp>proposal.timestamp:
                 break
             # if we exceed max block size, exit loop
-            elif len(new_block.txs)<max_block_size:
+            elif len(new_block.txs)>max_block_size:
                 break
             elif self.local_txs[tx_i] not in main_chain_txs:
                 new_block.add_tx(self.local_txs[tx_i])
                 tx_i+=1
 
         proposal.set_block(new_block)
-        self.logger.info('Proposing new block %s at %s', new_block.id,
-                proposal.timestamp) 
 
         # add new block to global blocktree
         global_blocktree.fork_choice_rule(new_block)
-
         # broadcast to rest of network
         self.broadcast(proposal, max_block_size, delay_model)
 

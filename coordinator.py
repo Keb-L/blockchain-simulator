@@ -28,12 +28,14 @@ class Coordinator():
                 self.proposals = np.append(self.proposals, proposal)
                 f.write(f'time: {proposal.timestamp}\n')
 
+
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
         with open('./logs/data.log', 'a') as f:
             f.write('Transactions:\n')
             for d in dataset:
                 f.write(f'time: {d.timestamp}, id: {d.id}, source: {d.source.node_id}\n')
+                self.nodes[d.source.node_id].add_to_local_txs(d)
 
     def update_finalized_blocks(self, timestamp):
         with open('./logs/data.log', 'a') as f:
