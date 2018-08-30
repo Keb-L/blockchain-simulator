@@ -1,5 +1,17 @@
-import re
+import re, json, pprint
 from constants import TX_RATE
+
+def dump_params():
+    print('Parameters:')
+    with open(f'params.json') as f:
+        contents = json.load(f)
+        setting_name = contents['setting-name']
+        d = contents[setting_name]
+    
+    pp = pprint.PrettyPrinter()
+    pp.pprint(d)
+    print('\n')
+
 
 def compute_throughput():
     return TX_RATE
@@ -51,7 +63,11 @@ def compute_latency():
 
     return avg_latency
 
-
-if __name__=='__main__':
+def dump_results():
+    print('Results:')
     print(f'Transaction Throughput: {compute_throughput()} transactions/sec')
     print(f'Transaction Latency: {compute_latency()} sec/transaction')
+
+if __name__=='__main__':
+    dump_params()
+    dump_results()
