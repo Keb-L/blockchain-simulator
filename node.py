@@ -105,6 +105,3 @@ class Node():
         global_blocktree.fork_choice_rule(new_block)
         # broadcast to rest of network
         self.broadcast(proposal, max_block_size, delay_model)
-
-        # update local transactions
-        self.local_txs = self.local_txs[tx_i:]
