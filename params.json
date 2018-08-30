@@ -14,10 +14,10 @@
     "Number of nodes": 3, 
     "Block size (txs)": 100, 
     "Probability of error in transaction confirmation": 0.0, 
-    "Block proposal rate parameter": 0.5, 
+    "Block proposal rate parameter": 0.001, 
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 10
+    "Duration (sec)": 10000
   }
 }

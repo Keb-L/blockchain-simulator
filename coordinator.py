@@ -43,7 +43,7 @@ class Coordinator():
             for v in self.global_blocktree.tree.vertices():
                 b = self.global_blocktree.blocks[v]
                 if self.global_blocktree.is_finalized(b, self.params['tx_error_prob']):
-                    s = f'{b.id}: '
+                    s = f'{b.id}:'
                     for tx in b.txs:
                         s+=f'{tx.id},'
                     s+='\n'

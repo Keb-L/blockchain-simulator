@@ -22,4 +22,4 @@ FINALIZATION_DEPTH = 6
 Transaction rate in transactions/sec used when generating a transaction
 dataset
 '''
-TX_RATE = 0.1
+TX_RATE = 1
