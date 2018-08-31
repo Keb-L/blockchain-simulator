@@ -11,7 +11,7 @@ class Algorithm():
         self.blocks = self.tree.new_vertex_property('object')
 
         self.root = self.tree.add_vertex()
-        self.blocks[self.root] = Block()
+        self.blocks[self.root] = Block(id='Genesis')
 
     @abstractmethod
     def fork_choice_rule(self, new_block):
