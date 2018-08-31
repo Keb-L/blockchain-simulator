@@ -67,13 +67,22 @@ class Node():
             b_i+=1
         self.buffer = self.buffer[b_i:]
 
-        # loop over orphans and update remaining orphans
-        remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
-        for i, orphan in enumerate(self.orphans):
-            parent_block = self.local_blocktree.add_block(orphan)
-            if parent_block==None:
-                remaining_orphans[i] = True
-        self.orphans = self.orphans[remaining_orphans]
+        # loop over orphans repeatedly while we added an orphan block
+        added_orphan_block = True
+        while added_orphan_block:
+            # assume we did not add an orphan block
+            added_orphan_block = False
+            # loop over orphans and update remaining orphans
+            remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
+            for i, orphan in enumerate(self.orphans):
+                parent_block = self.local_blocktree.add_block(orphan)
+                if parent_block==None:
+                    # did not add orphan block, block remains as orphan
+                    remaining_orphans[i] = True
+                else:
+                    # we did add an orphan block
+                    added_orphan_block = True
+            self.orphans = self.orphans[remaining_orphans]
 
         if timestamp==float('Inf'):
             self.log_local_blocktree()
