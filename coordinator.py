@@ -113,6 +113,9 @@ class Coordinator():
                     self.update_finalized_blocks(self.proposals[p_i].timestamp)
                     p_i+=1
 
+        # ******* 
+        # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
+        # *********
         # loop over all nodes and process buffer
-        for node in self.nodes:
-            node.process_buffer(float('Inf'))
+        # for node in self.nodes:
+            # node.process_buffer(self.params['duration'])
