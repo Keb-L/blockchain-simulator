@@ -25,6 +25,23 @@ class Algorithm():
     def main_chain(self):
         pass
 
+    def add_block(self, new_block):
+        # create new vertex
+        new_vertex = self.tree.add_vertex()
+        self.blocks[new_vertex] = new_block
+
+        parent_id = new_block.parent_id
+        parent_vertex = None
+        parent_block = None
+        # look through all blocks and find appropriate parent block
+        for vertex in self.tree.vertices():
+            if self.blocks[vertex].id==parent_id:
+                parent_vertex = vertex
+                parent_block = self.blocks
+                self.tree.add_edge(parent_vertex, new_vertex)
+                break
+        return parent_block
+
     def graph_to_str(self):
         s = ''
         for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):

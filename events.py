@@ -4,7 +4,7 @@ class Transaction():
     def __init__(self, timestamp, source):
         self.timestamp = timestamp
         self.source = source
-        self.id = uuid.uuid4().hex[0:3]
+        self.id = uuid.uuid4().hex[0:10]
 
 class Proposal():
     def __init__(self, timestamp):

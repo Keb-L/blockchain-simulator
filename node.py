@@ -12,7 +12,7 @@ class Node():
             self.local_blocktree = LongestChain()
 
         self.local_txs = np.array([])
-        self.orphans = set()
+        self.orphans = np.array([])
         self.buffer = np.array([])
         self.neighbors = np.array([])
 
@@ -53,13 +53,24 @@ class Node():
                 self.add_to_local_txs(event)
             elif event.__class__.__name__=='Proposal':
                 # blocks should be added to local block tree
-                copied_block = Block(event.block.txs, event.block.id) 
-                # find selected chain based on schema
-                self.local_blocktree.fork_choice_rule(copied_block)
+                copied_block = Block(event.block.txs, event.block.id,
+                        event.block.parent_id) 
+                # add block based on parent id
+                parent_block = self.local_blocktree.add_block(copied_block)
                 self.logger.info('%s: Block reception event. Block id: %s',
                         event.timestamp, copied_block.id) 
+                if parent_block==None:
+                    self.orphans = np.append(self.orphans, copied_block)
             b_i+=1
         self.buffer = self.buffer[b_i:]
+
+        # loop over orphans and update remaining orphans
+        remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
+        for i, orphan in enumerate(self.orphans):
+            parent_block = self.local_blocktree.add_block(orphan)
+            if parent_block==None:
+                remaining_orphans[i] = True
+        self.orphans = self.orphans[remaining_orphans]
 
         if timestamp==float('Inf'):
             self.log_local_blocktree()
@@ -99,8 +110,13 @@ class Node():
         proposal.set_block(new_block)
 
         # find selected chain based on schema and add block
-        self.local_blocktree.fork_choice_rule(new_block)
-        # add new block to global blocktree
-        global_blocktree.fork_choice_rule(new_block)
+        local_parent_block = self.local_blocktree.fork_choice_rule(new_block)
+        new_block.set_parent_id(local_parent_block.id)
+
+        # copy block and add new block to global blocktree
+        copied_block = Block(new_block.txs, new_block.id, new_block.parent_id) 
+        global_parent_block = global_blocktree.fork_choice_rule(copied_block)
+        copied_block.set_parent_id(global_parent_block.id)
+
         # broadcast to rest of network
         self.broadcast(proposal, max_block_size, delay_model)
