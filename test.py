@@ -8,7 +8,7 @@ class TestBlockchainSimulator(unittest.TestCase):
         # create our own tree 
         l.tree = Graph()
         l.root = l.tree.add_vertex()
-        l.blocks[l.root] = Block()
+        l.blocks[l.root] = Block(id='Genesis')
 
         # add 2 blocks a and b as root's children
         a_block = Block()
@@ -77,7 +77,7 @@ class TestBlockchainSimulator(unittest.TestCase):
         # create our own tree 
         g.tree = Graph()
         g.root = g.tree.add_vertex()
-        g.blocks[g.root] = Block()
+        g.blocks[g.root] = Block(id='Genesis')
 
         # add 2 blocks a and b as root's children
         a_block = Block()
@@ -126,7 +126,6 @@ class TestBlockchainSimulator(unittest.TestCase):
         g.tree.add_edge(g_vertex, h_vertex)
 
         i_block = Block()
-
 
 if __name__ == '__main__':
     unittest.main()

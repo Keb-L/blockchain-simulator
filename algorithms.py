@@ -42,11 +42,14 @@ class Algorithm():
                 break
         return parent_block
 
-    def graph_to_str(self):
-        s = ''
-        for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
-            s+=f'{self.blocks[e.source()].id} -> {self.blocks[e.target()].id}\n'
-        return s
+    def graph_to_str(self, vertex=None, level=0):
+        if vertex==None:
+            vertex=self.root
+        ret = '   '*level+f'{self.blocks[vertex].id}\n'
+        for e in vertex.out_edges():
+            child = e.target()	
+            ret += self.graph_to_str(vertex=child, level=level+1)
+        return ret
 
 class LongestChain(Algorithm):
     def fork_choice_rule(self, new_block):
