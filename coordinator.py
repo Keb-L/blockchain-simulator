@@ -28,6 +28,10 @@ class Coordinator():
                 self.proposals = np.append(self.proposals, proposal)
                 f.write(f'time: {proposal.timestamp}\n')
 
+    def log_global_blocktree(self):
+        with open('./logs/global_blocktree.log', 'w+') as f:
+            f.write(f'{self.global_blocktree.graph_to_str()}') 
+
 
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
@@ -112,6 +116,8 @@ class Coordinator():
                         self.params['model'], self.global_blocktree)
                     self.update_finalized_blocks(self.proposals[p_i].timestamp)
                     p_i+=1
+        
+        self.log_global_blocktree()
 
         # ******* 
         # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
