@@ -37,7 +37,7 @@ class Algorithm():
         for vertex in self.tree.vertices():
             if self.blocks[vertex].id==parent_id:
                 parent_vertex = vertex
-                parent_block = self.blocks
+                parent_block = self.blocks[vertex]
                 self.tree.add_edge(parent_vertex, new_vertex)
                 break
         return parent_block

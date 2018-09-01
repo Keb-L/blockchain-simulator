@@ -129,7 +129,7 @@ class Node():
 
         # copy block and add new block to global blocktree
         copied_block = Block(new_block.txs, new_block.id, new_block.parent_id) 
-        global_parent_block = global_blocktree.fork_choice_rule(copied_block)
+        global_parent_block = global_blocktree.add_block(copied_block)
         copied_block.set_parent_id(global_parent_block.id)
 
         # broadcast to rest of network
