@@ -99,36 +99,42 @@ class LongestChain(Algorithm):
         return main_chain
 
 class GHOST(Algorithm):
-    def subtree_size(self, vertex):
+    def heaviest_subtree_helper(self, vertex):
         if vertex is None:
             vertex = self.root
         s = 0
         for e in vertex.out_edges():
-            s+=self.subtree_size(e.target())
+            s+=self.heaviest_subtree_helper(e.target())
         return vertex.out_degree()+s
 
-    def fork_choice_rule(self, new_block):
-        new_vertex = self.tree.add_vertex()
-        self.blocks[new_vertex] = new_block
-
+    def heaviest_subtree(self): 
         vertex = self.root
         while True:
             max_subtree_vertex = None
             max_subtree_size = -1
             for e in vertex.out_edges():
-                size = self.subtree_size(e.target())
+                size = self.heaviest_subtree_helper(e.target())
                 if size>max_subtree_size:
                     max_subtree_vertex = e.target()
                     max_subtree_size = size
             if max_subtree_size==0:
-                self.tree.add_edge(max_subtree_vertex, new_vertex)
-                return self.blocks[max_subtree_vertex]
+                return max_subtree_vertex
             else:
                 vertex=max_subtree_vertex
         return None
 
+    def fork_choice_rule(self, new_block):
+        new_vertex = self.tree.add_vertex()
+        self.blocks[new_vertex] = new_block
+
+        max_subtree_vertex = self.heaviest_subtree()
+        self.tree.add_edge(max_subtree_vertex, new_vertex)
+        return self.blocks[max_subtree_vertex]
+
     def is_finalized(self, block, epsilon):
-        return
+        return False
 
     def main_chain(self):
-        return
+        max_subtree_vertex = self.heaviest_subtree()
+        main_chain = gt.shortest_path(self.tree, self.root, max_subtree_vertex)
+        return main_chain
