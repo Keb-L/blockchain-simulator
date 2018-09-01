@@ -99,8 +99,33 @@ class LongestChain(Algorithm):
         return main_chain
 
 class GHOST(Algorithm):
+    def subtree_size(self, vertex):
+        if vertex is None:
+            vertex = self.root
+        s = 0
+        for e in vertex.out_edges():
+            s+=self.subtree_size(e.target())
+        return vertex.out_degree()+s
+
     def fork_choice_rule(self, new_block):
-        return
+        new_vertex = self.tree.add_vertex()
+        self.blocks[new_vertex] = new_block
+
+        vertex = self.root
+        while True:
+            max_subtree_vertex = None
+            max_subtree_size = -1
+            for e in vertex.out_edges():
+                size = self.subtree_size(e.target())
+                if size>max_subtree_size:
+                    max_subtree_vertex = e.target()
+                    max_subtree_size = size
+            if max_subtree_size==0:
+                self.tree.add_edge(max_subtree_vertex, new_vertex)
+                return self.blocks[max_subtree_vertex]
+            else:
+                vertex=max_subtree_vertex
+        return None
 
     def is_finalized(self, block, epsilon):
         return

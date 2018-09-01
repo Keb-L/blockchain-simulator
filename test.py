@@ -90,42 +90,41 @@ class TestBlockchainSimulator(unittest.TestCase):
         g.blocks[b_vertex] = b_block
         g.tree.add_edge(g.root, b_vertex)
 
-        # add 1 block c as a's child
+        # add 4 blocks c, d, e, f as a's children
         c_block = Block()
         c_vertex = g.tree.add_vertex()
         g.blocks[c_vertex] = c_block
         g.tree.add_edge(a_vertex, c_vertex)
 
-        # add 2 blocks d and e as b's children
         d_block = Block()
         d_vertex = g.tree.add_vertex()
         g.blocks[d_vertex] = d_block
-        g.tree.add_edge(b_vertex, d_vertex)
+        g.tree.add_edge(a_vertex, d_vertex)
 
         e_block = Block()
         e_vertex = g.tree.add_vertex()
         g.blocks[e_vertex] = e_block
-        g.tree.add_edge(b_vertex, e_vertex)
+        g.tree.add_edge(a_vertex, e_vertex)
 
-        # add 1 block f as d's child
         f_block = Block()
         f_vertex = g.tree.add_vertex()
         g.blocks[f_vertex] = f_block
-        g.tree.add_edge(d_vertex, f_vertex)
+        g.tree.add_edge(a_vertex, f_vertex)
 
-        # add 1 block as f's child
+        # add 1 block g as b's child
         g_block = Block()
         g_vertex = g.tree.add_vertex()
         g.blocks[g_vertex] = g_block
-        g.tree.add_edge(f_vertex, g_vertex)
+        g.tree.add_edge(b_vertex, g_vertex)
 
-        # add 1 block as g's child
+        # add 1 block h as g's child
         h_block = Block()
         h_vertex = g.tree.add_vertex()
         g.blocks[h_vertex] = h_block
         g.tree.add_edge(g_vertex, h_vertex)
 
         i_block = Block()
+        self.assertEqual(g.fork_choice_rule(i_block).id, c_block.id)
 
 if __name__ == '__main__':
     unittest.main()
