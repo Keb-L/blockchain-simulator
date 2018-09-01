@@ -72,5 +72,61 @@ class TestBlockchainSimulator(unittest.TestCase):
         self.assertFalse(l.is_finalized(h_block, 0.0))
         self.assertFalse(l.is_finalized(i_block, 0.0))
 
+    def test_GHOST(self):
+        g = GHOST()
+        # create our own tree 
+        g.tree = Graph()
+        g.root = g.tree.add_vertex()
+        g.blocks[g.root] = Block()
+
+        # add 2 blocks a and b as root's children
+        a_block = Block()
+        a_vertex = g.tree.add_vertex()
+        g.blocks[a_vertex] = a_block
+        g.tree.add_edge(g.root, a_vertex)
+
+        b_block = Block()
+        b_vertex = g.tree.add_vertex()
+        g.blocks[b_vertex] = b_block
+        g.tree.add_edge(g.root, b_vertex)
+
+        # add 1 block c as a's child
+        c_block = Block()
+        c_vertex = g.tree.add_vertex()
+        g.blocks[c_vertex] = c_block
+        g.tree.add_edge(a_vertex, c_vertex)
+
+        # add 2 blocks d and e as b's children
+        d_block = Block()
+        d_vertex = g.tree.add_vertex()
+        g.blocks[d_vertex] = d_block
+        g.tree.add_edge(b_vertex, d_vertex)
+
+        e_block = Block()
+        e_vertex = g.tree.add_vertex()
+        g.blocks[e_vertex] = e_block
+        g.tree.add_edge(b_vertex, e_vertex)
+
+        # add 1 block f as d's child
+        f_block = Block()
+        f_vertex = g.tree.add_vertex()
+        g.blocks[f_vertex] = f_block
+        g.tree.add_edge(d_vertex, f_vertex)
+
+        # add 1 block as f's child
+        g_block = Block()
+        g_vertex = g.tree.add_vertex()
+        g.blocks[g_vertex] = g_block
+        g.tree.add_edge(f_vertex, g_vertex)
+
+        # add 1 block as g's child
+        h_block = Block()
+        h_vertex = g.tree.add_vertex()
+        g.blocks[h_vertex] = h_block
+        g.tree.add_edge(g_vertex, h_vertex)
+
+        i_block = Block()
+
+
 if __name__ == '__main__':
     unittest.main()

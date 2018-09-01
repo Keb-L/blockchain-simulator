@@ -94,3 +94,13 @@ class LongestChain(Algorithm):
             index+=1
 
         return main_chain
+
+class GHOST(Algorithm):
+    def fork_choice_rule(self, new_block):
+        return
+
+    def is_finalized(self, block, epsilon):
+        return
+
+    def main_chain(self):
+        return
