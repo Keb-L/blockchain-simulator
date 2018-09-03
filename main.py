@@ -1,5 +1,6 @@
 import sys, os, shutil, json, numpy as np
 from optparse import OptionParser
+from topology_reader import get_topology
 from coordinator import Coordinator
 from node import Node
 from constants import TX_RATE
@@ -19,6 +20,10 @@ def get_params(filename):
         params['model'] = d['Network model']
         params['fork_choice_rule'] = d['Fork choice rule']
         params['duration'] = d['Duration (sec)']
+        if 'Topology file' in d:
+            params['topology'] = d['Topology file']
+        if 'Locations file' in d:
+            params['locations'] = d['Locations file']
     return params
 
 if __name__=='__main__':
@@ -39,17 +44,34 @@ if __name__=='__main__':
 
     c = Coordinator(params) 
     nodes = np.empty(params['num_nodes'], dtype=Node)
-    # generate num_nodes nodes
-    for node_id in range(0, params['num_nodes']): 
-        n = Node(node_id, params['fork_choice_rule'])
-        nodes[node_id] = n
-        c.add_node(n)
-    
-    # every node is a neighbor of the other for right now
-    for i in range (0, len(nodes)): 
-        for j in range(0, len(nodes)):
-            if i!=j:
-                nodes[i].add_neighbor(nodes[j])
+    if 'topology' in params and 'locations' in params:
+        num_nodes, locations, G = get_topology(params['locations'],
+        params['topology'])
+        if num_nodes!=params['num_nodes']:
+            print('Invalid number of nodes provided')
+            sys.exit()
+        # generate num_nodes nodes
+        for node_id in range(0, num_nodes): 
+            n = Node(node_id, params['fork_choice_rule'], locations[node_id])
+            nodes[node_id] = n
+            c.add_node(n)
+
+        # add nodes to network based on graph topology
+        for node_id in range(0, num_nodes):
+            for neighbor in G[node_id]:
+                n.add_neighbor(nodes[neighbor])
+    else:
+        # generate num_nodes nodes
+        for node_id in range(0, params['num_nodes']): 
+            n = Node(node_id, params['fork_choice_rule'])
+            nodes[node_id] = n
+            c.add_node(n)
+        
+        # every node is a neighbor of the other for right now
+        for i in range (0, len(nodes)): 
+            for j in range(0, len(nodes)):
+                if i!=j:
+                    nodes[i].add_neighbor(nodes[j])
     
     # generate mock poisson dataset
     if params['dataset']=='poisson':

@@ -5,11 +5,13 @@ from network import fixed_latency, decker_wattenhorf
 from algorithms import *
 
 class Node():
-    def __init__(self, node_id, algorithm):
+    def __init__(self, node_id, algorithm, location=None):
         self.node_id = node_id
 
         if algorithm=='longest-chain':
             self.local_blocktree = LongestChain()
+
+        self.location=location
 
         self.local_txs = np.array([])
         self.orphans = np.array([])

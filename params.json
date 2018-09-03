@@ -12,6 +12,8 @@
   },
   "small":  {
     "Number of nodes": 10, 
+    "Topology file": "./data/graph_topology_small.csv",
+    "Locations file": "./data/locations_small.csv",
     "Block size (txs)": 100, 
     "Probability of error in transaction confirmation": 0.0, 
     "Block proposal rate parameter": 0.1, 
