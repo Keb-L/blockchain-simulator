@@ -2,6 +2,7 @@ import time, random, numpy as np
 from node import Node
 from events import Proposal
 from algorithms import *
+from graph_tool.all import *
 
 class Coordinator():
     def __init__(self, params):
@@ -118,6 +119,12 @@ class Coordinator():
                     p_i+=1
         
         self.log_global_blocktree()
+        graph_draw(self.global_blocktree.tree,
+                vertex_text=self.global_blocktree.tree.vertex_index,
+                vertex_size=50,
+                vertex_font_size=15, output_size=(4200, 4200),
+                edge_pen_width=1.0,
+                output="global-blocktree.png")
 
         # ******* 
         # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
