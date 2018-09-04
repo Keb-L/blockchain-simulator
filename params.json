@@ -1,21 +1,23 @@
 {
   "setting-name": "default",
   "default":  {
-    "Number of nodes": 10, 
-    "Block size (txs)": 20, 
-    "Probability of error in transaction confirmation": 0.0, 
-    "Block proposal rate parameter": 0.5, 
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 100, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 300
+    "Duration (sec)": 1000
   },
   "small":  {
     "Number of nodes": 10, 
+    "Number of adversaries": 1,
     "Topology file": "./data/graph_topology_small.csv",
     "Locations file": "./data/locations_small.csv",
     "Block size (txs)": 100, 
-    "Probability of error in transaction confirmation": 0.0, 
+    "Probability of error in transaction confirmation": 0.1, 
     "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",

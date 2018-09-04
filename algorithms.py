@@ -1,6 +1,7 @@
 import numpy as np, uuid
 from graph_tool import *
 import graph_tool.all as gt
+from math import e, factorial
 from block import Block
 from abc import ABC, abstractmethod
 from constants import FINALIZATION_DEPTH
@@ -18,7 +19,7 @@ class Algorithm():
         pass
 
     @abstractmethod
-    def is_finalized(self, block, epsilon):
+    def is_finalized(self, block, params):
         pass
 
     @abstractmethod
@@ -63,14 +64,35 @@ class LongestChain(Algorithm):
         self.tree.add_edge(parent_vertex, new_vertex)
         return self.blocks[parent_vertex]
 
-    def is_finalized(self, block, epsilon):
+    def compute_k(self, epsilon, _lambda, num_nodes, num_adversaries):
+        # compute finalization depth
+        k = 0
+        q = float(num_adversaries)/num_nodes
+        p = 1-q
+        while True:
+            s = 0
+            for i in range(0, k):
+                s+=pow(_lambda, i)*pow(e, -_lambda)/factorial(i)*(1-pow(q/p, k-i))
+            result = 1-s
+            if result<=epsilon:
+                break
+            else:
+                k+=1
+        return k
+
+    def is_finalized(self, block, params):
         # search for starting block
         for v in self.tree.vertices():
             if self.blocks[v]==block:
                 source = v
 
-        is_valid_depth = FINALIZATION_DEPTH in gt.shortest_distance(self.tree,
-                source, max_dist=FINALIZATION_DEPTH).get_array()
+        epsilon = params['tx_error_prob']
+
+        finalization_depth = self.compute_k(epsilon, params['proposal_rate'], params['num_nodes'],
+                params['num_adversaries'])
+
+        is_valid_depth = finalization_depth in gt.shortest_distance(self.tree,
+                source, max_dist=finalization_depth).get_array()
 
         # compute whether or not there is an error in transaction confirmation
         error = False if np.random.uniform(0, 1)<=1-epsilon else True
@@ -131,7 +153,7 @@ class GHOST(Algorithm):
         self.tree.add_edge(max_subtree_vertex, new_vertex)
         return self.blocks[max_subtree_vertex]
 
-    def is_finalized(self, block, epsilon):
+    def is_finalized(self, block, params):
         return False
 
     def main_chain(self):

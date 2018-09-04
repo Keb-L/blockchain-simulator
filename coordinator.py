@@ -47,7 +47,9 @@ class Coordinator():
             f.write(f'Finalized blocks at {timestamp}:\n')
             for v in self.global_blocktree.tree.vertices():
                 b = self.global_blocktree.blocks[v]
-                if self.global_blocktree.is_finalized(b, self.params['tx_error_prob']):
+                if self.params['fork_choice_rule']=='longest-chain':
+                    is_finalized = self.global_blocktree.is_finalized(b, self.params)
+                if is_finalized:
                     s = f'{b.id}:'
                     for tx in b.txs:
                         s+=f'{tx.id},'

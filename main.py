@@ -13,6 +13,7 @@ def get_params(filename):
         setting_name = contents['setting-name']
         d = contents[setting_name]
         params['num_nodes'] = d['Number of nodes'] 
+        params['num_adversaries'] = d['Number of adversaries']
         params['max_block_size'] = d['Block size (txs)']
         params['tx_error_prob'] = d['Probability of error in transaction confirmation']
         params['proposal_rate'] = d['Block proposal rate parameter']
