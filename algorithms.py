@@ -64,13 +64,14 @@ class LongestChain(Algorithm):
         self.tree.add_edge(parent_vertex, new_vertex)
         return self.blocks[parent_vertex]
 
-    def compute_k(self, epsilon, _lambda, num_nodes, num_adversaries):
+    def compute_k(self, epsilon, num_nodes, num_adversaries):
         # compute finalization depth
         k = 0
         q = float(num_adversaries)/num_nodes
         p = 1-q
         while True:
             s = 0
+            _lambda = k*q/p
             for i in range(0, k):
                 s+=pow(_lambda, i)*pow(e, -_lambda)/factorial(i)*(1-pow(q/p, k-i))
             result = 1-s
@@ -88,7 +89,7 @@ class LongestChain(Algorithm):
 
         epsilon = params['tx_error_prob']
 
-        finalization_depth = self.compute_k(epsilon, params['proposal_rate'], params['num_nodes'],
+        finalization_depth = self.compute_k(epsilon, params['num_nodes'],
                 params['num_adversaries'])
 
         is_valid_depth = finalization_depth in gt.shortest_distance(self.tree,
@@ -157,13 +158,14 @@ class GHOST(Algorithm):
     Both LongestChain() and GHOST() have the same finalization protocol, hence
     the code is identical. TODO: find a better implementation of code reuse
     '''
-    def compute_k(self, epsilon, _lambda, num_nodes, num_adversaries):
+    def compute_k(self, epsilon, num_nodes, num_adversaries):
         # compute finalization depth
         k = 0
         q = float(num_adversaries)/num_nodes
         p = 1-q
         while True:
             s = 0
+            _lambda = k*q/p
             for i in range(0, k):
                 s+=pow(_lambda, i)*pow(e, -_lambda)/factorial(i)*(1-pow(q/p, k-i))
             result = 1-s
@@ -181,7 +183,7 @@ class GHOST(Algorithm):
 
         epsilon = params['tx_error_prob']
 
-        finalization_depth = self.compute_k(epsilon, params['proposal_rate'], params['num_nodes'],
+        finalization_depth = self.compute_k(epsilon, params['num_nodes'],
                 params['num_adversaries'])
 
         is_valid_depth = finalization_depth in gt.shortest_distance(self.tree,
