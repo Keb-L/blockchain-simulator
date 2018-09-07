@@ -42,10 +42,9 @@ class Coordinator():
             if self.params['fork_choice_rule']=='longest-chain':
                 is_finalized = self.global_blocktree.is_finalized(b, self.params)
             if is_finalized:
-                s = f'{b.id}:'
+                b.set_finalization_timestamp(timestamp)
                 for tx in b.txs:
-                    s+=f'{tx.id},'
-                s+='\n'
+                    tx.set_finalization_timestamp(timestamp)
 
     '''
     Main simulation function
@@ -77,6 +76,7 @@ class Coordinator():
                     self.params['max_block_size'],
                     self.params['fork_choice_rule'],
                     self.params['model'])
+                self.update_finalized_blocks(self.proposals[p_i].timestamp)
                 p_i+=1
             # out of all proposals
             elif p_i==self.proposals.shape[0]:
