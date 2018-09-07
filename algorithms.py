@@ -1,4 +1,4 @@
-iport numpy as np, uuid
+import numpy as np, uuid
 from graph_tool import *
 import graph_tool.all as gt
 from math import e, factorial

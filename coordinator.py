@@ -9,11 +9,14 @@ class Coordinator():
         self.clock = time.time()
         self.proposals = np.array([])
         self.nodes = np.array([])
+        self.txs = np.array([])
 
         self.params = params
 
         if params['fork_choice_rule']=='longest-chain':
             self.global_blocktree = LongestChain()
+        elif params['fork_choice_rule']=='GHOST':
+            self.global_blocktree = GHOST()
 
     def add_node(self, node):
         self.nodes = np.append(self.nodes, node)
@@ -21,40 +24,28 @@ class Coordinator():
     def generate_proposals(self):
         start_time = self.clock
         timestamp = self.clock
-        with open('./logs/data.log', 'w+') as f:
-            f.write('Proposals:\n')
-            while timestamp<self.params['duration']+start_time: 
-                timestamp = timestamp + random.expovariate(self.params['proposal_rate'])
-                proposal = Proposal(timestamp) 
-                self.proposals = np.append(self.proposals, proposal)
-                f.write(f'time: {proposal.timestamp}\n')
+        while timestamp<self.params['duration']+start_time: 
+            timestamp = timestamp + random.expovariate(self.params['proposal_rate'])
+            proposal = Proposal(timestamp) 
+            self.proposals = np.append(self.proposals, proposal)
 
     def log_global_blocktree(self):
         with open('./logs/global_blocktree.log', 'w+') as f:
             f.write(f'{self.global_blocktree.graph_to_str()}') 
 
-
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
-        with open('./logs/data.log', 'a') as f:
-            f.write('Transactions:\n')
-            for d in dataset:
-                f.write(f'time: {d.timestamp}, id: {d.id}, source: {d.source.node_id}\n')
-                self.nodes[d.source.node_id].add_to_local_txs(d)
 
     def update_finalized_blocks(self, timestamp):
-        with open('./logs/data.log', 'a') as f:
-            f.write(f'Finalized blocks at {timestamp}:\n')
-            for v in self.global_blocktree.tree.vertices():
-                b = self.global_blocktree.blocks[v]
-                if self.params['fork_choice_rule']=='longest-chain':
-                    is_finalized = self.global_blocktree.is_finalized(b, self.params)
-                if is_finalized:
-                    s = f'{b.id}:'
-                    for tx in b.txs:
-                        s+=f'{tx.id},'
-                    s+='\n'
-                    f.write(s)
+        for v in self.global_blocktree.tree.vertices():
+            b = self.global_blocktree.blocks[v]
+            if self.params['fork_choice_rule']=='longest-chain':
+                is_finalized = self.global_blocktree.is_finalized(b, self.params)
+            if is_finalized:
+                s = f'{b.id}:'
+                for tx in b.txs:
+                    s+=f'{tx.id},'
+                s+='\n'
 
     '''
     Main simulation function

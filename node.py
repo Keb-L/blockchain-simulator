@@ -10,6 +10,8 @@ class Node():
 
         if algorithm=='longest-chain':
             self.local_blocktree = LongestChain()
+        elif algorithm=='GHOST':
+            self.local_blocktree = GHOST()
 
         self.location=location
 
@@ -18,19 +20,11 @@ class Node():
         self.buffer = np.array([])
         self.neighbors = np.array([])
 
-        handler = logging.FileHandler(f'./logs/{self.node_id}.log')        
-
-        self.logger = logging.getLogger(f'{self.node_id}')
-        self.logger.setLevel(logging.INFO)
-        self.logger.addHandler(handler)
-
 
     def add_neighbor(self, neighbor_node):
         self.neighbors = np.append(self.neighbors, neighbor_node)
 
     def add_to_buffer(self, event):
-        if event.__class__.__name__=='Proposal':
-            self.logger.info(f'Adding block %s to buffer', event.block.id)
         self.buffer = np.append(self.buffer, event)
 
     def add_to_local_txs(self, tx):
@@ -61,9 +55,6 @@ class Node():
                         event.block.parent_id) 
                 # add block based on parent id
                 parent_block = self.local_blocktree.add_block(copied_block)
-                self.logger.info('%s: Block reception event. Block id: %s, Parent block: %s',
-                        event.timestamp, copied_block.id, event.block.parent_id) 
-                self.logger.info(f'\nLocal blocktree:\n{self.local_blocktree.graph_to_str()}') 
                 if parent_block==None:
                     self.orphans = np.append(self.orphans, copied_block)
             b_i+=1
@@ -117,18 +108,12 @@ class Node():
                 tx_str+=f'{self.local_txs[tx_i].id},'
             tx_i+=1
 
-        self.logger.info('%s: Block proposal event. Block id: %s; Txs: %s',
-                proposal.timestamp, new_block.id,
-                tx_str) 
-
         proposal.set_block(new_block)
 
         # find selected chain based on schema and add block
         local_parent_block = self.local_blocktree.fork_choice_rule(new_block)
         new_block.set_parent_id(local_parent_block.id)
         
-        self.logger.info(f'\nLocal blocktree:\n{self.local_blocktree.graph_to_str()}') 
-
         # copy block and add new block to global blocktree
         copied_block = Block(new_block.txs, new_block.id, new_block.parent_id) 
         global_parent_block = global_blocktree.add_block(copied_block)
