@@ -23,5 +23,27 @@
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
     "Duration (sec)": 1000
+  },
+  "longest-chain-test":  {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 100, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block proposal rate parameter": 0.1, 
+    "Transaction dataset": "poisson",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "longest-chain",
+    "Duration (sec)": 1000
+  },
+  "GHOST-test":  {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 100, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block proposal rate parameter": 0.1, 
+    "Transaction dataset": "poisson",
+    "Network model": "GHOST",
+    "Fork choice rule": "longest-chain",
+    "Duration (sec)": 1000
   }
 }
