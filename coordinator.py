@@ -1,4 +1,4 @@
-import time, random, numpy as np
+import time, random, csv, numpy as np
 from node import Node
 from events import Proposal
 from algorithms import *
@@ -33,6 +33,27 @@ class Coordinator():
         with open('./logs/global_blocktree.log', 'w+') as f:
             f.write(f'{self.global_blocktree.graph_to_str()}') 
 
+    def log_txs(self):
+        with open('./logs/transactions.csv', 'w', newline='') as csvfile:
+            fieldnames = ['id', 'Source Node', 'Arrival Timestamp', 'Main Chain Arrival Timestamp', 'Finalization Timestamp']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for tx in self.txs:
+                writer.writerow({'id': f'{tx.id}', 'Source Node':
+                    f'{tx.source.node_id}', 'Arrival Timestamp':
+                    f'{tx.timestamp}', 'Main Chain Arrival Timestamp':
+                    f'{tx.main_chain_timestamp}', 'Finalization Timestamp':
+                    f'{tx.finalization_timestamp}'})
+
+    def log_proposals(self):
+        with open('./logs/proposals.csv', 'w', newline='') as csvfile:
+            fieldnames = ['Timestamp']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for p in self.proposals:
+                writer.writerow({'Timestamp': f'{p.timestamp}'})
+
+
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
 
@@ -42,7 +63,6 @@ class Coordinator():
             if self.params['fork_choice_rule']=='longest-chain':
                 is_finalized = self.global_blocktree.is_finalized(b, self.params)
             if is_finalized:
-                b.set_finalization_timestamp(timestamp)
                 for tx in b.txs:
                     tx.set_finalization_timestamp(timestamp)
 
@@ -111,6 +131,8 @@ class Coordinator():
                     self.update_finalized_blocks(self.proposals[p_i].timestamp)
                     p_i+=1
         
+        self.log_txs()
+        self.log_proposals()
         self.log_global_blocktree()
         graph_draw(self.global_blocktree.tree,
                 vertex_text=self.global_blocktree.tree.vertex_index,

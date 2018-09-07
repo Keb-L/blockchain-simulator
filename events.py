@@ -9,7 +9,7 @@ class Transaction():
         self.main_chain_timestamp = None
         self.finalization_timestamp = None
 
-    def set_main_chain_arrival(self, main_chain_timestamp):
+    def set_main_chain_arrival_timestamp(self, main_chain_timestamp):
         self.main_chain_timestamp = main_chain_timestamp
 
     def set_finalization_timestamp(self, finalization_timestamp):
