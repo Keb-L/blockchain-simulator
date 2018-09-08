@@ -1,4 +1,4 @@
-import time, random, csv, numpy as np
+import random, csv, numpy as np
 from node import Node
 from events import Proposal
 from algorithms import *
@@ -6,7 +6,7 @@ from graph_tool.all import *
 
 class Coordinator():
     def __init__(self, params):
-        self.clock = time.time()
+        self.clock = 0
         self.proposals = np.array([])
         self.nodes = np.array([])
         self.txs = np.array([])
