@@ -39,16 +39,16 @@ class Algorithm():
         self.block_to_vertices[new_block.id] = new_vertex
 
         parent_id = new_block.parent_id
-        parent_vertex = None
-        parent_block = None
-        # look through all blocks and find appropriate parent block
-        for vertex in self.tree.vertices():
-            if self.vertex_to_blocks[vertex].id==parent_id:
-                parent_vertex = vertex
-                parent_block = self.vertex_to_blocks[vertex]
-                self.tree.add_edge(parent_vertex, new_vertex)
-                break
-        return parent_block
+
+        # if parent id is in mapping, add the block and return the block.
+        # otherwise, return None
+        if parent_id in self.block_to_vertices:
+            parent_vertex = self.block_to_vertices[parent_id]
+            parent_block = self.vertex_to_blocks[parent_vertex]
+            self.tree.add_edge(parent_vertex, new_vertex)
+            return parent_block
+        else:
+            return None
 
     def graph_to_str(self, vertex=None, level=0):
         if vertex==None:
@@ -91,9 +91,7 @@ class LongestChain(Algorithm):
 
     def is_finalized(self, block, params):
         # search for starting block
-        for v in self.tree.vertices():
-            if self.vertex_to_blocks[v]==block:
-                source = v
+        source = self.block_to_vertices[block.id]
 
         epsilon = params['tx_error_prob']
 
@@ -186,9 +184,7 @@ class GHOST(Algorithm):
 
     def is_finalized(self, block, params):
         # search for starting block
-        for v in self.tree.vertices():
-            if self.vertex_to_blocks[v]==block:
-                source = v
+        source = self.block_to_vertices[block.id]
 
         epsilon = params['tx_error_prob']
 
