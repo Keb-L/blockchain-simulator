@@ -92,10 +92,13 @@ class Coordinator():
                 self.clock = self.proposals[p_i].timestamp
                 # choose proposer uniformly at random
                 proposer = random.choice(self.nodes)
-                proposer.propose(self.proposals[p_i].timestamp, 
+                proposal = proposer.propose(self.proposals[p_i].timestamp, 
                     self.params['max_block_size'],
                     self.params['fork_choice_rule'],
                     self.params['model'])
+                # broadcast to rest of network
+                proposer.broadcast(proposal, self.params['max_block_size'],
+                        self.params['model'])
                 self.update_finalized_blocks(self.proposals[p_i].timestamp)
                 p_i+=1
             # out of all proposals
@@ -124,10 +127,13 @@ class Coordinator():
                     self.clock = self.proposals[p_i].timestamp
                     # choose proposer uniformly at random
                     proposer = random.choice(self.nodes)
-                    proposer.propose(self.proposals[p_i],
+                    proposal = proposer.propose(self.proposals[p_i],
                         self.params['max_block_size'],
                         self.params['fork_choice_rule'],
                         self.params['model'], self.global_blocktree)
+                    # broadcast to rest of network
+                    proposer.broadcast(proposal, self.params['max_block_size'],
+                            self.params['model'])
                     self.update_finalized_blocks(self.proposals[p_i].timestamp)
                     p_i+=1
         

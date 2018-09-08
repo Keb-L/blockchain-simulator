@@ -124,5 +124,4 @@ class Node():
         global_parent_block = global_blocktree.add_block(copied_block)
         copied_block.set_parent_id(global_parent_block.id)
 
-        # broadcast to rest of network
-        self.broadcast(proposal, max_block_size, delay_model)
+        return proposal
