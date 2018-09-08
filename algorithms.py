@@ -70,11 +70,14 @@ class LongestChain(Algorithm):
         self.block_to_vertices[new_block.id] = new_vertex
         # start at root vertex
         parent_vertex = self.root
-        # lowest level in bfs iterator returns longest chain
-        for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
-            parent_vertex = e.target()
+
+        # parent vertex is vertex with maximum depth
+        parent_vertex = self.tree.vertex(self.depth.get_array().argmax(axis=0))
+
+        # add new node based on parent vertex
         self.tree.add_edge(parent_vertex, new_vertex)
         self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+
         return self.vertex_to_blocks[parent_vertex]
 
     def compute_k(self, epsilon, num_nodes, num_adversaries):
