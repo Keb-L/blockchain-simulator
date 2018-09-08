@@ -43,9 +43,16 @@ def log_statistics(params):
             f.write(f'Average network latency for txs: {constant_decker_wattenhorf(TX_SIZE)} sec\n')
 
 def draw_global_blocktree(global_blocktree):
+    main_chain_vp = global_blocktree.tree.new_vertex_property('int')
+
+    # color main chain a different color
+    for v in global_blocktree.main_chain():
+        main_chain_vp[global_blocktree.tree.vertex(v)] = 1
+
     graph_draw(global_blocktree.tree,
             vertex_text=global_blocktree.tree.vertex_index,
             vertex_size=50,
+            vertex_fill_color = main_chain_vp,
             vertex_font_size=15, output_size=(4200, 4200),
             edge_pen_width=1.0,
             output="./logs/global-blocktree.png")
