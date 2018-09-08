@@ -42,6 +42,8 @@ class Node():
             # add network delay
             if delay_model=='Decker-Wattenhorf':
                 event.timestamp+=decker_wattenhorf(msg_size)
+            elif delay_model=='Constant-Decker-Wattenhorf':
+                event.timestamp+=constant_decker_wattenhorf(msg_size)
             neighbor.add_to_buffer(event)
 
     def log_local_blocktree(self):

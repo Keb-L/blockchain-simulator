@@ -3,6 +3,7 @@ from node import Node
 from events import Proposal
 from algorithms import *
 from graph_tool.all import *
+from logger import log_global_blocktree, log_txs, log_proposals, log_statistics
 
 class Coordinator():
     def __init__(self, params):
@@ -29,38 +30,6 @@ class Coordinator():
             proposal = Proposal(timestamp) 
             self.proposals = np.append(self.proposals, proposal)
 
-    def log_global_blocktree(self):
-        with open('./logs/global_blocktree.log', 'w+') as f:
-            f.write(f'{self.global_blocktree.graph_to_str()}') 
-
-        with open('./logs/blocks.csv', 'w', newline='') as csvfile:
-            fieldnames = ['id', 'Parent id', 'Transactions']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for block in self.global_blocktree.blocks:
-                tx_str = ';'.join(tx.id for tx in block.txs)
-                writer.writerow({'id': f'{block.id}', 'Parent id':
-                    f'{block.parent_id}', 'Transactions': f'{tx_str}'})
-
-    def log_txs(self):
-        with open('./logs/transactions.csv', 'w', newline='') as csvfile:
-            fieldnames = ['id', 'Source Node', 'Arrival Timestamp', 'Main Chain Arrival Timestamp', 'Finalization Timestamp']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for tx in self.txs:
-                writer.writerow({'id': f'{tx.id}', 'Source Node':
-                    f'{tx.source.node_id}', 'Arrival Timestamp':
-                    f'{tx.timestamp}', 'Main Chain Arrival Timestamp':
-                    f'{tx.main_chain_timestamp}', 'Finalization Timestamp':
-                    f'{tx.finalization_timestamp}'})
-
-    def log_proposals(self):
-        with open('./logs/proposals.csv', 'w', newline='') as csvfile:
-            fieldnames = ['id', 'Timestamp']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for p in self.proposals:
-                writer.writerow({'id': f'{p.id}', 'Timestamp': f'{p.timestamp}'})
 
 
     def set_transactions(self, dataset):
@@ -146,9 +115,10 @@ class Coordinator():
                 self.update_finalized_blocks(self.proposals[p_i].timestamp)
                 p_i+=1
         
-        self.log_txs()
-        self.log_proposals()
-        self.log_global_blocktree()
+        log_txs(self.txs)
+        log_proposals(self.proposals)
+        log_global_blocktree(self.global_blocktree)
+        log_statistics(self.params)
         graph_draw(self.global_blocktree.tree,
                 vertex_text=self.global_blocktree.tree.vertex_index,
                 vertex_size=50,
