@@ -17,6 +17,8 @@ class Node():
 
         self.local_txs = np.array([])
         self.orphans = np.array([])
+        # this is an event buffer containing broadcasted both block proposals and
+        # transactions
         self.buffer = np.array([])
         self.neighbors = np.array([])
 
@@ -58,6 +60,8 @@ class Node():
                 if parent_block==None:
                     self.orphans = np.append(self.orphans, copied_block)
             b_i+=1
+
+        # remove already processed items in buffer
         self.buffer = self.buffer[b_i:]
 
         # loop over orphans repeatedly while we added an orphan block

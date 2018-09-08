@@ -22,3 +22,11 @@ def decker_wattenhorf(num_txs):
     from constants import SEC_PER_TRANSACTION
     beta = SEC_PER_TRANSACTION * num_txs + 1
     return np.random.exponential(beta)
+
+'''
+A constant beta value used for testing purposes
+'''
+def constant_decker_wattenhorf(num_txs):
+    from constants import SEC_PER_TRANSACTION
+    beta = SEC_PER_TRANSACTION * num_txs + 1
+    return beta
