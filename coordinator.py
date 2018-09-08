@@ -92,33 +92,12 @@ class Coordinator():
         p_i = 0
 
         # run main loop
-        while tx_i<self.txs.shape[0] and p_i<self.proposals.shape[0]:
+        while tx_i<self.txs.shape[0] or p_i<self.proposals.shape[0]:
             if (tx_i+p_i)%100==0:
                 print(float(tx_i+p_i)/(self.txs.shape[0]+self.proposals.shape[0]))
-            # out of all transactions
-            if tx_i==self.txs.shape[0]:
-                # process proposal
-                self.clock = self.proposals[p_i].timestamp
-                # choose proposer uniformly at random
-                proposer = random.choice(self.nodes)
-                proposal = proposer.propose(self.proposals[p_i].timestamp, 
-                    self.params['max_block_size'],
-                    self.params['fork_choice_rule'],
-                    self.params['model'])
-                # broadcast to rest of network
-                proposer.broadcast(proposal, self.params['max_block_size'],
-                        self.params['model'])
-                self.update_finalized_blocks(self.proposals[p_i].timestamp)
-                p_i+=1
-            # out of all proposals
-            elif p_i==self.proposals.shape[0]:
-                tx = self.txs[tx_i]
-                source_node = tx.source
-                source_node.broadcast(tx, self.params['max_block_size'],
-                        self.params['model'])
-                self.clock = tx.timestamp
-                tx_i+=1
-            else:
+            # still have valid txs and proposals
+            if tx_i<self.txs.shape[0] and p_i<self.proposals.shape[0]:
+                # transaction before proposal
                 if self.txs[tx_i].timestamp < self.proposals[p_i].timestamp:
                     # transaction processing occurs when a node is selected to
                     # be a proposer, so don't do anything but increment
@@ -132,7 +111,6 @@ class Coordinator():
                     tx_i+=1
                 # proposal before transaction
                 else:
-                    # process proposal
                     self.clock = self.proposals[p_i].timestamp
                     # choose proposer uniformly at random
                     proposer = random.choice(self.nodes)
@@ -145,6 +123,28 @@ class Coordinator():
                             self.params['model'])
                     self.update_finalized_blocks(self.proposals[p_i].timestamp)
                     p_i+=1
+            # out of all proposals
+            elif p_i==self.proposals.shape[0]:
+                tx = self.txs[tx_i]
+                source_node = tx.source
+                source_node.broadcast(tx, self.params['max_block_size'],
+                        self.params['model'])
+                self.clock = tx.timestamp
+                tx_i+=1
+            # out of all transactions
+            elif tx_i==self.txs.shape[0]:
+                self.clock = self.proposals[p_i].timestamp
+                # choose proposer uniformly at random
+                proposer = random.choice(self.nodes)
+                proposal = proposer.propose(self.proposals[p_i], 
+                    self.params['max_block_size'],
+                    self.params['fork_choice_rule'],
+                    self.params['model'], self.global_blocktree)
+                # broadcast to rest of network
+                proposer.broadcast(proposal, self.params['max_block_size'],
+                        self.params['model'])
+                self.update_finalized_blocks(self.proposals[p_i].timestamp)
+                p_i+=1
         
         self.log_txs()
         self.log_proposals()
