@@ -1,4 +1,5 @@
 import csv
+from graph_tool.all import *
 from network import constant_decker_wattenhorf
 from constants import TX_SIZE
 
@@ -40,3 +41,11 @@ def log_statistics(params):
         if params['model']=='Decker-Wattenhorf' or params['model']=='Constant-Decker-Wattenhorf':
             f.write(f'Average network latency for blocks: {constant_decker_wattenhorf(params["max_block_size"])} sec\n')
             f.write(f'Average network latency for txs: {constant_decker_wattenhorf(TX_SIZE)} sec\n')
+
+def draw_global_blocktree(global_blocktree):
+    graph_draw(global_blocktree.tree,
+            vertex_text=global_blocktree.tree.vertex_index,
+            vertex_size=50,
+            vertex_font_size=15, output_size=(4200, 4200),
+            edge_pen_width=1.0,
+            output="./logs/global-blocktree.png")
