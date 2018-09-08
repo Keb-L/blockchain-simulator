@@ -103,7 +103,8 @@ class Node():
         main_chain = self.local_blocktree.main_chain()
         main_chain_txs = np.array([])
         for v in main_chain:
-            main_chain_txs = np.append(main_chain_txs, self.local_blocktree.blocks[v].txs)
+            main_chain_txs = np.append(main_chain_txs,
+                    self.local_blocktree.vertex_to_blocks[v].txs)
 
         tx_i = 0
         tx_str = ''

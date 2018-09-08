@@ -11,7 +11,7 @@ def log_global_blocktree(global_blocktree):
         fieldnames = ['id', 'Parent id', 'Transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        for block in global_blocktree.blocks:
+        for block in global_blocktree.vertex_to_blocks:
             tx_str = ';'.join(tx.id for tx in block.txs)
             writer.writerow({'id': f'{block.id}', 'Parent id':
                 f'{block.parent_id}', 'Transactions': f'{tx_str}'})

@@ -9,10 +9,16 @@ from constants import FINALIZATION_DEPTH
 class Algorithm():
     def __init__(self):
         self.tree = Graph()
-        self.blocks = self.tree.new_vertex_property('object')
+        # maps vertex to block
+        self.vertex_to_blocks = self.tree.new_vertex_property('object')
+        # maps block to vertex
+        self.block_to_vertices = {}
 
+        # add genesis block and vertex
         self.root = self.tree.add_vertex()
-        self.blocks[self.root] = Block(id='Genesis')
+        genesis = Block(id='Genesis')
+        self.vertex_to_blocks[self.root] = genesis
+        self.block_to_vertices[genesis.id] = self.root
 
     @abstractmethod
     def fork_choice_rule(self, new_block):
@@ -29,16 +35,17 @@ class Algorithm():
     def add_block(self, new_block):
         # create new vertex
         new_vertex = self.tree.add_vertex()
-        self.blocks[new_vertex] = new_block
+        self.vertex_to_blocks[new_vertex] = new_block
+        self.block_to_vertices[new_block.id] = new_vertex
 
         parent_id = new_block.parent_id
         parent_vertex = None
         parent_block = None
         # look through all blocks and find appropriate parent block
         for vertex in self.tree.vertices():
-            if self.blocks[vertex].id==parent_id:
+            if self.vertex_to_blocks[vertex].id==parent_id:
                 parent_vertex = vertex
-                parent_block = self.blocks[vertex]
+                parent_block = self.vertex_to_blocks[vertex]
                 self.tree.add_edge(parent_vertex, new_vertex)
                 break
         return parent_block
@@ -46,7 +53,7 @@ class Algorithm():
     def graph_to_str(self, vertex=None, level=0):
         if vertex==None:
             vertex=self.root
-        ret = '   '*level+f'{self.blocks[vertex].id}\n'
+        ret = '   '*level+f'{self.vertex_to_blocks[vertex].id}\n'
         for e in vertex.out_edges():
             child = e.target()	
             ret += self.graph_to_str(vertex=child, level=level+1)
@@ -55,14 +62,15 @@ class Algorithm():
 class LongestChain(Algorithm):
     def fork_choice_rule(self, new_block):
         new_vertex = self.tree.add_vertex()
-        self.blocks[new_vertex] = new_block
+        self.vertex_to_blocks[new_vertex] = new_block
+        self.block_to_vertices[new_block.id] = new_vertex
         # start at root vertex
         parent_vertex = self.root
         # lowest level in bfs iterator returns longest chain
         for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
             parent_vertex = e.target()
         self.tree.add_edge(parent_vertex, new_vertex)
-        return self.blocks[parent_vertex]
+        return self.vertex_to_blocks[parent_vertex]
 
     def compute_k(self, epsilon, num_nodes, num_adversaries):
         # compute finalization depth
@@ -84,7 +92,7 @@ class LongestChain(Algorithm):
     def is_finalized(self, block, params):
         # search for starting block
         for v in self.tree.vertices():
-            if self.blocks[v]==block:
+            if self.vertex_to_blocks[v]==block:
                 source = v
 
         epsilon = params['tx_error_prob']
@@ -148,11 +156,12 @@ class GHOST(Algorithm):
 
     def fork_choice_rule(self, new_block):
         new_vertex = self.tree.add_vertex()
-        self.blocks[new_vertex] = new_block
+        self.vertex_to_blocks[new_vertex] = new_block
+        self.block_to_vertices[new_block.id] = new_vertex
 
         max_subtree_vertex = self.heaviest_subtree()
         self.tree.add_edge(max_subtree_vertex, new_vertex)
-        return self.blocks[max_subtree_vertex]
+        return self.vertex_to_blocks[max_subtree_vertex]
 
     '''
     Both LongestChain() and GHOST() have the same finalization protocol, hence
@@ -178,7 +187,7 @@ class GHOST(Algorithm):
     def is_finalized(self, block, params):
         # search for starting block
         for v in self.tree.vertices():
-            if self.blocks[v]==block:
+            if self.vertex_to_blocks[v]==block:
                 source = v
 
         epsilon = params['tx_error_prob']

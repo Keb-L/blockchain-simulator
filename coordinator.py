@@ -36,7 +36,7 @@ class Coordinator():
 
     def update_finalized_blocks(self, timestamp):
         for v in self.global_blocktree.tree.vertices():
-            b = self.global_blocktree.blocks[v]
+            b = self.global_blocktree.vertex_to_blocks[v]
             if self.params['fork_choice_rule']=='longest-chain':
                 is_finalized = self.global_blocktree.is_finalized(b, self.params)
             if is_finalized:
