@@ -10,8 +10,8 @@ class Block():
             self.id = uuid.uuid4().hex[0:5] 
         else:
             self.id = id
-        if parent_id!=None:
-            self.parent_id = parent_id 
+
+        self.parent_id = parent_id 
 
     def add_tx(self, tx):
         self.txs = np.append(self.txs, tx)

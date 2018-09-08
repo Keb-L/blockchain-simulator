@@ -33,6 +33,15 @@ class Coordinator():
         with open('./logs/global_blocktree.log', 'w+') as f:
             f.write(f'{self.global_blocktree.graph_to_str()}') 
 
+        with open('./logs/blocks.csv', 'w', newline='') as csvfile:
+            fieldnames = ['id', 'Parent id', 'Transactions']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for block in self.global_blocktree.blocks:
+                tx_str = ';'.join(tx.id for tx in block.txs)
+                writer.writerow({'id': f'{block.id}', 'Parent id':
+                    f'{block.parent_id}', 'Transactions': f'{tx_str}'})
+
     def log_txs(self):
         with open('./logs/transactions.csv', 'w', newline='') as csvfile:
             fieldnames = ['id', 'Source Node', 'Arrival Timestamp', 'Main Chain Arrival Timestamp', 'Finalization Timestamp']
@@ -47,11 +56,11 @@ class Coordinator():
 
     def log_proposals(self):
         with open('./logs/proposals.csv', 'w', newline='') as csvfile:
-            fieldnames = ['Timestamp']
+            fieldnames = ['id', 'Timestamp']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             for p in self.proposals:
-                writer.writerow({'Timestamp': f'{p.timestamp}'})
+                writer.writerow({'id': f'{p.id}', 'Timestamp': f'{p.timestamp}'})
 
 
     def set_transactions(self, dataset):

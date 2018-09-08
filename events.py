@@ -18,6 +18,7 @@ class Transaction():
 class Proposal():
     def __init__(self, timestamp):
         self.timestamp = timestamp
+        self.id = uuid.uuid4().hex[0:6]
 
     def set_block(self, block):
         self.block = block
