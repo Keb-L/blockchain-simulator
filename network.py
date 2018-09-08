@@ -18,15 +18,15 @@ From the green line in Fig 1, we can approximate the function as:
 
 We use this as a parameter into our exponential delay
 '''
-def decker_wattenhorf(num_txs):
+def decker_wattenhorf(msg_size):
     from constants import SEC_PER_TRANSACTION
-    beta = SEC_PER_TRANSACTION * num_txs + 1
+    beta = SEC_PER_TRANSACTION * msg_size + 1
     return np.random.exponential(beta)
 
 '''
 A constant beta value used for testing purposes
 '''
-def constant_decker_wattenhorf(num_txs):
+def constant_decker_wattenhorf(msg_size):
     from constants import SEC_PER_TRANSACTION
-    beta = SEC_PER_TRANSACTION * num_txs + 1
+    beta = SEC_PER_TRANSACTION * msg_size + 1
     return beta

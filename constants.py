@@ -23,3 +23,8 @@ Transaction rate in transactions/sec used when generating a transaction
 dataset
 '''
 TX_RATE = 1
+
+'''
+Transaction size used for computing network latency when broadcasting transactions 
+'''
+TX_SIZE = 1
