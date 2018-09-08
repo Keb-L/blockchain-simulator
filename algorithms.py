@@ -13,12 +13,15 @@ class Algorithm():
         self.vertex_to_blocks = self.tree.new_vertex_property('object')
         # maps block to vertex
         self.block_to_vertices = {}
+        # create a new vertex property corresponding to depth
+        self.depth = self.tree.new_vertex_property('int')
 
         # add genesis block and vertex
         self.root = self.tree.add_vertex()
         genesis = Block(id='Genesis')
         self.vertex_to_blocks[self.root] = genesis
         self.block_to_vertices[genesis.id] = self.root
+        self.depth[self.root] = 0
 
     @abstractmethod
     def fork_choice_rule(self, new_block):
@@ -46,6 +49,7 @@ class Algorithm():
             parent_vertex = self.block_to_vertices[parent_id]
             parent_block = self.vertex_to_blocks[parent_vertex]
             self.tree.add_edge(parent_vertex, new_vertex)
+            self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
             return parent_block
         else:
             return None
@@ -70,6 +74,7 @@ class LongestChain(Algorithm):
         for e in gt.bfs_iterator(self.tree, self.tree.vertex(0)):
             parent_vertex = e.target()
         self.tree.add_edge(parent_vertex, new_vertex)
+        self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
         return self.vertex_to_blocks[parent_vertex]
 
     def compute_k(self, epsilon, num_nodes, num_adversaries):
@@ -159,6 +164,7 @@ class GHOST(Algorithm):
 
         max_subtree_vertex = self.heaviest_subtree()
         self.tree.add_edge(max_subtree_vertex, new_vertex)
+        self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
         return self.vertex_to_blocks[max_subtree_vertex]
 
     '''
