@@ -6,7 +6,6 @@ from logger import log_global_blocktree, log_txs, log_proposals, log_statistics,
 
 class Coordinator():
     def __init__(self, params):
-        self.clock = 0
         self.proposals = np.array([])
         self.nodes = np.array([])
         self.txs = np.array([])
@@ -22,13 +21,12 @@ class Coordinator():
         self.nodes = np.append(self.nodes, node)
 
     def generate_proposals(self):
-        start_time = self.clock
-        timestamp = self.clock
+        start_time = 0
+        timestamp = 0
         while timestamp<self.params['duration']+start_time: 
-            timestamp = timestamp + random.expovariate(self.params['proposal_rate'])
+            timestamp = timestamp + np.random.exponential(1.0/self.params['proposal_rate'])
             proposal = Proposal(timestamp) 
             self.proposals = np.append(self.proposals, proposal)
-
 
 
     def set_transactions(self, dataset):
@@ -75,11 +73,9 @@ class Coordinator():
                     source_node.add_to_local_txs(tx)
                     source_node.broadcast(tx, self.params['max_block_size'],
                             self.params['model'])
-                    self.clock = tx.timestamp
                     tx_i+=1
                 # proposal before transaction
                 else:
-                    self.clock = self.proposals[p_i].timestamp
                     # choose proposer uniformly at random
                     proposer = random.choice(self.nodes)
                     proposal = proposer.propose(self.proposals[p_i],
@@ -97,11 +93,9 @@ class Coordinator():
                 source_node = tx.source
                 source_node.broadcast(tx, self.params['max_block_size'],
                         self.params['model'])
-                self.clock = tx.timestamp
                 tx_i+=1
             # out of all transactions
             elif tx_i==self.txs.shape[0]:
-                self.clock = self.proposals[p_i].timestamp
                 # choose proposer uniformly at random
                 proposer = random.choice(self.nodes)
                 proposal = proposer.propose(self.proposals[p_i], 

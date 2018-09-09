@@ -6,7 +6,7 @@ def poisson(rate, duration, start_time, nodes):
     timestamp = start_time
 
     while timestamp<duration+start_time: 
-        timestamp = timestamp + random.expovariate(rate)
+        timestamp = timestamp + np.random.exponential(1.0/rate)
         tx = Transaction(timestamp, np.random.choice(nodes))
         data.append(tx)
 
