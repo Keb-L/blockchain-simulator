@@ -106,8 +106,9 @@ class LongestChain(Algorithm):
         finalization_depth = self.compute_k(epsilon, params['num_nodes'],
                 params['num_adversaries'])
 
-        is_valid_depth = finalization_depth in gt.shortest_distance(self.tree,
-                source, max_dist=finalization_depth).get_array()
+        current_depth = self.depth[self.tree.vertex(source)]
+
+        is_valid_depth = current_depth >= finalization_depth
 
         # compute whether or not there is an error in transaction confirmation
         error = False if np.random.uniform(0, 1)<=1-epsilon else True
@@ -200,8 +201,9 @@ class GHOST(Algorithm):
         finalization_depth = self.compute_k(epsilon, params['num_nodes'],
                 params['num_adversaries'])
 
-        is_valid_depth = finalization_depth in gt.shortest_distance(self.tree,
-                source, max_dist=finalization_depth).get_array()
+        current_depth = self.depth[self.tree.vertex(source)]
+
+        is_valid_depth = current_depth >= finalization_depth
 
         # compute whether or not there is an error in transaction confirmation
         error = False if np.random.uniform(0, 1)<=1-epsilon else True
