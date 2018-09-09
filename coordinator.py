@@ -2,7 +2,7 @@ import random, csv, numpy as np
 from node import Node
 from events import Proposal
 from algorithms import *
-from logger import log_global_blocktree, log_txs, log_proposals, log_statistics, draw_global_blocktree
+from logger import log_global_blocktree, log_txs, log_statistics, draw_global_blocktree
 
 class Coordinator():
     def __init__(self, params):
@@ -109,7 +109,6 @@ class Coordinator():
                 p_i+=1
         
         log_txs(self.txs)
-        log_proposals(self.proposals)
         log_global_blocktree(self.global_blocktree)
         log_statistics(self.params)
         draw_global_blocktree(self.global_blocktree)

@@ -28,14 +28,6 @@ def log_txs(txs):
                 f'{tx.main_chain_timestamp}', 'Finalization Timestamp':
                 f'{tx.finalization_timestamp}'})
 
-def log_proposals(proposals):
-    with open('./logs/proposals.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'Timestamp']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for p in proposals:
-            writer.writerow({'id': f'{p.id}', 'Timestamp': f'{p.timestamp}'})
-
 def log_statistics(params):
     with open('./logs/stats.log', 'w+') as f:
         if params['model']=='Decker-Wattenhorf' or params['model']=='Constant-Decker-Wattenhorf':
