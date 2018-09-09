@@ -37,11 +37,15 @@ def log_statistics(params):
 def draw_global_blocktree(global_blocktree):
     main_chain_vp = global_blocktree.tree.new_vertex_property('int')
 
+
     # color main chain a different color
     for v in global_blocktree.main_chain():
         main_chain_vp[global_blocktree.tree.vertex(v)] = 1
 
+    pos = radial_tree_layout(global_blocktree.tree, global_blocktree.tree.vertex(0))
+
     graph_draw(global_blocktree.tree,
+            pos = pos,
             vertex_text=global_blocktree.tree.vertex_index,
             vertex_size=50,
             vertex_fill_color = main_chain_vp,
