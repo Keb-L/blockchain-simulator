@@ -32,14 +32,15 @@ class Coordinator():
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
 
-    def update_finalized_blocks(self, timestamp):
+    def update_finalized_blocks(self):
         for v in self.global_blocktree.tree.vertices():
             b = self.global_blocktree.vertex_to_blocks[v]
             if self.params['fork_choice_rule']=='longest-chain':
                 is_finalized = self.global_blocktree.is_finalized(b, self.params)
             if is_finalized:
                 for tx in b.txs:
-                    tx.set_finalization_timestamp(timestamp)
+                    tx.set_main_chain_arrival_timestamp(b.proposal_timestamp)
+                    tx.set_finalization_timestamp(b.finalization_timestamp)
 
     '''
     Main simulation function
@@ -85,7 +86,6 @@ class Coordinator():
                     # broadcast to rest of network
                     proposer.broadcast(proposal, self.params['max_block_size'],
                             self.params['model'])
-                    self.update_finalized_blocks(self.proposals[p_i].timestamp)
                     p_i+=1
             # out of all proposals
             elif p_i==self.proposals.shape[0]:
@@ -105,9 +105,9 @@ class Coordinator():
                 # broadcast to rest of network
                 proposer.broadcast(proposal, self.params['max_block_size'],
                         self.params['model'])
-                self.update_finalized_blocks(self.proposals[p_i].timestamp)
                 p_i+=1
-        
+
+        self.update_finalized_blocks()
         log_txs(self.txs)
         log_global_blocktree(self.global_blocktree)
         log_statistics(self.params)
