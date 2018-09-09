@@ -76,9 +76,10 @@ if __name__=='__main__':
     
     # generate mock poisson dataset
     if params['dataset']=='poisson':
-        tx_dataset = generate_tx_dataset.poisson(TX_RATE, params['duration'], c.clock, c.nodes)
+        tx_dataset = generate_tx_dataset.poisson(TX_RATE, params['duration'], 0, c.nodes)
     elif params['dataset']=='deterministic':
-        tx_dataset = generate_tx_dataset.deterministic(TX_RATE, params['duration'], c.clock, c.nodes)
+        tx_dataset = generate_tx_dataset.deterministic(TX_RATE,
+                params['duration'], 0, c.nodes)
 
     # generate proposal events
     c.generate_proposals()

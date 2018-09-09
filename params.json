@@ -31,9 +31,9 @@
     "Probability of error in transaction confirmation": 0.1, 
     "Block proposal rate parameter": 0.5, 
     "Transaction dataset": "poisson",
-    "Network model": "Decker-Wattenhorf",
+    "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 1200
+    "Duration (sec)": 500
   },
   "GHOST-test":  {
     "Number of nodes": 100, 

@@ -1,10 +1,10 @@
 import numpy as np
 
 '''
-Simple model of simple latency of 1 sec
+Simple model of simple latency of 0 sec
 '''
-def fixed_latency():
-    return 1
+def zero_latency():
+    return 0
 '''
 An approximation of network latency in the Bitcoin network based on the
 following paper: https://ieeexplore.ieee.org/document/6688704/.

@@ -1,7 +1,7 @@
 import logging, copy, numpy as np
 from block import Block
 import graph_tool.all as gt
-from network import fixed_latency, decker_wattenhorf
+from network import zero_latency, decker_wattenhorf, constant_decker_wattenhorf
 from algorithms import *
 from constants import TX_SIZE
 
@@ -34,16 +34,22 @@ class Node():
         self.local_txs = np.append(self.local_txs, tx)
 
     def broadcast(self, event, max_block_size, delay_model):
+        if event.__class__.__name__=='Transaction':
+            msg_size = TX_SIZE
+        elif event.__class__.__name__=='Proposal':
+            msg_size = max_block_size
+
+        # add network delay
+        if delay_model=='Decker-Wattenhorf':
+            delay = decker_wattenhorf(msg_size)
+        elif delay_model=='Constant-Decker-Wattenhorf':
+            delay = constant_decker_wattenhorf(msg_size)
+        elif delay_model=='Zero':
+            delay = zero_latency()
+
+        event.timestamp+=delay
+
         for neighbor in self.neighbors:
-            if event.__class__.__name__=='Transaction':
-                msg_size = TX_SIZE
-            elif event.__class__.__name__=='Proposal':
-                msg_size = max_block_size
-            # add network delay
-            if delay_model=='Decker-Wattenhorf':
-                event.timestamp+=decker_wattenhorf(msg_size)
-            elif delay_model=='Constant-Decker-Wattenhorf':
-                event.timestamp+=constant_decker_wattenhorf(msg_size)
             neighbor.add_to_buffer(event)
 
     def log_local_blocktree(self):
@@ -107,7 +113,6 @@ class Node():
                     self.local_blocktree.vertex_to_blocks[v].txs)
 
         tx_i = 0
-        tx_str = ''
         while tx_i<len(self.local_txs):
             # if we exceed current time, exit loop
             if self.local_txs[tx_i].timestamp>proposal.timestamp:
@@ -118,7 +123,6 @@ class Node():
             elif self.local_txs[tx_i] not in main_chain_txs:
                 self.local_txs[tx_i].set_main_chain_arrival_timestamp(proposal.timestamp)
                 new_block.add_tx(self.local_txs[tx_i])
-                tx_str+=f'{self.local_txs[tx_i].id},'
             tx_i+=1
 
         proposal.set_block(new_block)
