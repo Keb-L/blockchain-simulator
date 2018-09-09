@@ -103,7 +103,7 @@ class Node():
         self.process_buffer(proposal.timestamp)
 
         # append new block to appropriate chain
-        new_block = Block()
+        new_block = Block(proposal_timestamp=proposal.timestamp)
 
         # find all txs in main chain
         main_chain = self.local_blocktree.main_chain()
@@ -132,7 +132,8 @@ class Node():
         new_block.set_parent_id(local_parent_block.id)
         
         # copy block and add new block to global blocktree
-        copied_block = Block(new_block.txs, new_block.id, new_block.parent_id) 
+        copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
+                proposal_timestamp=new_block.proposal_timestamp) 
         global_parent_block = global_blocktree.add_block(copied_block)
         copied_block.set_parent_id(global_parent_block.id)
 

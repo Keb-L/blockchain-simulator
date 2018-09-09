@@ -1,7 +1,7 @@
 import numpy as np, uuid
 
 class Block():
-    def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp):
+    def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0):
         if txs is None:
             self.txs = np.array([])
         else:
@@ -11,8 +11,8 @@ class Block():
         else:
             self.id = id
 
-        self.parent_id = parent_id 
         self.proposal_timestamp = proposal_timestamp
+        self.parent_id = parent_id 
 
         self.finalization_timestamp = None
 
