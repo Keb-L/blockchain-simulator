@@ -42,6 +42,10 @@ def log_statistics(params, global_blocktree):
             csvfile.write(f'Average network latency for blocks (sec),{constant_decker_wattenhorf(params["max_block_size"])}\n')
             csvfile.write(f'Average network latency for txs (sec),{constant_decker_wattenhorf(TX_SIZE)}\n')
 
+        # log finalization depth
+        finalization_depth = global_blocktree.compute_k(params['tx_error_prob'], params['num_nodes'], params['num_adversaries'])
+        csvfile.write(f'Finalization depth,{finalization_depth}\n')
+
         # log main chain information blocks
         num_blocks = len(global_blocktree.tree.get_vertices())
         main_chain_length = len(global_blocktree.main_chain())

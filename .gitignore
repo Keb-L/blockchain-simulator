@@ -3,4 +3,5 @@ logs/
 .DS_Store
 *.png
 results/.*
+results/*.json
 *.swp
