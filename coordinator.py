@@ -32,16 +32,33 @@ class Coordinator():
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
 
-    def update_finalized_blocks(self):
-        for v in self.global_blocktree.tree.vertices():
-            b = self.global_blocktree.vertex_to_blocks[v]
-            if self.params['fork_choice_rule']=='longest-chain':
-                is_finalized = self.global_blocktree.is_finalized(b, self.params)
-            if is_finalized:
-                for tx in b.txs:
-                    tx.set_main_chain_arrival_timestamp(b.proposal_timestamp)
-                    tx.set_finalization_timestamp(b.finalization_timestamp)
+    def set_timestamps(self):
+        # get main chain
+        main_chain = self.global_blocktree.main_chain()
 
+        # initialize vertex depth to 0 and get finalization depth
+        finalization_depth = self.global_blocktree.compute_k(self.params['tx_error_prob'],
+                self.params['num_nodes'], self.params['num_adversaries'])
+
+        for depth in range(0, len(main_chain)):
+            if depth+finalization_depth>len(main_chain)-1:
+                break
+            else:
+                # top block is block depth blocks deep on main chain
+                top_block = self.global_blocktree.vertex_to_blocks[main_chain[depth]]
+                # bottom block is block depth+finalization_depth blocks deep on
+                # main chain
+                bottom_block = self.global_blocktree.vertex_to_blocks[main_chain[depth+finalization_depth]]
+
+                # top block's finalization timestamp is bottom block's proposal
+                # timestamp
+                top_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
+                # set main chain arrival and finalization timestamp of all transactions in top block
+                for tx in top_block.txs:
+                    tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
+                    tx.set_finalization_timestamp(top_block.finalization_timestamp)
+
+                
     '''
     Main simulation function
     Coordinator checks head of proposal and tx queue and processes earlier
@@ -107,7 +124,7 @@ class Coordinator():
                         self.params['model'])
                 p_i+=1
 
-        self.update_finalized_blocks()
+        self.set_timestamps()
         log_txs(self.txs)
         log_global_blocktree(self.global_blocktree)
         log_statistics(self.params)
