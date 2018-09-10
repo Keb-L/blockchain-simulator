@@ -33,7 +33,11 @@ class Algorithm():
 
     @abstractmethod
     def main_chain(self):
-        pass
+        leaf_block = self.fork_choice_rule()
+        leaf_vertex = self.block_to_vertices[leaf_block.id]
+        main_chain = gt.shortest_path(self.tree, self.root,
+                leaf_vertex)[0]
+        return main_chain
 
     # add a new block given a parent block
     def add_block(self, parent_block, new_block):
@@ -122,24 +126,6 @@ class LongestChain(Algorithm):
 
         return finalized
 
-    def main_chain(self):
-        # find leafs of tree by determining which nodes have out degree 0
-        out_degrees = self.tree.get_out_degrees(self.tree.get_vertices())
-        leaf_indices = np.where(out_degrees == 0)[0]
-        
-        # find main chain
-        max_len = 0
-        main_chain = np.array([])
-        index = 0 
-        for v in self.tree.vertices():
-            if index in leaf_indices:
-                chain = gt.shortest_path(self.tree, self.root, v)
-                if len(chain[0])>max_len:
-                    main_chain = chain[0]
-                    max_len = len(chain[0])
-            index+=1
-
-        return main_chain
 
 class GHOST(Algorithm):
     def heaviest_subtree_helper(self, vertex):
@@ -213,8 +199,3 @@ class GHOST(Algorithm):
         finalized = True if is_valid_depth and not error else False
 
         return finalized
-
-    def main_chain(self):
-        max_subtree_vertex = self.heaviest_subtree()
-        main_chain = gt.shortest_path(self.tree, self.root, max_subtree_vertex)
-        return main_chain
