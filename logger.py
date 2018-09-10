@@ -35,11 +35,23 @@ def log_txs(txs):
                 f'{tx.main_chain_timestamp}', 'Finalization Timestamp':
                 f'{tx.finalization_timestamp}'})
 
-def log_statistics(params):
+def log_statistics(params, global_blocktree):
     with open('./logs/stats.log', 'w+') as f:
+        # log network latency information
         if params['model']=='Decker-Wattenhorf' or params['model']=='Constant-Decker-Wattenhorf':
             f.write(f'Average network latency for blocks: {constant_decker_wattenhorf(params["max_block_size"])} sec\n')
             f.write(f'Average network latency for txs: {constant_decker_wattenhorf(TX_SIZE)} sec\n')
+
+        # log main chain information blocks
+        num_blocks = len(global_blocktree.tree.get_vertices())
+        main_chain_length = len(global_blocktree.main_chain())
+        num_orphan_blocks = num_blocks - main_chain_length 
+        f.write(f'Number of blocks: {num_blocks}\n')
+        f.write(f'Main chain length: {main_chain_length}\n')
+        f.write(f'Number of orphan blocks: {num_orphan_blocks}\n')
+        f.write(f'Fraction of orphan blocks: {float(num_orphan_blocks)/num_blocks}\n')
+
+
 
 def draw_global_blocktree(global_blocktree):
     main_chain_vp = global_blocktree.tree.new_vertex_property('int')

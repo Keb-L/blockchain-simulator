@@ -127,7 +127,7 @@ class Coordinator():
         self.set_timestamps()
         log_txs(self.txs)
         log_global_blocktree(self.global_blocktree)
-        log_statistics(self.params)
+        log_statistics(self.params, self.global_blocktree)
         draw_global_blocktree(self.global_blocktree)
 
         # ******* 
