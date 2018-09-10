@@ -35,12 +35,21 @@ class Algorithm():
     def main_chain(self):
         pass
 
-    def add_block(self, new_block):
+    # add a new block given a parent block
+    def add_block(self, parent_block, new_block):
         # create new vertex
         new_vertex = self.tree.add_vertex()
         self.vertex_to_blocks[new_vertex] = new_block
         self.block_to_vertices[new_block.id] = new_vertex
 
+        parent_vertex = self.block_to_vertices[parent_block.id]
+
+        self.tree.add_edge(parent_vertex, new_vertex)
+        self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+
+
+    # adds block based on parent id
+    def add_block_by_parent_id(self, new_block):
         parent_id = new_block.parent_id
 
         # if parent id is in mapping, add the block and return the block.
@@ -48,8 +57,7 @@ class Algorithm():
         if parent_id in self.block_to_vertices:
             parent_vertex = self.block_to_vertices[parent_id]
             parent_block = self.vertex_to_blocks[parent_vertex]
-            self.tree.add_edge(parent_vertex, new_vertex)
-            self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+            self.add_block(parent_block, new_block)
             return parent_block
         else:
             return None
@@ -65,20 +73,13 @@ class Algorithm():
 
 class LongestChain(Algorithm):
     def fork_choice_rule(self, new_block):
-        new_vertex = self.tree.add_vertex()
-        self.vertex_to_blocks[new_vertex] = new_block
-        self.block_to_vertices[new_block.id] = new_vertex
-        # start at root vertex
-        parent_vertex = self.root
-
         # parent vertex is vertex with maximum depth
         parent_vertex = self.tree.vertex(self.depth.get_array().argmax(axis=0))
+        parent_block = self.vertex_to_blocks[parent_vertex]
 
-        # add new node based on parent vertex
-        self.tree.add_edge(parent_vertex, new_vertex)
-        self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+        self.add_block(parent_block, new_block)
 
-        return self.vertex_to_blocks[parent_vertex]
+        return parent_block
 
     def compute_k(self, epsilon, num_nodes, num_adversaries):
         # compute finalization depth
@@ -162,14 +163,13 @@ class GHOST(Algorithm):
         return None
 
     def fork_choice_rule(self, new_block):
-        new_vertex = self.tree.add_vertex()
-        self.vertex_to_blocks[new_vertex] = new_block
-        self.block_to_vertices[new_block.id] = new_vertex
-
+        # parent vertex is vertex with maximum size subtree
         max_subtree_vertex = self.heaviest_subtree()
-        self.tree.add_edge(max_subtree_vertex, new_vertex)
-        self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
-        return self.vertex_to_blocks[max_subtree_vertex]
+        parent_block = self.vertex_to_blocks[max_subtree_vertex]
+
+        self.add_block(parent_block, new_block)
+
+        return parent_block
 
     '''
     Both LongestChain() and GHOST() have the same finalization protocol, hence

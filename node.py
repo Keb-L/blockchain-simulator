@@ -69,7 +69,7 @@ class Node():
                 copied_block = Block(event.block.txs, event.block.id,
                         event.block.parent_id) 
                 # add block based on parent id
-                parent_block = self.local_blocktree.add_block(copied_block)
+                parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                 if parent_block==None:
                     self.orphans = np.append(self.orphans, copied_block)
             b_i+=1
@@ -85,7 +85,7 @@ class Node():
             # loop over orphans and update remaining orphans
             remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
             for i, orphan in enumerate(self.orphans):
-                parent_block = self.local_blocktree.add_block(orphan)
+                parent_block = self.local_blocktree.add_block_by_parent_id(orphan)
                 if parent_block==None:
                     # did not add orphan block, block remains as orphan
                     remaining_orphans[i] = True
@@ -134,7 +134,7 @@ class Node():
         # copy block and add new block to global blocktree
         copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
                 proposal_timestamp=new_block.proposal_timestamp) 
-        global_parent_block = global_blocktree.add_block(copied_block)
+        global_parent_block = global_blocktree.add_block_by_parent_id(copied_block)
         copied_block.set_parent_id(global_parent_block.id)
 
         return proposal
