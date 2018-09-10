@@ -47,6 +47,12 @@ class Algorithm():
         self.tree.add_edge(parent_vertex, new_vertex)
         self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
 
+    # add block based on fork choice rule
+    def add_block_by_fork_choice_rule(self, new_block):
+        parent_block = self.fork_choice_rule()
+        self.add_block(parent_block, new_block)
+
+        return parent_block
 
     # adds block based on parent id
     def add_block_by_parent_id(self, new_block):
@@ -72,12 +78,10 @@ class Algorithm():
         return ret
 
 class LongestChain(Algorithm):
-    def fork_choice_rule(self, new_block):
+    def fork_choice_rule(self):
         # parent vertex is vertex with maximum depth
         parent_vertex = self.tree.vertex(self.depth.get_array().argmax(axis=0))
         parent_block = self.vertex_to_blocks[parent_vertex]
-
-        self.add_block(parent_block, new_block)
 
         return parent_block
 
@@ -162,12 +166,10 @@ class GHOST(Algorithm):
                 vertex=max_subtree_vertex
         return None
 
-    def fork_choice_rule(self, new_block):
+    def fork_choice_rule(self):
         # parent vertex is vertex with maximum size subtree
         max_subtree_vertex = self.heaviest_subtree()
         parent_block = self.vertex_to_blocks[max_subtree_vertex]
-
-        self.add_block(parent_block, new_block)
 
         return parent_block
 

@@ -23,4 +23,4 @@ class Block():
         self.parent_id = parent_id
 
     def set_finalization_timestamp(self, finalization_timestamp):
-        self.finalizatin_timestamp = finalization_timestamp
+        self.finalization_timestamp = finalization_timestamp

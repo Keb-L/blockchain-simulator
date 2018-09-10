@@ -128,7 +128,7 @@ class Node():
         proposal.set_block(new_block)
 
         # find selected chain based on schema and add block
-        local_parent_block = self.local_blocktree.fork_choice_rule(new_block)
+        local_parent_block = self.local_blocktree.add_block_by_fork_choice_rule(new_block)
         new_block.set_parent_id(local_parent_block.id)
         
         # copy block and add new block to global blocktree
