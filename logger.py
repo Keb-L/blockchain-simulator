@@ -8,13 +8,20 @@ def log_global_blocktree(global_blocktree):
         f.write(f'{global_blocktree.graph_to_str()}') 
 
     with open('./logs/blocks.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'Parent id', 'Transactions']
+        fieldnames = ['id', 'Parent id', 'Proposal timestamp', 
+                'Finalization timestamp', 'Depth', 'Finalized', 'Transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for block in global_blocktree.vertex_to_blocks:
+            vertex = global_blocktree.block_to_vertices[block.id] 
             tx_str = ';'.join(tx.id for tx in block.txs)
+            depth = global_blocktree.depth[vertex]
+            is_finalized = False if block.finalization_timestamp==None else True
             writer.writerow({'id': f'{block.id}', 'Parent id':
-                f'{block.parent_id}', 'Transactions': f'{tx_str}'})
+                f'{block.parent_id}', 'Proposal timestamp':
+                f'{block.proposal_timestamp}', 'Finalization timestamp':
+                f'{block.finalization_timestamp}', 'Depth': f'{depth}',
+                'Finalized': f'{is_finalized}', 'Transactions': f'{tx_str}'})
 
 def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:
