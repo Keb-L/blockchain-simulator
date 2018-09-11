@@ -1,4 +1,4 @@
-import random, csv, numpy as np
+import random, csv, os, numpy as np
 from node import Node
 from events import Proposal
 from algorithms import *
@@ -129,6 +129,8 @@ class Coordinator():
         log_global_blocktree(self.global_blocktree)
         log_statistics(self.params, self.global_blocktree)
         draw_global_blocktree(self.global_blocktree)
+
+        os.system('cat ./logs/stats.csv')
 
         # ******* 
         # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
