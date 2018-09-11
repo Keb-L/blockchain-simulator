@@ -28,10 +28,6 @@ class Algorithm():
         pass
 
     @abstractmethod
-    def is_finalized(self, block, params):
-        pass
-
-    @abstractmethod
     def main_chain(self):
         leaf_block = self.fork_choice_rule()
         leaf_vertex = self.block_to_vertices[leaf_block.id]
@@ -106,27 +102,6 @@ class LongestChain(Algorithm):
                 k+=1
         return k
 
-    def is_finalized(self, block, params):
-        # search for starting block
-        source = self.block_to_vertices[block.id]
-
-        epsilon = params['tx_error_prob']
-
-        finalization_depth = self.compute_k(epsilon, params['num_nodes'],
-                params['num_adversaries'])
-
-        current_depth = self.depth[self.tree.vertex(source)]
-
-        is_valid_depth = current_depth >= finalization_depth
-
-        # compute whether or not there is an error in transaction confirmation
-        error = False if np.random.uniform(0, 1)<=1-epsilon else True
-
-        finalized = True if is_valid_depth and not error else False
-
-        return finalized
-
-
 class GHOST(Algorithm):
     def heaviest_subtree_helper(self, vertex):
         if vertex is None:
@@ -179,23 +154,3 @@ class GHOST(Algorithm):
             else:
                 k+=1
         return k
-
-    def is_finalized(self, block, params):
-        # search for starting block
-        source = self.block_to_vertices[block.id]
-
-        epsilon = params['tx_error_prob']
-
-        finalization_depth = self.compute_k(epsilon, params['num_nodes'],
-                params['num_adversaries'])
-
-        current_depth = self.depth[self.tree.vertex(source)]
-
-        is_valid_depth = current_depth >= finalization_depth
-
-        # compute whether or not there is an error in transaction confirmation
-        error = False if np.random.uniform(0, 1)<=1-epsilon else True
-
-        finalized = True if is_valid_depth and not error else False
-
-        return finalized
