@@ -104,33 +104,29 @@ class LongestChain(Algorithm):
         # return k
 
 class GHOST(Algorithm):
-    def heaviest_subtree_helper(self, vertex):
-        if vertex is None:
-            vertex = self.root
-        s = 0
-        for e in vertex.out_edges():
-            s+=self.heaviest_subtree_helper(e.target())
-        return vertex.out_degree()+s
+    def __init__(self):
+        super(GHOST, self).__init__()
+        self.subtree_size = {}
 
-    def heaviest_subtree(self): 
-        vertex = self.root
-        while True:
-            max_subtree_vertex = None
-            max_subtree_size = -1
-            for e in vertex.out_edges():
-                size = self.heaviest_subtree_helper(e.target())
-                if size>max_subtree_size:
-                    max_subtree_vertex = e.target()
-                    max_subtree_size = size
-            if max_subtree_size==0:
-                return max_subtree_vertex
-            else:
-                vertex=max_subtree_vertex
-        return None
+        self.subtree_size[self.root] = 0
+
+    def add_block(self, parent_block, new_block):
+        # call Algorithm's add_block function
+        super(GHOST, self).add_block(parent_block, new_block)
+
+        # increment subtree size for all blocks along path from root to new leaf
+        # vertex
+        leaf_vertex = self.block_to_vertices[new_block.id]
+        path = gt.shortest_path(self.tree, self.root, leaf_vertex)[0] 
+
+        for vertex in path[:-1]:
+            self.subtree_size[vertex]+=1
+        # set subtree size of leaf vertex to be 0
+        self.subtree_size[leaf_vertex]=0
 
     def fork_choice_rule(self):
         # parent vertex is vertex with maximum size subtree
-        max_subtree_vertex = self.heaviest_subtree()
+        max_subtree_vertex = max(self.subtree_size, key=self.subtree_size.get)
         parent_block = self.vertex_to_blocks[max_subtree_vertex]
 
         return parent_block
