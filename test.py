@@ -8,123 +8,109 @@ class TestBlockchainSimulator(unittest.TestCase):
         # create our own tree 
         l.tree = Graph()
         l.root = l.tree.add_vertex()
-        l.blocks[l.root] = Block(id='Genesis')
+        l.vertex_to_blocks[l.root] = Block(id='Genesis')
 
-        # add 2 blocks a and b as root's children
+        # add 2 vertex_to_blocks a and b as root's children
         a_block = Block()
         a_vertex = l.tree.add_vertex()
-        l.blocks[a_vertex] = a_block
+        l.vertex_to_blocks[a_vertex] = a_block
         l.tree.add_edge(l.root, a_vertex)
 
         b_block = Block()
         b_vertex = l.tree.add_vertex()
-        l.blocks[b_vertex] = b_block
+        l.vertex_to_blocks[b_vertex] = b_block
         l.tree.add_edge(l.root, b_vertex)
 
         # add 1 block c as a's child
         c_block = Block()
         c_vertex = l.tree.add_vertex()
-        l.blocks[c_vertex] = c_block
+        l.vertex_to_blocks[c_vertex] = c_block
         l.tree.add_edge(a_vertex, c_vertex)
 
-        # add 2 blocks d and e as b's children
+        # add 2 vertex_to_blocks d and e as b's children
         d_block = Block()
         d_vertex = l.tree.add_vertex()
-        l.blocks[d_vertex] = d_block
+        l.vertex_to_blocks[d_vertex] = d_block
         l.tree.add_edge(b_vertex, d_vertex)
 
         e_block = Block()
         e_vertex = l.tree.add_vertex()
-        l.blocks[e_vertex] = e_block
+        l.vertex_to_blocks[e_vertex] = e_block
         l.tree.add_edge(b_vertex, e_vertex)
 
         # add 1 block f as d's child
         f_block = Block()
         f_vertex = l.tree.add_vertex()
-        l.blocks[f_vertex] = f_block
+        l.vertex_to_blocks[f_vertex] = f_block
         l.tree.add_edge(d_vertex, f_vertex)
 
         # add 1 block as f's child
         g_block = Block()
         g_vertex = l.tree.add_vertex()
-        l.blocks[g_vertex] = g_block
+        l.vertex_to_blocks[g_vertex] = g_block
         l.tree.add_edge(f_vertex, g_vertex)
 
         # add 1 block as g's child
         h_block = Block()
         h_vertex = l.tree.add_vertex()
-        l.blocks[h_vertex] = h_block
+        l.vertex_to_blocks[h_vertex] = h_block
         l.tree.add_edge(g_vertex, h_vertex)
 
         i_block = Block()
-        self.assertEqual(l.fork_choice_rule(i_block).id, h_block.id)
 
-        # ensure only the root is finalized, while forcing probability of error
-        # to be 0
-        self.assertTrue(l.is_finalized(l.blocks[l.root], 0.0))
-        self.assertFalse(l.is_finalized(a_block, 0.0))
-        self.assertFalse(l.is_finalized(b_block, 0.0))
-        self.assertFalse(l.is_finalized(c_block, 0.0))
-        self.assertFalse(l.is_finalized(d_block, 0.0))
-        self.assertFalse(l.is_finalized(e_block, 0.0))
-        self.assertFalse(l.is_finalized(f_block, 0.0))
-        self.assertFalse(l.is_finalized(g_block, 0.0))
-        self.assertFalse(l.is_finalized(h_block, 0.0))
-        self.assertFalse(l.is_finalized(i_block, 0.0))
 
     def test_GHOST(self):
         g = GHOST()
         # create our own tree 
         g.tree = Graph()
         g.root = g.tree.add_vertex()
-        g.blocks[g.root] = Block(id='Genesis')
+        g.vertex_to_blocks[g.root] = Block(id='Genesis')
 
-        # add 2 blocks a and b as root's children
+        # add 2 vertex_to_blocks a and b as root's children
         a_block = Block()
         a_vertex = g.tree.add_vertex()
-        g.blocks[a_vertex] = a_block
+        g.vertex_to_blocks[a_vertex] = a_block
         g.tree.add_edge(g.root, a_vertex)
 
         b_block = Block()
         b_vertex = g.tree.add_vertex()
-        g.blocks[b_vertex] = b_block
+        g.vertex_to_blocks[b_vertex] = b_block
         g.tree.add_edge(g.root, b_vertex)
 
-        # add 4 blocks c, d, e, f as a's children
+        # add 4 vertex_to_blocks c, d, e, f as a's children
         c_block = Block()
         c_vertex = g.tree.add_vertex()
-        g.blocks[c_vertex] = c_block
+        g.vertex_to_blocks[c_vertex] = c_block
         g.tree.add_edge(a_vertex, c_vertex)
 
         d_block = Block()
         d_vertex = g.tree.add_vertex()
-        g.blocks[d_vertex] = d_block
+        g.vertex_to_blocks[d_vertex] = d_block
         g.tree.add_edge(a_vertex, d_vertex)
 
         e_block = Block()
         e_vertex = g.tree.add_vertex()
-        g.blocks[e_vertex] = e_block
+        g.vertex_to_blocks[e_vertex] = e_block
         g.tree.add_edge(a_vertex, e_vertex)
 
         f_block = Block()
         f_vertex = g.tree.add_vertex()
-        g.blocks[f_vertex] = f_block
+        g.vertex_to_blocks[f_vertex] = f_block
         g.tree.add_edge(a_vertex, f_vertex)
 
         # add 1 block g as b's child
         g_block = Block()
         g_vertex = g.tree.add_vertex()
-        g.blocks[g_vertex] = g_block
+        g.vertex_to_blocks[g_vertex] = g_block
         g.tree.add_edge(b_vertex, g_vertex)
 
         # add 1 block h as g's child
         h_block = Block()
         h_vertex = g.tree.add_vertex()
-        g.blocks[h_vertex] = h_block
+        g.vertex_to_blocks[h_vertex] = h_block
         g.tree.add_edge(g_vertex, h_vertex)
 
         i_block = Block()
-        self.assertEqual(g.fork_choice_rule(i_block).id, c_block.id)
 
 if __name__ == '__main__':
     unittest.main()
