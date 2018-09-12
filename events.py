@@ -8,12 +8,16 @@ class Transaction():
 
         self.main_chain_timestamp = None
         self.finalization_timestamp = None
+        self.optimistic_finalization_time = None
 
     def set_main_chain_arrival_timestamp(self, main_chain_timestamp):
         self.main_chain_timestamp = main_chain_timestamp
 
     def set_finalization_timestamp(self, finalization_timestamp):
         self.finalization_timestamp = finalization_timestamp
+
+    def set_optimistic_finalization_time(self, optimistic_finalization_time):
+        self.optimistic_finalization_time = optimistic_finalization_time
 
 class Proposal():
     def __init__(self, timestamp):
