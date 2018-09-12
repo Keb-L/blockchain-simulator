@@ -30,7 +30,10 @@ def compute_latency():
             if row['Finalization Timestamp']!='None':
                 finalization_sum += float(row['Finalization Timestamp']) - float(row['Main Chain Arrival Timestamp'])
                 finalization_count += 1
-    return main_chain_arrival_sum/main_chain_arrival_count, finalization_sum/finalization_count
+
+    avg_main_chain_arrival_latency = 0 if main_chain_arrival_count==0 else main_chain_arrival_sum/main_chain_arrival_count
+    avg_finalization_latency = 0 if finalization_count==0 else finalization_sum/finalization_count
+    return avg_main_chain_arrival_latency, avg_finalization_latency
 
 def dump_results():
     print('Results:')
