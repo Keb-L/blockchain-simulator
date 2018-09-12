@@ -100,7 +100,8 @@ class LongestChain(Algorithm):
                 break
             else:
                 k+=1
-        return k
+        return 6
+        # return k
 
 class GHOST(Algorithm):
     def heaviest_subtree_helper(self, vertex):
