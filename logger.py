@@ -25,7 +25,9 @@ def log_global_blocktree(global_blocktree):
 
 def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'Source Node', 'Arrival Timestamp', 'Main Chain Arrival Timestamp', 'Finalization Timestamp']
+        fieldnames = ['id', 'Source Node', 'Arrival Timestamp', 
+                'Main Chain Arrival Timestamp', 
+                'Finalization Timestamp', 'Optimistic Confirmation Time']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for tx in txs:
@@ -33,7 +35,8 @@ def log_txs(txs):
                 f'{tx.source.node_id}', 'Arrival Timestamp':
                 f'{tx.timestamp}', 'Main Chain Arrival Timestamp':
                 f'{tx.main_chain_timestamp}', 'Finalization Timestamp':
-                f'{tx.finalization_timestamp}'})
+                f'{tx.finalization_timestamp}', 'Optimistic Confirmation Time':
+                f'{tx.optimistic_confirmation_time}'})
 
 def log_statistics(params, global_blocktree):
     with open('./logs/stats.csv', 'w+') as csvfile:

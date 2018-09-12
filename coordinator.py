@@ -98,7 +98,7 @@ class Coordinator():
                     max_finalization_timestamp = b.finalization_timestamp
             if in_all_chains:
                 for tx in b.txs:
-                    tx.set_optimistic_finalization_time(max_finalization_timestamp-min_proposal_timestamp)
+                    tx.set_optimistic_confirmation_time(max_finalization_timestamp-min_proposal_timestamp)
 
                 
     '''
