@@ -3,9 +3,20 @@ from graph_tool.all import *
 from network import constant_decker_wattenhorf
 from constants import TX_SIZE
 
-def log_local_blocktree(node_id, local_blocktree):
-    with open(f'./logs/{node_id}.log', 'w+') as f:
-        f.write(f'{local_blocktree.graph_to_str()}') 
+def log_local_blocktree(node):
+    with open(f'./logs/{node.node_id}.log', 'w+') as f:
+        f.write(f'{node.local_blocktree.graph_to_str()}') 
+
+    with open(f'./logs/{node.node_id}.csv', 'w', newline='') as csvfile:
+        fieldnames = ['id', 'Transactions']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        print(node.local_blocktree.main_chain())
+        for vertex in node.local_blocktree.main_chain():
+            print(vertex)
+            block = node.local_blocktree.vertex_to_blocks[vertex]
+            tx_str = ';'.join(tx.id for tx in block.txs)
+            writer.writerow({'id': f'{block.id}', 'Transactions': f'{tx_str}'})
 
 def log_global_blocktree(global_blocktree):
     with open('./logs/global_blocktree.log', 'w+') as f:

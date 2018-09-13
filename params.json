@@ -8,7 +8,7 @@
     "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
-    "Fork choice rule": "GHOST",
+    "Fork choice rule": "longest-chain",
     "Duration (sec)": 1000
   },
   "small":  {
