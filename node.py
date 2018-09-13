@@ -22,6 +22,7 @@ class Node():
         # transactions
         self.buffer = np.array([])
         self.neighbors = np.array([])
+        self.optimistic_confirmation_timestamps = {}
 
 
     def add_neighbor(self, neighbor_node):
@@ -53,6 +54,16 @@ class Node():
             neighbor.add_to_buffer(event)
 
     def process_buffer(self, timestamp):
+
+        # helper functions to extract blocks and ids from main chain
+        vertex_to_blocks = lambda vertex: self.local_blocktree.vertex_to_blocks[vertex]
+        blocks_to_ids = lambda block: block.id
+
+        # get initial main chain
+        initial_main_chain = list(map(vertex_to_blocks,
+            self.local_blocktree.main_chain()))
+        initial_main_chain_ids = list(map(blocks_to_ids, initial_main_chain))
+
         b_i = 0
         while b_i<len(self.buffer):
             if self.buffer[b_i].timestamp>timestamp:
@@ -91,8 +102,17 @@ class Node():
                     added_orphan_block = True
             self.orphans = self.orphans[remaining_orphans]
 
-        if timestamp==float('Inf'):
-            self.log_local_blocktree()
+        # get new main chain
+        new_main_chain = list(map(vertex_to_blocks,
+            self.local_blocktree.main_chain()))
+        new_main_chain_ids = list(map(blocks_to_ids,
+            new_main_chain))
+
+        # find all blocks in new main chain not in initial main chain
+        for new_id in new_main_chain_ids:
+            if new_id not in initial_main_chain_ids:
+                # update optimistic confirmation timestamp
+                self.optimistic_confirmation_timestamps[new_id] = timestamp
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
             global_blocktree):
@@ -101,6 +121,9 @@ class Node():
 
         # append new block to appropriate chain
         new_block = Block(proposal_timestamp=proposal.timestamp)
+
+        # initialize optimistic confirmation timestamp
+        self.optimistic_confirmation_timestamps[new_block.id] = proposal.timestamp
 
         # find all txs in main chain
         main_chain = self.local_blocktree.main_chain()
@@ -118,7 +141,6 @@ class Node():
             elif len(new_block.txs)>max_block_size:
                 break
             elif self.local_txs[tx_i] not in main_chain_txs:
-                self.local_txs[tx_i].set_main_chain_arrival_timestamp(proposal.timestamp)
                 new_block.add_tx(self.local_txs[tx_i])
             tx_i+=1
 

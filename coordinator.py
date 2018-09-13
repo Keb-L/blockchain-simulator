@@ -58,11 +58,9 @@ class Coordinator():
                     tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
                     tx.set_finalization_timestamp(top_block.finalization_timestamp)
 
-        local_main_chain_blocks = []
         for n_i in range(0, self.nodes.shape[0]):
             node = self.nodes[n_i]
             local_main_chain = node.local_blocktree.main_chain()
-            local_main_chain_blocks.append([])
             for depth in range(0, len(local_main_chain)):
                 if depth+finalization_depth>len(local_main_chain)-1:
                     break
@@ -80,27 +78,6 @@ class Coordinator():
                     for tx in top_block.txs:
                         tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
                         tx.set_finalization_timestamp(top_block.finalization_timestamp)
-                    local_main_chain_blocks[n_i].append(top_block)
-
-        # loop over all blocks in node 0's main chain
-        for b in local_main_chain_blocks[0]:
-            in_all_chains = True
-            min_proposal_timestamp = float('Inf')
-            max_finalization_timestamp = 0
-            # check if in all chains
-            for chain in local_main_chain_blocks[1:]:
-                block_ids = list(map(lambda block: block.id, chain))
-                if b.id not in block_ids:
-                    in_all_chains = False
-                    break
-                elif b.proposal_timestamp<min_proposal_timestamp:
-                    min_proposal_timestamp = b.proposal_timestamp
-                elif b.finalization_timestamp>max_finalization_timestamp:
-                    max_finalization_timestamp = b.finalization_timestamp
-            if in_all_chains:
-                for tx in b.txs:
-                    tx.set_optimistic_confirmation_time(max_finalization_timestamp-min_proposal_timestamp)
-
                 
     '''
     Main simulation function
@@ -170,8 +147,8 @@ class Coordinator():
         self.set_timestamps()
         log_txs(self.txs)
 
-        # for node in self.nodes:
-        #    log_local_blocktree(node)
+        for node in self.nodes:
+            log_local_blocktree(node)
         log_global_blocktree(self.global_blocktree)
         log_statistics(self.params, self.global_blocktree)
         draw_global_blocktree(self.global_blocktree)

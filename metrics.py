@@ -12,6 +12,9 @@ def dump_params():
     pp.pprint(d)
     print('\n')
 
+def compute_optimistic_confirmation_time():
+    for filename in glob.glob('./logs/*-transactions.csv'):
+        print(filename)
 
 def compute_throughput():
     f = 0.95
@@ -36,7 +39,6 @@ def compute_throughput():
                 in_node_count+=1
         if float(in_node_count)/len(node_txs)>=f:
             tx_count+=1
-    print(float(tx_count)/len(all_txs))
     return TX_RATE
 
 def compute_latency():
@@ -60,6 +62,7 @@ def compute_latency():
 
 def dump_results():
     print('Results:')
+    avg_optimistic_confirmatino_time = compute_optimistic_confirmation_time()
     avg_main_chain_arrival_latency, avg_finalization_latency = compute_latency() 
     print(f'Transaction Throughput: {compute_throughput()} transactions/sec')
     print(f'Main Chain Arrival Latency: {avg_main_chain_arrival_latency} sec/transaction')

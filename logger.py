@@ -4,17 +4,20 @@ from network import constant_decker_wattenhorf
 from constants import TX_SIZE
 
 def log_local_blocktree(node):
+    '''
     with open(f'./logs/{node.node_id}.log', 'w+') as f:
         f.write(f'{node.local_blocktree.graph_to_str()}') 
+    '''
 
-    with open(f'./logs/{node.node_id}.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'Transactions']
+    with open(f'./logs/{node.node_id}-transactions.csv', 'w', newline='') as csvfile:
+        fieldnames = ['id', 'Optimistic confirmation timestamp']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for vertex in node.local_blocktree.main_chain():
             block = node.local_blocktree.vertex_to_blocks[vertex]
-            tx_str = ';'.join(tx.id for tx in block.txs)
-            writer.writerow({'id': f'{block.id}', 'Transactions': f'{tx_str}'})
+            for tx in block.txs:
+                writer.writerow({'id': f'{tx.id}', 'Optimistic confirmation timestamp':
+                    f'{node.optimistic_confirmation_timestamps[block.id]}'})
 
 def log_global_blocktree(global_blocktree):
     with open('./logs/global_blocktree.log', 'w+') as f:
@@ -40,7 +43,7 @@ def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 'Source Node', 'Arrival Timestamp', 
                 'Main Chain Arrival Timestamp', 
-                'Finalization Timestamp', 'Optimistic Confirmation Time']
+                'Finalization Timestamp']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for tx in txs:
@@ -48,8 +51,7 @@ def log_txs(txs):
                 f'{tx.source.node_id}', 'Arrival Timestamp':
                 f'{tx.timestamp}', 'Main Chain Arrival Timestamp':
                 f'{tx.main_chain_timestamp}', 'Finalization Timestamp':
-                f'{tx.finalization_timestamp}', 'Optimistic Confirmation Time':
-                f'{tx.optimistic_confirmation_time}'})
+                f'{tx.finalization_timestamp}'})
 
 def log_statistics(params, global_blocktree):
     with open('./logs/stats.csv', 'w+') as csvfile:

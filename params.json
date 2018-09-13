@@ -33,7 +33,7 @@
     "Transaction dataset": "poisson",
     "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 2400
+    "Duration (sec)": 1000
   },
   "GHOST-test":  {
     "Number of nodes": 100, 
