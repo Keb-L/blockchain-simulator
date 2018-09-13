@@ -11,9 +11,7 @@ def log_local_blocktree(node):
         fieldnames = ['id', 'Transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        print(node.local_blocktree.main_chain())
         for vertex in node.local_blocktree.main_chain():
-            print(vertex)
             block = node.local_blocktree.vertex_to_blocks[vertex]
             tx_str = ';'.join(tx.id for tx in block.txs)
             writer.writerow({'id': f'{block.id}', 'Transactions': f'{tx_str}'})

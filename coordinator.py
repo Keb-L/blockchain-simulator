@@ -169,8 +169,9 @@ class Coordinator():
 
         self.set_timestamps()
         log_txs(self.txs)
-        for node in self.nodes:
-            log_local_blocktree(node)
+
+        # for node in self.nodes:
+        #    log_local_blocktree(node)
         log_global_blocktree(self.global_blocktree)
         log_statistics(self.params, self.global_blocktree)
         draw_global_blocktree(self.global_blocktree)

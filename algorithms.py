@@ -150,4 +150,4 @@ class GHOST(Algorithm):
                 break
             else:
                 k+=1
-        return k
+        return 6

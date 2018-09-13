@@ -1,5 +1,5 @@
 {
-  "setting-name": "default",
+  "setting-name": "longest-chain-test",
   "default":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
@@ -29,7 +29,7 @@
     "Number of adversaries": 1,
     "Block size (txs)": 50, 
     "Probability of error in transaction confirmation": 0.1, 
-    "Block proposal rate parameter": 0.01, 
+    "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
     "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
@@ -42,8 +42,8 @@
     "Probability of error in transaction confirmation": 0.1, 
     "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
-    "Network model": "GHOST",
-    "Fork choice rule": "longest-chain",
+    "Network model": "Constant-Decker-Wattenhorf",
+    "Fork choice rule": "GHOST",
     "Duration (sec)": 1000
   }
 }
