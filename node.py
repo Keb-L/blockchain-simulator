@@ -52,9 +52,6 @@ class Node():
         for neighbor in self.neighbors:
             neighbor.add_to_buffer(event)
 
-    def log_local_blocktree(self):
-        self.logger.info(f'\nLocal blocktree:\n{self.local_blocktree.graph_to_str()}') 
-
     def process_buffer(self, timestamp):
         b_i = 0
         while b_i<len(self.buffer):
