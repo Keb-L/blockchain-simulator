@@ -1,4 +1,4 @@
-import re, json, pprint, csv
+import re, json, pprint, csv, glob
 from constants import TX_RATE
 
 def dump_params():
@@ -14,6 +14,29 @@ def dump_params():
 
 
 def compute_throughput():
+    f = 0.95
+    all_txs = []
+    node_txs = []
+    for filename in glob.glob('./logs/*.csv'):
+        if filename.split('./logs/')[1].split('.csv')[0].isdigit():
+            txs = []
+            with open(filename, newline='') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    txs+=row['Transactions'].split(';')
+            txs = list(filter(None,txs))
+            all_txs +=txs
+            node_txs.append(txs)
+    
+    tx_count=0
+    for tx in all_txs:
+        in_node_count = 0
+        for txs in node_txs:
+            if tx in txs:
+                in_node_count+=1
+        if float(in_node_count)/len(node_txs)>=f:
+            tx_count+=1
+    print(float(tx_count)/len(all_txs))
     return TX_RATE
 
 def compute_latency():
