@@ -3,6 +3,10 @@ from graph_tool.all import *
 from network import constant_decker_wattenhorf
 from constants import TX_SIZE
 
+def log_local_blocktree(node_id, local_blocktree):
+    with open(f'./logs/{node_id}.log', 'w+') as f:
+        f.write(f'{local_blocktree.graph_to_str()}') 
+
 def log_global_blocktree(global_blocktree):
     with open('./logs/global_blocktree.log', 'w+') as f:
         f.write(f'{global_blocktree.graph_to_str()}') 
