@@ -2,7 +2,7 @@ import random, csv, os, numpy as np
 from node import Node
 from events import Proposal
 from algorithms import *
-from logger import log_global_blocktree, log_txs, log_statistics, draw_global_blocktree
+from logger import log_local_blocktree, log_global_blocktree, log_txs, log_statistics, draw_global_blocktree
 
 class Coordinator():
     def __init__(self, params):
@@ -83,17 +83,18 @@ class Coordinator():
                     local_main_chain_blocks[n_i].append(top_block)
 
         # loop over all blocks in node 0's main chain
-        for b in local_main_chain_blocks:
+        for b in local_main_chain_blocks[0]:
             in_all_chains = True
-            min_proposal_time = float('Inf')
-            max_finalization_time = 0
+            min_proposal_timestamp = float('Inf')
+            max_finalization_timestamp = 0
             # check if in all chains
             for chain in local_main_chain_blocks[1:]:
-                if b not in chain:
+                block_ids = list(map(lambda block: block.id, chain))
+                if b.id not in block_ids:
                     in_all_chains = False
                     break
-                elif b.proposal_time<min_proposal_time:
-                    min_proposal_time = b.proposal_time
+                elif b.proposal_timestamp<min_proposal_timestamp:
+                    min_proposal_timestamp = b.proposal_timestamp
                 elif b.finalization_timestamp>max_finalization_timestamp:
                     max_finalization_timestamp = b.finalization_timestamp
             if in_all_chains:
@@ -168,6 +169,8 @@ class Coordinator():
 
         self.set_timestamps()
         log_txs(self.txs)
+        for node in self.nodes:
+            log_local_blocktree(node.node_id, node.local_blocktree)
         log_global_blocktree(self.global_blocktree)
         log_statistics(self.params, self.global_blocktree)
         draw_global_blocktree(self.global_blocktree)
