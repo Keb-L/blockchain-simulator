@@ -40,7 +40,7 @@ class Algorithm():
             vertex = self.block_to_vertices[block.parent_id]
             main_chain.append(vertex)
 
-        return main_chain
+        return main_chain[::-1]
 
     # add a new block given a parent block
     def add_block(self, parent_block, new_block):
