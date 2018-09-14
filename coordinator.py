@@ -58,27 +58,6 @@ class Coordinator():
                     tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
                     tx.set_finalization_timestamp(top_block.finalization_timestamp)
 
-        for n_i in range(0, self.nodes.shape[0]):
-            node = self.nodes[n_i]
-            local_main_chain = node.local_blocktree.main_chain()
-            for depth in range(0, len(local_main_chain)):
-                if depth+finalization_depth>len(local_main_chain)-1:
-                    break
-                else:
-                    # top block is block depth blocks deep on main chain
-                    top_block = node.local_blocktree.vertex_to_blocks[local_main_chain[depth]]
-                    # bottom block is block depth+finalization_depth blocks deep on
-                    # main chain
-                    bottom_block = node.local_blocktree.vertex_to_blocks[local_main_chain[depth+finalization_depth]]
-
-                    # top block's finalization timestamp is bottom block's proposal
-                    # timestamp
-                    top_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
-                    # set main chain arrival and finalization timestamp of all transactions in top block
-                    for tx in top_block.txs:
-                        tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
-                        tx.set_finalization_timestamp(top_block.finalization_timestamp)
-                
     '''
     Main simulation function
     Coordinator checks head of proposal and tx queue and processes earlier
