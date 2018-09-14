@@ -29,10 +29,17 @@ class Algorithm():
 
     @abstractmethod
     def main_chain(self):
-        leaf_block = self.fork_choice_rule()
-        leaf_vertex = self.block_to_vertices[leaf_block.id]
-        main_chain = gt.shortest_path(self.tree, self.root,
-                leaf_vertex)[0]
+        # find leaf block via fork choice rule
+        block = self.fork_choice_rule()
+        vertex = self.block_to_vertices[block.id]
+        main_chain = [vertex]
+
+        # traverse from leaf vertex up to root and add to main chain
+        while vertex!=self.root:
+            block = self.vertex_to_blocks[vertex]
+            vertex = self.block_to_vertices[block.parent_id]
+            main_chain.append(vertex)
+
         return main_chain
 
     # add a new block given a parent block
@@ -50,6 +57,7 @@ class Algorithm():
     # add block based on fork choice rule
     def add_block_by_fork_choice_rule(self, new_block):
         parent_block = self.fork_choice_rule()
+        new_block.parent_id = parent_block.id
         self.add_block(parent_block, new_block)
 
         return parent_block
@@ -114,18 +122,18 @@ class GHOST(Algorithm):
         # call Algorithm's add_block function
         super(GHOST, self).add_block(parent_block, new_block)
 
+        # set subtree size of leaf vertex to be 0
+        vertex = self.block_to_vertices[new_block.id]
+        self.subtree_size[vertex] = 0
+
         # increment subtree size for all blocks along path from root to new leaf
         # vertex
-        leaf_vertex = self.block_to_vertices[new_block.id]
-        path = gt.shortest_path(self.tree, self.root, leaf_vertex)[0] 
-
-        for vertex in path[:-1]:
+        while vertex!=self.root:
+            block = self.vertex_to_blocks[vertex]
+            vertex = self.block_to_vertices[block.parent_id]
             self.subtree_size[vertex]+=1
-        # set subtree size of leaf vertex to be 0
-        self.subtree_size[leaf_vertex]=0
 
     def fork_choice_rule(self):
-
         # start with root vertex
         max_subtree_vertex = self.root
         children = list(self.root.out_edges())
