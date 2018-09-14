@@ -112,7 +112,17 @@ class Node():
         for new_id in new_main_chain_ids:
             if new_id not in initial_main_chain_ids:
                 # update optimistic confirmation timestamp
-                self.optimistic_confirmation_timestamps[new_id] = timestamp
+                # if this is the first time it arrives to main chain, both
+                # timestamps are the same
+                if new_id not in self.optimistic_confirmation_timestamps:
+                    self.optimistic_confirmation_timestamps[new_id] = {'initial_arrival': 
+                            timestamp, 'final_arrival': timestamp}
+                # otherwise, keep initial main chain arrival, update final main
+                # chain arrival
+                else:
+                    self.optimistic_confirmation_timestamps[new_id] = {'initial_arrival':
+                            self.optimistic_confirmation_timestamps[new_id]['initial_arrival'], 
+                            'final_arrival': timestamp}
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
             global_blocktree):
@@ -123,7 +133,8 @@ class Node():
         new_block = Block(proposal_timestamp=proposal.timestamp)
 
         # initialize optimistic confirmation timestamp
-        self.optimistic_confirmation_timestamps[new_block.id] = proposal.timestamp
+        self.optimistic_confirmation_timestamps[new_block.id] = {'initial_arrival': proposal.timestamp, 'final_arrival':
+                proposal.timestamp}
 
         # find all txs in main chain
         main_chain = self.local_blocktree.main_chain()

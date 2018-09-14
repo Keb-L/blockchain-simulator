@@ -13,8 +13,27 @@ def dump_params():
     print('\n')
 
 def compute_optimistic_confirmation_time():
+    num_nodes = 0
+    avg_optimistic_confirmation_sum = 0
     for filename in glob.glob('./logs/*-transactions.csv'):
-        print(filename)
+        optimistic_confirmation_times = {}
+        with open(f'{filename}', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            first_row = True
+            for row in reader:
+                if first_row:
+                    first_row = False
+                    continue
+                else:
+                    optimistic_confirmation_times[row['id']] =  float(row['Final arrival timestamp']) - float(row['Initial arrival timestamp'])
+        if len(optimistic_confirmation_times.keys())==0:
+            avg_optimistic_confirmation_time = 0.0
+        else:
+            avg_optimistic_confirmation_time = sum(optimistic_confirmation_times.values())/len(optimistic_confirmation_times)
+        avg_optimistic_confirmation_sum+=avg_optimistic_confirmation_time
+        num_nodes+=1
+
+    return float(avg_optimistic_confirmation_sum)/num_nodes
 
 def compute_throughput():
     f = 0.95
