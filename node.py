@@ -141,6 +141,7 @@ class Node():
             elif len(new_block.txs)>max_block_size:
                 break
             elif self.local_txs[tx_i] not in main_chain_txs:
+                self.local_txs[tx_i].set_main_chain_arrival_timestamp(proposal.timestamp)
                 new_block.add_tx(self.local_txs[tx_i])
             tx_i+=1
 
