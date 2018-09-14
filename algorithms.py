@@ -125,8 +125,22 @@ class GHOST(Algorithm):
         self.subtree_size[leaf_vertex]=0
 
     def fork_choice_rule(self):
-        # parent vertex is vertex with maximum size subtree
-        max_subtree_vertex = max(self.subtree_size, key=self.subtree_size.get)
+
+        # start with root vertex
+        max_subtree_vertex = self.root
+        children = list(self.root.out_edges())
+
+        # search for leaf vertex
+        while len(children)!=0:
+            max_subtree_size = 0
+            # search for child with max subtree size
+            for edge in children:
+                target = edge.target()
+                if self.subtree_size[max_subtree_vertex]>max_subtree_size:
+                    max_subtree_size = self.subtree_size[target]
+                    max_subtree_vertex = target
+            children = list(max_subtree_vertex.out_edges())
+
         parent_block = self.vertex_to_blocks[max_subtree_vertex]
 
         return parent_block

@@ -1,5 +1,5 @@
 {
-  "setting-name": "longest-chain-test",
+  "setting-name": "GHOST-test",
   "default":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
