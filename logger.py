@@ -10,16 +10,14 @@ def log_local_blocktree(node):
     '''
 
     with open(f'./logs/{node.node_id}-transactions.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'Initial arrival timestamp', 'Final arrival timestamp']
+        fieldnames = ['id', 'Optimistic confirmation timestamp']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for vertex in node.local_blocktree.main_chain():
             block = node.local_blocktree.vertex_to_blocks[vertex]
             for tx in block.txs:
-                writer.writerow({'id': f'{tx.id}', 'Initial arrival timestamp':
-                f'{node.optimistic_confirmation_timestamps[block.id]["initial_arrival"]}',
-                'Final arrival timestamp':
-                f'{node.optimistic_confirmation_timestamps[block.id]["final_arrival"]}'})
+                writer.writerow({'id': f'{tx.id}', 'Optimistic confirmation timestamp':
+                f'{node.optimistic_confirmation_timestamps[block.id]}'})
 
 def log_global_blocktree(global_blocktree):
     with open('./logs/global_blocktree.log', 'w+') as f:

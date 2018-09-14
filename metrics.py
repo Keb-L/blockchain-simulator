@@ -25,7 +25,17 @@ def compute_optimistic_confirmation_time():
                     first_row = False
                     continue
                 else:
-                    optimistic_confirmation_times[row['id']] =  float(row['Final arrival timestamp']) - float(row['Initial arrival timestamp'])
+                    optimistic_confirmation_times[row['id']] = float(row['Optimistic confirmation timestamp'])
+        with open(f'./logs/transactions.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            first_row = True
+            for row in reader:
+                if first_row:
+                    first_row = False
+                    continue
+                else:
+                    if row['id'] in optimistic_confirmation_times:
+                        optimistic_confirmation_times[row['id']] -= float(row['Arrival Timestamp'])
         if len(optimistic_confirmation_times.keys())==0:
             avg_optimistic_confirmation_time = 0.0
         else:
@@ -81,9 +91,10 @@ def compute_latency():
 
 def dump_results():
     print('Results:')
-    avg_optimistic_confirmatino_time = compute_optimistic_confirmation_time()
+    avg_optimistic_confirmation_time = compute_optimistic_confirmation_time()
     avg_main_chain_arrival_latency, avg_finalization_latency = compute_latency() 
     print(f'Transaction Throughput: {compute_throughput()} transactions/sec')
+    print(f'Optimistic Confirmation Time: {avg_optimistic_confirmation_time} sec')
     print(f'Main Chain Arrival Latency: {avg_main_chain_arrival_latency} sec/transaction')
     print(f'Finalization Latency: {avg_finalization_latency} sec/transaction')
 
