@@ -17,7 +17,7 @@ def log_local_blocktree(node):
             block = node.local_blocktree.vertex_to_blocks[vertex]
             for tx in block.txs:
                 writer.writerow({'id': f'{tx.id}', 'Optimistic confirmation timestamp':
-                f'{node.optimistic_confirmation_timestamps[block.id]}'})
+                f'{block.optimistic_confirmation_timestamp}'})
 
 def log_global_blocktree(global_blocktree):
     with open('./logs/global_blocktree.log', 'w+') as f:

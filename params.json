@@ -7,7 +7,7 @@
     "Probability of error in transaction confirmation": 0.01, 
     "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
-    "Network model": "Decker-Wattenhorf",
+    "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
     "Duration (sec)": 1000
   },

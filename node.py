@@ -22,8 +22,6 @@ class Node():
         # transactions
         self.buffer = np.array([])
         self.neighbors = np.array([])
-        self.optimistic_confirmation_timestamps = {}
-
 
     def add_neighbor(self, neighbor_node):
         self.neighbors = np.append(self.neighbors, neighbor_node)
@@ -55,14 +53,9 @@ class Node():
 
     def process_buffer(self, timestamp):
 
-        # helper functions to extract blocks and ids from main chain
+	# helper functions to extract blocks and ids from main chain
         vertex_to_blocks = lambda vertex: self.local_blocktree.vertex_to_blocks[vertex]
         blocks_to_ids = lambda block: block.id
-
-        # get initial main chain
-        initial_main_chain = list(map(vertex_to_blocks,
-            self.local_blocktree.main_chain()))
-        initial_main_chain_ids = list(map(blocks_to_ids, initial_main_chain))
 
         b_i = 0
         while b_i<len(self.buffer):
@@ -73,13 +66,31 @@ class Node():
                 # transactions should be added to local transaction queue
                 self.add_to_local_txs(event)
             elif event.__class__.__name__=='Proposal':
+                # get initial main chain
+                initial_main_chain = list(map(vertex_to_blocks, self.local_blocktree.main_chain()))
+                initial_main_chain_ids = list(map(blocks_to_ids, initial_main_chain))
+
                 # blocks should be added to local block tree
                 copied_block = Block(event.block.txs, event.block.id,
                         event.block.parent_id) 
+                # update optimistic confirmation timestamp to event's timestamp
+                copied_block.set_optimistic_confirmation_timestamp(event.timestamp)
                 # add block based on parent id
                 parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                 if parent_block==None:
-                    self.orphans = np.append(self.orphans, copied_block)
+                    self.orphans = np.append(self.orphans, event)
+
+                # get new main chain
+                new_main_chain = list(map(vertex_to_blocks,
+                    self.local_blocktree.main_chain()))
+                new_main_chain_ids = list(map(blocks_to_ids,
+                    new_main_chain))
+		# find all blocks in new main chain not in initial main chain
+                for i in range(0, len(new_main_chain)):
+                    new_id = new_main_chain_ids[i]	
+                    if new_id not in initial_main_chain_ids:
+                        # update optimistic confirmation timestamp
+                        new_main_chain[i].set_optimistic_confirmation_timestamp(event.timestamp)
             b_i+=1
 
         # remove already processed items in buffer
@@ -92,27 +103,30 @@ class Node():
             added_orphan_block = False
             # loop over orphans and update remaining orphans
             remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
-            for i, orphan in enumerate(self.orphans):
-                parent_block = self.local_blocktree.add_block_by_parent_id(orphan)
+            for i, proposal in enumerate(self.orphans):
+                # get initial main chain
+                initial_main_chain = list(map(vertex_to_blocks, self.local_blocktree.main_chain()))
+                initial_main_chain_ids = list(map(blocks_to_ids, initial_main_chain))
+                parent_block = self.local_blocktree.add_block_by_parent_id(proposal.block)
                 if parent_block==None:
                     # did not add orphan block, block remains as orphan
                     remaining_orphans[i] = True
                 else:
                     # we did add an orphan block
                     added_orphan_block = True
+                    # get new main chain
+                    new_main_chain = list(map(vertex_to_blocks,
+                        self.local_blocktree.main_chain()))
+                    new_main_chain_ids = list(map(blocks_to_ids,
+                        new_main_chain))
+                    i = 0
+                    # find all blocks in new main chain not in initial main chain
+                    for i in range(0, len(new_main_chain)):
+                        new_id = new_main_chain_ids[i]	
+                        if new_id not in initial_main_chain_ids:
+                            # update optimistic confirmation timestamp
+                            new_main_chain[i].set_optimistic_confirmation_timestamp(proposal.timestamp)
             self.orphans = self.orphans[remaining_orphans]
-
-        # get new main chain
-        new_main_chain = list(map(vertex_to_blocks,
-            self.local_blocktree.main_chain()))
-        new_main_chain_ids = list(map(blocks_to_ids,
-            new_main_chain))
-
-        # find all blocks in new main chain not in initial main chain
-        for new_id in new_main_chain_ids:
-            if new_id not in initial_main_chain_ids:
-                # update optimistic confirmation timestamp
-                self.optimistic_confirmation_timestamps[new_id] = timestamp
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
             global_blocktree):
@@ -123,7 +137,7 @@ class Node():
         new_block = Block(proposal_timestamp=proposal.timestamp)
 
         # initialize optimistic confirmation timestamp
-        self.optimistic_confirmation_timestamps[new_block.id] = proposal.timestamp
+        new_block.set_optimistic_confirmation_timestamp(proposal.timestamp)
 
         # find all txs in main chain
         main_chain = self.local_blocktree.main_chain()
