@@ -31,8 +31,8 @@ class TestBlockchainSimulator(unittest.TestCase):
         block_chain_2 = list(map(lambda vertex: l.vertex_to_blocks[vertex].id,
                 chains[1]))
 
-        self.assertListEqual(block_chain_1, [c_block.id, b_block.id, 'Genesis']) 
-        self.assertListEqual(block_chain_2, [d_block.id, b_block.id, 'Genesis']) 
+        self.assertListEqual(block_chain_1, ['Genesis', b_block.id, c_block.id]) 
+        self.assertListEqual(block_chain_2, ['Genesis', b_block.id, d_block.id]) 
 
     def test_GHOST(self):
         g = GHOST()
@@ -62,8 +62,29 @@ class TestBlockchainSimulator(unittest.TestCase):
         block_chain_2 = list(map(lambda vertex: g.vertex_to_blocks[vertex].id,
                 chains[1]))
 
-        self.assertListEqual(block_chain_1, [c_block.id, b_block.id, 'Genesis']) 
-        self.assertListEqual(block_chain_2, [d_block.id, b_block.id, 'Genesis']) 
+        self.assertListEqual(block_chain_1, ['Genesis', b_block.id, c_block.id]) 
+        self.assertListEqual(block_chain_2, ['Genesis', b_block.id, d_block.id]) 
+
+    def test_common_prefix(self):
+        g = GHOST()
+
+        # create our own tree 
+        a_block = Block(id='a', parent_id='Genesis')
+        g.add_block_by_parent_id(a_block) 
+
+        b_block = Block(id='b', parent_id='Genesis')
+        g.add_block_by_parent_id(b_block) 
+
+        c_block = Block(id='c', parent_id='b')
+        g.add_block_by_parent_id(c_block) 
+
+        d_block = Block(id='d', parent_id='b')
+        g.add_block_by_parent_id(d_block) 
+
+        common_prefix = list(map(lambda vertex: g.vertex_to_blocks[vertex].id,
+            g.common_prefix()))
+
+        self.assertListEqual(common_prefix, ['Genesis', b_block.id])
 
 
 if __name__ == '__main__':

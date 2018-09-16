@@ -1,4 +1,4 @@
-import numpy as np, uuid
+import numpy as np, uuid, functools
 from graph_tool import *
 import graph_tool.all as gt
 from math import e, factorial
@@ -27,6 +27,18 @@ class Algorithm():
     def fork_choice_rule(self, new_block):
         pass
 
+    def common_prefix(self, main_chains=None):
+        if main_chains is None:
+            main_chains = self.main_chains()
+
+        l = [functools.reduce(lambda v1, v2: v1 if self.vertex_to_blocks[v1].id ==
+            self.vertex_to_blocks[v2].id else None,
+            chain) for chain in zip(*main_chains)] + [None]
+
+        common_prefix = l[:l.index(None)]
+
+        return common_prefix
+
     @abstractmethod
     def main_chains(self):
         # find leaf blocks via fork choice rule
@@ -43,6 +55,8 @@ class Algorithm():
                 block = self.vertex_to_blocks[vertex]
                 vertex = self.block_to_vertices[block.parent_id]
             main_chain[-1].append(self.root)
+            # reverse the path
+            main_chain[-1] = main_chain[-1][::-1]
 
         return main_chain
 
