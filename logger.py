@@ -13,7 +13,7 @@ def log_local_blocktree(node):
         fieldnames = ['id', 'Optimistic confirmation timestamp']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        for vertex in node.local_blocktree.main_chain():
+        for vertex in node.local_blocktree.main_chains()[0]:
             block = node.local_blocktree.vertex_to_blocks[vertex]
             for tx in block.txs:
                 writer.writerow({'id': f'{tx.id}', 'Optimistic confirmation timestamp':
@@ -69,7 +69,7 @@ def log_statistics(params, global_blocktree):
 
         # log main chain information blocks
         num_blocks = len(global_blocktree.tree.get_vertices())
-        main_chain_length = len(global_blocktree.main_chain())
+        main_chain_length = len(global_blocktree.main_chains()[0])
         num_orphan_blocks = num_blocks - main_chain_length 
         csvfile.write(f'Number of blocks,{num_blocks}\n')
         csvfile.write(f'Main chain length,{main_chain_length}\n')
@@ -87,7 +87,7 @@ def draw_global_blocktree(global_blocktree):
     main_chain_vp = global_blocktree.tree.new_vertex_property('int')
 
     # color main chain a different color
-    for v in global_blocktree.main_chain():
+    for v in global_blocktree.main_chains()[0]:
         main_chain_vp[global_blocktree.tree.vertex(v)] = 1
 
     pos = radial_tree_layout(global_blocktree.tree, global_blocktree.tree.vertex(0))

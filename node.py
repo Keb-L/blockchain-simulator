@@ -67,7 +67,8 @@ class Node():
                 self.add_to_local_txs(event)
             elif event.__class__.__name__=='Proposal':
                 # get initial main chain
-                initial_main_chain = list(map(vertex_to_blocks, self.local_blocktree.main_chain()))
+                initial_main_chain = list(map(vertex_to_blocks,
+                    self.local_blocktree.main_chains()[0]))
                 initial_main_chain_ids = list(map(blocks_to_ids, initial_main_chain))
 
                 # blocks should be added to local block tree
@@ -82,7 +83,7 @@ class Node():
 
                 # get new main chain
                 new_main_chain = list(map(vertex_to_blocks,
-                    self.local_blocktree.main_chain()))
+                    self.local_blocktree.main_chains()[0]))
                 new_main_chain_ids = list(map(blocks_to_ids,
                     new_main_chain))
 		# find all blocks in new main chain not in initial main chain
@@ -140,7 +141,7 @@ class Node():
         new_block.set_optimistic_confirmation_timestamp(proposal.timestamp)
 
         # find all txs in main chain
-        main_chain = self.local_blocktree.main_chain()
+        main_chain = self.local_blocktree.main_chains()[0]
         main_chain_txs = np.array([])
         for v in main_chain:
             main_chain_txs = np.append(main_chain_txs,
