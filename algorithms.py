@@ -1,4 +1,5 @@
-import numpy as np, uuid, functools
+import numpy as np, uuid 
+from itertools import takewhile
 from graph_tool import *
 import graph_tool.all as gt
 from math import e, factorial
@@ -31,11 +32,7 @@ class Algorithm():
         if main_chains is None:
             main_chains = self.main_chains()
 
-        l = [functools.reduce(lambda v1, v2: v1 if self.vertex_to_blocks[v1].id ==
-            self.vertex_to_blocks[v2].id else None,
-            chain) for chain in zip(*main_chains)] + [None]
-
-        common_prefix = l[:l.index(None)]
+        common_prefix = [v[0] for v in takewhile(lambda chain: len(set(chain)) == 1, zip(*main_chains))]
 
         return common_prefix
 
@@ -44,21 +41,21 @@ class Algorithm():
         # find leaf blocks via fork choice rule
         leaf_blocks = self.fork_choice_rule()
 
-        main_chain = []
+        main_chains = []
 
         # traverse from leaf vertices up to root and add to main chain
         for leaf_block in leaf_blocks: 
-            main_chain.append([])
+            main_chains.append([])
             vertex = self.block_to_vertices[leaf_block.id]
             while vertex!=self.root:
-                main_chain[-1].append(vertex)
+                main_chains[-1].append(vertex)
                 block = self.vertex_to_blocks[vertex]
                 vertex = self.block_to_vertices[block.parent_id]
-            main_chain[-1].append(self.root)
+            main_chains[-1].append(self.root)
             # reverse the path
-            main_chain[-1] = main_chain[-1][::-1]
+            main_chains[-1] = main_chains[-1][::-1]
 
-        return main_chain
+        return main_chains
 
     # add a new block given a parent block
     def add_block(self, parent_block, new_block):

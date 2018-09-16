@@ -66,10 +66,11 @@ class Node():
                 # transactions should be added to local transaction queue
                 self.add_to_local_txs(event)
             elif event.__class__.__name__=='Proposal':
-                # get initial main chain
-                initial_main_chain = list(map(vertex_to_blocks,
-                    self.local_blocktree.main_chains()[0]))
-                initial_main_chain_ids = list(map(blocks_to_ids, initial_main_chain))
+                # get initial common prefix
+                initial_common_prefix = list(map(vertex_to_blocks,
+                    self.local_blocktree.common_prefix()))
+                initial_common_prefix_ids = list(map(blocks_to_ids,
+                    initial_common_prefix))
 
                 # blocks should be added to local block tree
                 copied_block = Block(event.block.txs, event.block.id,
@@ -81,17 +82,17 @@ class Node():
                 if parent_block==None:
                     self.orphans = np.append(self.orphans, event)
 
-                # get new main chain
-                new_main_chain = list(map(vertex_to_blocks,
-                    self.local_blocktree.main_chains()[0]))
-                new_main_chain_ids = list(map(blocks_to_ids,
-                    new_main_chain))
+                # get new main chains
+                new_common_prefix = list(map(vertex_to_blocks,
+                    self.local_blocktree.common_prefix()))
+                new_common_prefix_ids = list(map(blocks_to_ids,
+                    new_common_prefix))
 		# find all blocks in new main chain not in initial main chain
-                for i in range(0, len(new_main_chain)):
-                    new_id = new_main_chain_ids[i]	
-                    if new_id not in initial_main_chain_ids:
+                for i in range(0, len(new_common_prefix)):
+                    new_id = new_common_prefix_ids[i]	
+                    if new_id not in initial_common_prefix_ids:
                         # update optimistic confirmation timestamp
-                        new_main_chain[i].set_optimistic_confirmation_timestamp(event.timestamp)
+                        new_common_prefix[i].set_optimistic_confirmation_timestamp(event.timestamp)
             b_i+=1
 
         # remove already processed items in buffer
