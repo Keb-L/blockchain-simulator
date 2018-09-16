@@ -130,11 +130,24 @@ class LongestChain(Algorithm):
         # return k
 
 class GHOST(Algorithm):
-    def __init__(self):
+    def __init__(self, validate_length=True):
         super(GHOST, self).__init__()
         self.subtree_size = {}
 
         self.subtree_size[self.root] = 0
+        self.validate_length = validate_length
+
+    def main_chains(self):
+        # call Algorithm's main_chains function
+        main_chains = super(GHOST, self).main_chains()
+
+        if self.validate_length:
+            depths = self.depth.get_array()
+            max_depth = np.amax(depths)
+            if max_depth+1!=len(main_chains[0]):
+                assert max_depth+1==len(main_chains[0]), 'Mismatch between Longest Chain Main Chain and GHOST Main Chain'
+
+        return main_chains
 
     def add_block(self, parent_block, new_block):
         # call Algorithm's add_block function
