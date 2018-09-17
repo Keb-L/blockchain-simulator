@@ -1,5 +1,5 @@
 {
-  "setting-name": "GHOST-test",
+  "setting-name": "default",
   "default":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
@@ -10,7 +10,7 @@
     "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
     "Duration (sec)": 1000,
-    "Logging enabled": true
+    "Logging enabled": false
   },
   "small":  {
     "Number of nodes": 10, 

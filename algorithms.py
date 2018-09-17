@@ -106,17 +106,6 @@ class Algorithm():
             ret += self.graph_to_str(vertex=child, level=level+1)
         return ret
 
-class LongestChain(Algorithm):
-    def fork_choice_rule(self):
-        # parent vertex is vertex with maximum depth
-        depths = self.depth.get_array()
-        max_depth = np.amax(depths)
-        max_indices = np.where(depths==max_depth)[0]
-        parent_blocks = [self.vertex_to_blocks[self.tree.vertex(index)] for index in
-                max_indices]
-
-        return parent_blocks
-
     def compute_k(self, epsilon, num_nodes, num_adversaries):
         # compute finalization depth
         k = 0
@@ -133,7 +122,24 @@ class LongestChain(Algorithm):
             else:
                 k+=1
         return 6
-        # return k
+
+class LongestChain(Algorithm):
+    def fork_choice_rule(self):
+        depth_array = self.depth.get_array()
+        # find max depth
+        max_depth = np.amax(depth_array)
+
+        # find indices where depth is max depth
+        max_indices = np.where(depth_array==np.amax(depth_array))[0]
+
+        # copy blocks into parent blocks array
+        it = np.nditer(max_indices, flags=['f_index'])
+        parent_blocks = np.empty(shape=max_indices.shape[0], dtype=object)
+        while not it.finished:
+            parent_blocks[it.index] = self.vertex_to_blocks[self.tree.vertex(it[0])]
+            it.iternext()
+
+        return parent_blocks
 
 class GHOST(Algorithm):
     def __init__(self, validate_length=True):
@@ -196,25 +202,3 @@ class GHOST(Algorithm):
                 max_subtree_vertices]
 
         return parent_blocks
-
-
-    '''
-    Both LongestChain() and GHOST() have the same finalization protocol, hence
-    the code is identical. TODO: find a better implementation of code reuse
-    '''
-    def compute_k(self, epsilon, num_nodes, num_adversaries):
-        # compute finalization depth
-        k = 0
-        q = float(num_adversaries)/num_nodes
-        p = 1-q
-        while True:
-            s = 0
-            _lambda = k*q/p
-            for i in range(0, k):
-                s+=pow(_lambda, i)*pow(e, -_lambda)/factorial(i)*(1-pow(q/p, k-i))
-            result = 1-s
-            if result<=epsilon:
-                break
-            else:
-                k+=1
-        return 6
