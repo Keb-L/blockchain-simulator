@@ -40,8 +40,8 @@ def compute_optimistic_confirmation_time():
             avg_optimistic_confirmation_time = 0.0
         else:
             avg_optimistic_confirmation_time = sum(optimistic_confirmation_times.values())/len(optimistic_confirmation_times)
+            num_nodes+=1
         avg_optimistic_confirmation_sum+=avg_optimistic_confirmation_time
-        num_nodes+=1
 
     return float(avg_optimistic_confirmation_sum)/num_nodes
 

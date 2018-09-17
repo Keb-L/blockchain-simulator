@@ -1,5 +1,5 @@
 {
-  "setting-name": "GHOST-test",
+  "setting-name": "default",
   "default":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
