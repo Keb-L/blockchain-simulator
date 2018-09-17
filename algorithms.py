@@ -1,4 +1,4 @@
-import numpy as np, uuid 
+import numpy as np, uuid, random 
 from itertools import takewhile
 from graph_tool import *
 import graph_tool.all as gt
@@ -35,6 +35,12 @@ class Algorithm():
         common_prefix = [v[0] for v in takewhile(lambda chain: len(set(chain)) == 1, zip(*main_chains))]
 
         return common_prefix
+
+    def random_main_chain(self, main_chains=None):
+        if main_chains is None:
+            main_chains = self.main_chains()
+
+        return random.choice(main_chains)
 
     @abstractmethod
     def main_chains(self):

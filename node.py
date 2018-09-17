@@ -142,7 +142,7 @@ class Node():
         new_block.set_optimistic_confirmation_timestamp(proposal.timestamp)
 
         # find all txs in main chain
-        main_chain = self.local_blocktree.main_chains()[0]
+        main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.array([])
         for v in main_chain:
             main_chain_txs = np.append(main_chain_txs,

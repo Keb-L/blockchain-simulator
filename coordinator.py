@@ -34,7 +34,7 @@ class Coordinator():
 
     def set_timestamps(self):
         # get main chain
-        main_chain = self.global_blocktree.main_chains()[0]
+        main_chain = self.global_blocktree.random_main_chain()
 
         # initialize vertex depth to 0 and get finalization depth
         finalization_depth = self.global_blocktree.compute_k(self.params['tx_error_prob'],
