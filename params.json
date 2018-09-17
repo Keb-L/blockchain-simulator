@@ -1,5 +1,5 @@
 {
-  "setting-name": "default",
+  "setting-name": "GHOST-test",
   "default":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
@@ -9,7 +9,8 @@
     "Transaction dataset": "poisson",
     "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 1000
+    "Duration (sec)": 1000,
+    "Logging enabled": true
   },
   "small":  {
     "Number of nodes": 10, 
@@ -22,7 +23,8 @@
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 1000
+    "Duration (sec)": 1000,
+    "Logging enabled": true
   },
   "longest-chain-test":  {
     "Number of nodes": 100, 
@@ -33,7 +35,8 @@
     "Transaction dataset": "poisson",
     "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 2400
+    "Duration (sec)": 2400,
+    "Logging enabled": true
   },
   "GHOST-test":  {
     "Number of nodes": 100, 
@@ -42,8 +45,9 @@
     "Probability of error in transaction confirmation": 0.1, 
     "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
-    "Network model": "Constant-Decker-Wattenhorf",
+    "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "GHOST",
-    "Duration (sec)": 1000
+    "Duration (sec)": 1000,
+    "Logging enabled": true
   }
 }

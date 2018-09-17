@@ -21,6 +21,7 @@ def get_params(filename):
         params['model'] = d['Network model']
         params['fork_choice_rule'] = d['Fork choice rule']
         params['duration'] = d['Duration (sec)']
+        params['logging'] = d['Logging enabled']
         if 'Topology file' in d:
             params['topology'] = d['Topology file']
         if 'Locations file' in d:

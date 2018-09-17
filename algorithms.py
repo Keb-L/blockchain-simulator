@@ -150,8 +150,7 @@ class GHOST(Algorithm):
         if self.validate_length:
             depths = self.depth.get_array()
             max_depth = np.amax(depths)
-            if max_depth+1!=len(main_chains[0]):
-                assert max_depth+1==len(main_chains[0]), 'Mismatch between Longest Chain Main Chain and GHOST Main Chain'
+            assert max_depth+1==len(main_chains[0]), 'Mismatch between Longest Chain Main Chain and GHOST Main Chain'
 
         return main_chains
 

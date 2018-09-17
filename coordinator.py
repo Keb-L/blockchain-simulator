@@ -124,15 +124,16 @@ class Coordinator():
                 p_i+=1
 
         self.set_timestamps()
-        log_txs(self.txs)
 
-        for node in self.nodes:
-            log_local_blocktree(node)
-        log_global_blocktree(self.global_blocktree)
-        log_statistics(self.params, self.global_blocktree)
-        draw_global_blocktree(self.global_blocktree)
+        if self.params['logging']:
+            log_txs(self.txs)
+            for node in self.nodes:
+                log_local_blocktree(node)
+            log_global_blocktree(self.global_blocktree)
+            log_statistics(self.params, self.global_blocktree)
+            draw_global_blocktree(self.global_blocktree)
 
-        os.system('cat ./logs/stats.csv')
+            os.system('cat ./logs/stats.csv')
 
         # ******* 
         # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
