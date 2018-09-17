@@ -43,7 +43,10 @@ def compute_optimistic_confirmation_time():
             num_nodes+=1
         avg_optimistic_confirmation_sum+=avg_optimistic_confirmation_time
 
-    return float(avg_optimistic_confirmation_sum)/num_nodes
+    if num_nodes==0:
+        return 0.0
+    else:
+        return float(avg_optimistic_confirmation_sum)/num_nodes
 
 def compute_throughput():
     f = 0.95
