@@ -32,7 +32,8 @@ class Algorithm():
         if main_chains is None:
             main_chains = self.main_chains()
 
-        common_prefix = [v[0] for v in takewhile(lambda chain: len(set(chain)) == 1, zip(*main_chains))]
+        common_prefix = [v[0] for v in takewhile(lambda chain:
+            chain.count(chain[0])==len(chain), zip(*main_chains))]
 
         return common_prefix
 
@@ -77,7 +78,7 @@ class Algorithm():
 
     # add block based on fork choice rule
     def add_block_by_fork_choice_rule(self, new_block):
-        parent_block = self.fork_choice_rule()[0]
+        parent_block = random.choice(self.fork_choice_rule())
         new_block.parent_id = parent_block.id
         self.add_block(parent_block, new_block)
 
@@ -144,8 +145,7 @@ class LongestChain(Algorithm):
 class GHOST(Algorithm):
     def __init__(self, validate_length=True):
         super(GHOST, self).__init__()
-        self.subtree_size = {}
-
+        self.subtree_size = self.tree.new_vertex_property('int')
         self.subtree_size[self.root] = 0
         self.validate_length = validate_length
 

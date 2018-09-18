@@ -10,7 +10,7 @@
     "Network model": "Constant-Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
     "Duration (sec)": 1000,
-    "Logging enabled": false
+    "Logging enabled": true
   },
   "small":  {
     "Number of nodes": 10, 
@@ -47,7 +47,7 @@
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "GHOST",
-    "Duration (sec)": 1000,
+    "Duration (sec)": 1200,
     "Logging enabled": true
   }
 }
