@@ -66,22 +66,23 @@ class Node():
                 # transactions should be added to local transaction queue
                 self.add_to_local_txs(event)
             elif event.__class__.__name__=='Proposal':
+                '''
                 # get initial common prefix
                 initial_common_prefix = list(map(vertex_to_blocks,
                     self.local_blocktree.common_prefix()))
                 initial_common_prefix_ids = list(map(blocks_to_ids,
                     initial_common_prefix))
-
+                '''
                 # blocks should be added to local block tree
                 copied_block = Block(event.block.txs, event.block.id,
                         event.block.parent_id) 
                 # update optimistic confirmation timestamp to event's timestamp
-                copied_block.set_optimistic_confirmation_timestamp(event.timestamp)
+                # copied_block.set_optimistic_confirmation_timestamp(event.timestamp)
                 # add block based on parent id
                 parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                 if parent_block==None:
                     self.orphans = np.append(self.orphans, event)
-
+                '''
                 # get new main chains
                 new_common_prefix = list(map(vertex_to_blocks,
                     self.local_blocktree.common_prefix()))
@@ -93,6 +94,7 @@ class Node():
                     if new_id not in initial_common_prefix_ids:
                         # update optimistic confirmation timestamp
                         new_common_prefix[i].set_optimistic_confirmation_timestamp(event.timestamp)
+                '''
             b_i+=1
 
         # remove already processed items in buffer
