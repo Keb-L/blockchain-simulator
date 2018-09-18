@@ -16,10 +16,16 @@ def get_params(filename):
         params['num_adversaries'] = d['Number of adversaries']
         params['max_block_size'] = d['Block size (txs)']
         params['tx_error_prob'] = d['Probability of error in transaction confirmation']
-        params['proposal_rate'] = d['Block proposal rate parameter']
+        params['fork_choice_rule'] = d['Fork choice rule']
+        # if the fork choice rule is longest chain with pool, we should have 2
+        # proposal rates f_t for the tree and f_p for the pool
+        if d['Fork choice rule']=='longest-chain-with-pool':
+            params['tree_proposal_rate'] = d['Block tree proposal rate parameter']
+            params['pool_proposal_rate'] = d['Block pool proposal rate parameter']
+        else:
+            params['proposal_rate'] = d['Block proposal rate parameter']
         params['dataset'] = d['Transaction dataset']
         params['model'] = d['Network model']
-        params['fork_choice_rule'] = d['Fork choice rule']
         params['duration'] = d['Duration (sec)']
         params['logging'] = d['Logging enabled']
         if 'Topology file' in d:

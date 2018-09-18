@@ -16,9 +16,10 @@ class Transaction():
         self.finalization_timestamp = finalization_timestamp
 
 class Proposal():
-    def __init__(self, timestamp):
+    def __init__(self, timestamp, proposal_type ='tree'):
         self.timestamp = timestamp
         self.id = uuid.uuid4().hex[0:6]
+        self.proposal_type = proposal_type
 
     def set_block(self, block):
         self.block = block

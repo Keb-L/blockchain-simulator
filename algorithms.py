@@ -25,7 +25,7 @@ class Algorithm():
         self.depth[self.root] = 0
 
     @abstractmethod
-    def fork_choice_rule(self, new_block):
+    def fork_choice_rule(self):
         pass
 
     def common_prefix(self, main_chains=None):
@@ -141,6 +141,16 @@ class LongestChain(Algorithm):
             it.iternext()
 
         return parent_blocks
+
+class LongestChainWithPool(LongestChain):
+    def __init__(self):
+        super(LongestChainWithPool, self).__init__()
+
+        self.pool_blocks = np.array([])
+
+    def add_pool_block(self, new_pool_block):
+        self.pool_blocks = np.append(self.pool_blocks, new_pool_block)
+
 
 class GHOST(Algorithm):
     def __init__(self, validate_length=True):

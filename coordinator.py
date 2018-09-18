@@ -12,7 +12,9 @@ class Coordinator():
 
         self.params = params
 
-        if params['fork_choice_rule']=='longest-chain':
+        if params['fork_choice_rule']=='longest-chain-with-pool':
+            self.global_blocktree = LongestChainWithPool()
+        elif params['fork_choice_rule']=='longest-chain':
             self.global_blocktree = LongestChain()
         elif params['fork_choice_rule']=='GHOST':
             self.global_blocktree = GHOST()
@@ -23,10 +25,21 @@ class Coordinator():
     def generate_proposals(self):
         start_time = 0
         timestamp = 0
+
+        # generate tree proposal events
         while timestamp<self.params['duration']+start_time: 
-            timestamp = timestamp + np.random.exponential(1.0/self.params['proposal_rate'])
-            proposal = Proposal(timestamp) 
+            timestamp = timestamp + np.random.exponential(1.0/self.params['tree_proposal_rate'])
+            proposal = Proposal(timestamp, proposal_type='Tree') 
             self.proposals = np.append(self.proposals, proposal)
+
+        timestamp = 0
+        # generate pool proposal events
+        while timestamp<self.params['duration']+start_time: 
+            timestamp = timestamp + np.random.exponential(1.0/self.params['tree_proposal_rate'])
+            proposal = Proposal(timestamp, proposal_type='Pool') 
+            self.proposals = np.append(self.proposals, proposal)
+
+        sorted(self.proposals, key = lambda proposal: proposal.timestamp)
 
 
     def set_transactions(self, dataset):

@@ -1,5 +1,5 @@
 {
-  "setting-name": "default",
+  "setting-name": "longest-chain-with-pool",
   "default":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
@@ -48,6 +48,19 @@
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "GHOST",
     "Duration (sec)": 1200,
+    "Logging enabled": true
+  },
+  "longest-chain-with-pool":  {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block tree proposal rate parameter": 0.01, 
+    "Block pool proposal rate parameter": 0.01, 
+    "Transaction dataset": "poisson",
+    "Network model": "Constant-Decker-Wattenhorf",
+    "Fork choice rule": "longest-chain-with-pool",
+    "Duration (sec)": 2400,
     "Logging enabled": true
   }
 }

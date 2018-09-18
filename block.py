@@ -1,7 +1,8 @@
 import numpy as np, uuid
 
 class Block():
-    def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0):
+    def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
+            block_type = 'Tree'):
         if txs is None:
             self.txs = np.array([])
         else:
@@ -17,15 +18,19 @@ class Block():
         self.optimistic_confirmation_timestamp = None
         self.finalization_timestamp = None
 
+        self.referenced_blocks = np.array([])
+
+        self.block_type = block_type 
+
     def add_tx(self, tx):
         self.txs = np.append(self.txs, tx)
 
     def set_parent_id(self, parent_id):
         self.parent_id = parent_id
 
-    def set_optimistic_confirmation_timestamp(self,
-            optimistic_confirmation_timestamp):
-        self.optimistic_confirmation_timestamp = optimistic_confirmation_timestamp
-
     def set_finalization_timestamp(self, finalization_timestamp):
         self.finalization_timestamp = finalization_timestamp
+
+    def add_referenced_block(self, referenced_block):
+        self.referenced_blocks = np.append(self.referenced_blocks,
+                referenced_block)
