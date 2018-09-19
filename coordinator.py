@@ -1,8 +1,8 @@
 import random, csv, os, numpy as np
+import logger
 from node import Node
 from events import Proposal
 from algorithms import *
-from logger import log_local_blocktree, log_global_blocktree, log_txs, log_statistics, draw_global_blocktree
 
 class Coordinator():
     def __init__(self, params):
@@ -141,14 +141,15 @@ class Coordinator():
         self.set_timestamps()
 
         if self.params['logging']:
-            log_txs(self.txs)
+            logger.log_txs(self.txs)
             '''
             for node in self.nodes:
                 log_local_blocktree(node)
             '''
-            log_global_blocktree(self.global_blocktree)
-            log_statistics(self.params, self.global_blocktree)
-            draw_global_blocktree(self.global_blocktree)
+            logger.log_global_blocktree(self.global_blocktree)
+            logger.log_statistics(self.params, self.global_blocktree)
+            logger.draw_global_blocktree(self.global_blocktree)
+            logger.draw_main_chain(self.global_blocktree)
 
             os.system('cat ./logs/stats.csv')
 
