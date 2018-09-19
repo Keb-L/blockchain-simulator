@@ -33,6 +33,13 @@ def log_global_blocktree(global_blocktree):
                 f'{block.proposal_timestamp}', 'Finalization timestamp':
                 f'{block.finalization_timestamp}', 'Depth': f'{depth}',
                 'Finalized': f'{is_finalized}', 'Transactions': f'{tx_str}'})
+            for pool_block in block.referenced_blocks:
+                pool_tx_str = ';'.join(tx.id for tx in pool_block.txs)
+                writer.writerow({'id': f'{pool_block.id}', 'Parent id':
+                    f'{pool_block.parent_id}', 'Proposal timestamp':
+                    f'{pool_block.proposal_timestamp}', 'Finalization timestamp':
+                    f'{block.finalization_timestamp}', 'Depth': f'NA',
+                    'Finalized': f'{is_finalized}', 'Transactions': f'{pool_tx_str}'})
 
 def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:

@@ -73,6 +73,14 @@ class Coordinator():
                     tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
                     tx.set_finalization_timestamp(top_block.finalization_timestamp)
 
+                # set finalization timestamps for referenced blocks and
+                # transactions within them
+                for pool_block in top_block.referenced_blocks:
+                    pool_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
+                    for tx in top_block.txs:
+                        tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
+                        tx.set_finalization_timestamp(top_block.finalization_timestamp)
+
     '''
     Main simulation function
     Coordinator checks head of proposal and tx queue and processes earlier
