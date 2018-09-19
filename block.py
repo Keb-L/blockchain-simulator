@@ -2,7 +2,7 @@ import numpy as np, uuid
 
 class Block():
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'Tree'):
+            block_type = 'tree', referenced_blocks=None):
         if txs is None:
             self.txs = np.array([])
         else:
@@ -18,7 +18,10 @@ class Block():
         self.optimistic_confirmation_timestamp = None
         self.finalization_timestamp = None
 
-        self.referenced_blocks = np.array([])
+        if referenced_blocks is None:
+            self.referenced_blocks = np.array([])
+        else:
+            self.referenced_blocks = referenced_blocks.copy()
 
         self.block_type = block_type 
 

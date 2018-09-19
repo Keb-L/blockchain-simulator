@@ -47,18 +47,19 @@ class Algorithm():
     def main_chains(self):
         # find leaf blocks via fork choice rule
         leaf_blocks = self.fork_choice_rule()
-
         main_chains = []
 
+
         # traverse from leaf vertices up to root and add to main chain
+        root_block = self.vertex_to_blocks[self.root]
         for leaf_block in leaf_blocks: 
             main_chains.append([])
-            vertex = self.block_to_vertices[leaf_block.id]
-            while vertex!=self.root:
-                main_chains[-1].append(vertex)
-                block = self.vertex_to_blocks[vertex]
-                vertex = self.block_to_vertices[block.parent_id]
-            main_chains[-1].append(self.root)
+            block = leaf_block
+            while block.id!=root_block.id:
+                main_chains[-1].append(block)
+                parent_vertex = self.block_to_vertices[block.parent_id]
+                block = self.vertex_to_blocks[parent_vertex]
+            main_chains[-1].append(root_block)
             # reverse the path
             main_chains[-1] = main_chains[-1][::-1]
 
@@ -79,7 +80,7 @@ class Algorithm():
     # add block based on fork choice rule
     def add_block_by_fork_choice_rule(self, new_block):
         parent_block = random.choice(self.fork_choice_rule())
-        new_block.parent_id = parent_block.id
+        new_block.set_parent_id(parent_block.id)
         self.add_block(parent_block, new_block)
 
         return parent_block
@@ -145,11 +146,39 @@ class LongestChain(Algorithm):
 class LongestChainWithPool(LongestChain):
     def __init__(self):
         super(LongestChainWithPool, self).__init__()
-
         self.pool_blocks = np.array([])
 
     def add_pool_block(self, new_pool_block):
         self.pool_blocks = np.append(self.pool_blocks, new_pool_block)
+
+    def add_block(self, parent_block, new_block):
+        # call LongestChain's add_block function
+        super(LongestChainWithPool, self).add_block(parent_block, new_block)
+
+        if self.pool_blocks.shape[0]>0:
+            it = np.nditer(self.pool_blocks, flags=['f_index', 'refs_ok'])
+
+            while not it.finished:
+                pool_block = self.pool_blocks[it.index]
+                new_block.add_referenced_block(pool_block)
+                it.iternext()
+
+            self.pool_blocks = np.array([])
+
+    def main_chains(self):
+        # call LongestChain's main_chains function
+        tree_main_chains = super(LongestChainWithPool, self).main_chains()
+
+        main_chains = []
+
+        for main_chain in tree_main_chains:
+            main_chains.append([])
+            for tree_block in main_chain:
+                added_blocks = list(tree_block.referenced_blocks)
+                added_blocks.append(tree_block)
+                main_chains[-1]+=added_blocks
+
+        return main_chains
 
 
 class GHOST(Algorithm):

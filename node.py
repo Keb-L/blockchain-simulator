@@ -63,13 +63,19 @@ class Node():
                 # transactions should be added to local transaction queue
                 self.add_to_local_txs(event)
             elif event.__class__.__name__=='Proposal':
-                # blocks should be added to local block tree
-                copied_block = Block(event.block.txs, event.block.id,
-                        event.block.parent_id) 
-                # add block based on parent id
-                parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
-                if parent_block==None:
-                    self.orphans = np.append(self.orphans, event)
+                if event.block.block_type=='tree':
+                    # tree blocks should be added to local block tree
+                    copied_block = Block(event.block.txs, event.block.id,
+                            event.block.parent_id) 
+                    # add block based on parent id
+                    parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
+                    if parent_block==None:
+                        self.orphans = np.append(self.orphans, event)
+                elif event.block.block_type=='pool':
+                    # blocks should be added to local block tree
+                    copied_block = Block(event.block.txs, event.block.id) 
+                    self.local_blocktree.add_pool_block(copied_block)
+
             b_i+=1
 
         # remove already processed items in buffer
@@ -90,11 +96,6 @@ class Node():
                 else:
                     # we did add an orphan block
                     added_orphan_block = True
-                    # get new main chain
-                    new_main_chain = list(map(vertex_to_blocks,
-                        self.local_blocktree.main_chain()))
-                    new_main_chain_ids = list(map(blocks_to_ids,
-                        new_main_chain))
             self.orphans = self.orphans[remaining_orphans]
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
@@ -103,14 +104,15 @@ class Node():
         self.process_buffer(proposal.timestamp)
 
         # append new block to appropriate chain
-        new_block = Block(proposal_timestamp=proposal.timestamp)
+        new_block = Block(proposal_timestamp=proposal.timestamp,
+                block_type=proposal.proposal_type)
 
         # find all txs in main chain
         main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.array([])
-        for v in main_chain:
+        for b in main_chain:
             main_chain_txs = np.append(main_chain_txs,
-                    self.local_blocktree.vertex_to_blocks[v].txs)
+                    b.txs)
 
         tx_i = 0
         while tx_i<len(self.local_txs):
@@ -126,9 +128,8 @@ class Node():
             tx_i+=1
 
         proposal.set_block(new_block)
-
         if proposal.proposal_type=='pool':
-            self.add_pool_block(new_block)
+            self.local_blocktree.add_pool_block(new_block)
         elif proposal.proposal_type=='tree':
             # find selected chain based on schema and add block
             local_parent_block = self.local_blocktree.add_block_by_fork_choice_rule(new_block)
@@ -136,8 +137,9 @@ class Node():
             
             # copy block and add new block to global blocktree
             copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
-                    proposal_timestamp=new_block.proposal_timestamp) 
+                    proposal_timestamp=new_block.proposal_timestamp,
+                    referenced_blocks=new_block.referenced_blocks) 
             global_parent_block = global_blocktree.add_block_by_parent_id(copied_block)
             copied_block.set_parent_id(global_parent_block.id)
-
+    
         return proposal

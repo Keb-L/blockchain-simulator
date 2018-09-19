@@ -3,6 +3,7 @@ from algorithms import *
 from block import Block
 
 class TestBlockchainSimulator(unittest.TestCase):
+    '''
     def test_longest_chain(self):
         l = LongestChain()
 
@@ -85,6 +86,30 @@ class TestBlockchainSimulator(unittest.TestCase):
             g.common_prefix()))
 
         self.assertListEqual(common_prefix, ['Genesis', b_block.id])
+    '''
+
+    def test_longest_chain_with_pool(self):
+        l = LongestChainWithPool()
+        # create our own tree 
+        block_a = Block(id='a', parent_id='Genesis', block_type='tree')
+        l.add_block_by_parent_id(block_a) 
+
+        # create two pool blocks
+        block_1 = Block(id='1', block_type='pool')
+        block_2 = Block(id='2', block_type='pool')
+
+        l.add_pool_block(block_1)
+        l.add_pool_block(block_2)
+
+        block_b = Block(id='b', block_type='tree')
+        l.add_block_by_fork_choice_rule(block_b)
+
+        chains = l.main_chains()
+
+        block_chain_1 = list(map(lambda vertex: l.vertex_to_blocks[vertex].id,
+                chains[0]))
+
+        print(block_chain_1)
 
 
 if __name__ == '__main__':

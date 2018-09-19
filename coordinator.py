@@ -26,21 +26,23 @@ class Coordinator():
         start_time = 0
         timestamp = 0
 
+        proposals = []
+
         # generate tree proposal events
         while timestamp<self.params['duration']+start_time: 
             timestamp = timestamp + np.random.exponential(1.0/self.params['tree_proposal_rate'])
-            proposal = Proposal(timestamp, proposal_type='Tree') 
-            self.proposals = np.append(self.proposals, proposal)
+            proposal = Proposal(timestamp, proposal_type='tree') 
+            proposals.append(proposal)
 
         timestamp = 0
         # generate pool proposal events
         while timestamp<self.params['duration']+start_time: 
-            timestamp = timestamp + np.random.exponential(1.0/self.params['tree_proposal_rate'])
-            proposal = Proposal(timestamp, proposal_type='Pool') 
-            self.proposals = np.append(self.proposals, proposal)
+            timestamp = timestamp + np.random.exponential(1.0/self.params['pool_proposal_rate'])
+            proposal = Proposal(timestamp, proposal_type='pool') 
+            proposals.append(proposal)
 
-        sorted(self.proposals, key = lambda proposal: proposal.timestamp)
-
+        self.proposals = np.asarray(sorted(proposals, key = lambda
+            proposal: proposal.timestamp))
 
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
@@ -58,10 +60,10 @@ class Coordinator():
                 break
             else:
                 # top block is block depth blocks deep on main chain
-                top_block = self.global_blocktree.vertex_to_blocks[main_chain[depth]]
+                top_block = main_chain[depth]
                 # bottom block is block depth+finalization_depth blocks deep on
                 # main chain
-                bottom_block = self.global_blocktree.vertex_to_blocks[main_chain[depth+finalization_depth]]
+                bottom_block = main_chain[depth+finalization_depth]
 
                 # top block's finalization timestamp is bottom block's proposal
                 # timestamp
