@@ -57,10 +57,9 @@ def log_txs(txs):
 
 def log_statistics(params, global_blocktree):
     with open('./logs/stats.csv', 'w+') as csvfile:
-        '''
         delta_blocks = constant_decker_wattenhorf(params['max_block_size'])
         delta_txs = constant_decker_wattenhorf(TX_SIZE)
-        f = params['proposal_rate']
+        f = params['tree_proposal_rate']
         # log network latency information
         if params['model']=='Decker-Wattenhorf' or params['model']=='Constant-Decker-Wattenhorf':
             csvfile.write(f'Average network latency for blocks (sec),{delta_blocks}\n')
@@ -85,7 +84,6 @@ def log_statistics(params, global_blocktree):
         # log information about latencies
         csvfile.write(f'Expected arrival rate,{float(f)/(1+f*delta_blocks)}\n')
         csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
-        '''
 
 def draw_global_blocktree(global_blocktree):
     main_chain_color_vp = global_blocktree.tree.new_vertex_property('int')
