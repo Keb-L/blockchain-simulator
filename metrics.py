@@ -58,10 +58,8 @@ def compute_latency():
 
 def dump_results():
     print('Results:')
-    avg_optimistic_confirmation_time = compute_optimistic_confirmation_time()
     avg_main_chain_arrival_latency, avg_finalization_latency = compute_latency() 
     print(f'Transaction Throughput: {compute_throughput()} transactions/sec')
-    print(f'Optimistic Confirmation Time: {avg_optimistic_confirmation_time} sec')
     print(f'Main Chain Arrival Latency: {avg_main_chain_arrival_latency} sec/transaction')
     print(f'Finalization Latency: {avg_finalization_latency} sec/transaction')
 

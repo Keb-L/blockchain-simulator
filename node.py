@@ -66,14 +66,16 @@ class Node():
                 if event.block.block_type=='tree':
                     # tree blocks should be added to local block tree
                     copied_block = Block(event.block.txs, event.block.id,
-                            event.block.parent_id) 
+                            event.block.parent_id,
+                            proposal_timestamp=event.timestamp) 
                     # add block based on parent id
                     parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                     if parent_block==None:
                         self.orphans = np.append(self.orphans, event)
                 elif event.block.block_type=='pool':
                     # blocks should be added to local block tree
-                    copied_block = Block(event.block.txs, event.block.id) 
+                    copied_block = Block(event.block.txs, event.block.id,
+                            proposal_timestamp=event.timestamp) 
                     self.local_blocktree.add_pool_block(copied_block)
 
             b_i+=1
