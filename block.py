@@ -15,7 +15,8 @@ class Block():
         self.proposal_timestamp = proposal_timestamp
         self.parent_id = parent_id 
 
-        self.optimistic_confirmation_timestamp = None
+
+        self.pool_block_timestamp = None
         self.finalization_timestamp = None
 
         if referenced_blocks is None:
@@ -30,6 +31,9 @@ class Block():
 
     def set_parent_id(self, parent_id):
         self.parent_id = parent_id
+
+    def set_pool_block_timestamp(self, pool_block_timestamp):
+        self.pool_block_timestamp = pool_block_timestamp
 
     def set_finalization_timestamp(self, finalization_timestamp):
         self.finalization_timestamp = finalization_timestamp
