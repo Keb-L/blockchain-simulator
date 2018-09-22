@@ -164,7 +164,6 @@ class Coordinator():
             logger.log_global_blocktree(self.global_blocktree)
             logger.log_statistics(self.params, self.global_blocktree)
             logger.draw_global_blocktree(self.global_blocktree)
-            logger.draw_main_chain(self.global_blocktree)
 
             os.system('cat ./logs/stats.csv')
 

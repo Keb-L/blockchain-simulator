@@ -24,6 +24,8 @@ def get_params(filename):
             params['pool_proposal_rate'] = d['Block pool proposal rate parameter']
         else:
             params['proposal_rate'] = d['Block proposal rate parameter']
+        if 'Transaction rate parameter' in d:
+            params['transaction_rate'] = d['Transaction rate parameter']
         params['dataset'] = d['Transaction dataset']
         params['model'] = d['Network model']
         params['duration'] = d['Duration (sec)']
@@ -80,12 +82,14 @@ if __name__=='__main__':
             for j in range(0, len(nodes)):
                 if i!=j:
                     nodes[i].add_neighbor(nodes[j])
+
+    tx_rate = TX_RATE if 'transaction_rate' not in params else params['transaction_rate']
     
     # generate mock poisson dataset
     if params['dataset']=='poisson':
-        tx_dataset = generate_tx_dataset.poisson(TX_RATE, params['duration'], 0, c.nodes)
+        tx_dataset = generate_tx_dataset.poisson(tx_rate, params['duration'], 0, c.nodes)
     elif params['dataset']=='deterministic':
-        tx_dataset = generate_tx_dataset.deterministic(TX_RATE,
+        tx_dataset = generate_tx_dataset.deterministic(tx_rate,
                 params['duration'], 0, c.nodes)
 
     # generate proposal events

@@ -87,49 +87,47 @@ def log_statistics(params, global_blocktree):
         csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
 
 def draw_global_blocktree(global_blocktree):
-    main_chain_color_vp = global_blocktree.tree.new_vertex_property('int')
-    main_chain_text_vp = global_blocktree.tree.new_vertex_property('string')
+    color_vp = global_blocktree.tree.new_vertex_property('double')
+    shape_vp = global_blocktree.tree.new_vertex_property('int')
+    text_vp = global_blocktree.tree.new_vertex_property('string')
+
+    main_chain = global_blocktree.random_main_chain()
+    main_chain_ids = list(map(lambda b: b.id, main_chain))
+
+    for b_id in global_blocktree.block_to_vertices:
+        v = global_blocktree.block_to_vertices[b_id]
+        text_vp[global_blocktree.tree.vertex(v)] = b_id
+        # squares for tree blocks
+        shape_vp[global_blocktree.tree.vertex(v)] = 2
+        if b_id in main_chain_ids:
+            # yellow for main chain blocks
+            color_vp[global_blocktree.tree.vertex(v)] = 0.8
+        else:
+            # red for orphan blocks
+            color_vp[global_blocktree.tree.vertex(v)] = 0.2
 
     # color main chain a different color
     for b in global_blocktree.main_chains()[0]:
         if b.id in global_blocktree.block_to_vertices:
             v = global_blocktree.block_to_vertices[b.id]
-            main_chain_color_vp[global_blocktree.tree.vertex(v)] = 1
-        main_chain_text_vp[global_blocktree.tree.vertex(v)] = b.id
+            # main chain color
+            color_vp[global_blocktree.tree.vertex(v)] = 1
+            for pool_block in b.referenced_blocks:
+                pool_vertex = global_blocktree.tree.add_vertex()
+                text_vp[global_blocktree.tree.vertex(pool_vertex)] = pool_block.id
+                # circles for pool blocks
+                shape_vp[pool_vertex] = 0
+                # blue for pool blocks
+                color_vp[pool_vertex] = 0
+                global_blocktree.tree.add_edge(v, pool_vertex)
 
     pos = radial_tree_layout(global_blocktree.tree, global_blocktree.tree.vertex(0))
 
     graph_draw(global_blocktree.tree,
-            vertex_text= main_chain_text_vp,
             vertex_size=50,
-            vertex_fill_color = main_chain_color_vp,
+            vertex_text=text_vp,
+            vertex_shape=shape_vp,
+            vertex_fill_color =color_vp,
             vertex_font_size=15, output_size=(4200, 4200),
             edge_pen_width=1.0,
-            output="./logs/global-blocktree.png")
-
-def draw_main_chain(global_blocktree):
-    main_chain = Graph()
-
-    main_chain_shape_vp =main_chain.new_vertex_property('int')
-    main_chain_text_vp =main_chain.new_vertex_property('string')
-
-    prev_v = None
-
-    for b in global_blocktree.main_chains()[0]:
-        v = main_chain.add_vertex()
-        main_chain_text_vp[main_chain.vertex(v)] = b.id
-        if b.id in global_blocktree.block_to_vertices:
-            main_chain_shape_vp[main_chain.vertex(v)] = 2
-        else:
-            main_chain_shape_vp[main_chain.vertex(v)] = 1
-        if prev_v is not None:
-            main_chain.add_edge(prev_v, v)
-        prev_v = v
-
-    graph_draw(main_chain,
-            vertex_text = main_chain_text_vp,
-            vertex_size=50,
-            vertex_shape = main_chain_shape_vp,
-            vertex_font_size=15, output_size=(4200, 4200),
-            edge_pen_width=1.0,
-            output="./logs/main-chain.png")
+            output="./logs/blocktree.png")
