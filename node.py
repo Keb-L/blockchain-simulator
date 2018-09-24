@@ -18,21 +18,28 @@ class Node():
 
         self.location=location
 
-        self.local_txs = np.array([])
         self.orphans = np.array([])
         # this is an event buffer containing broadcasted both block proposals and
         # transactions
-        self.buffer = np.array([])
         self.neighbors = np.array([])
+
+    def create_arrays(self, num_txs, num_proposals):
+        self.local_tx_i = 0
+        self.buffer_i = 0
+
+        self.local_txs = np.empty(num_txs, dtype=object)
+        self.buffer = np.empty(num_txs+num_proposals, dtype=object)
 
     def add_neighbor(self, neighbor_node):
         self.neighbors = np.append(self.neighbors, neighbor_node)
 
     def add_to_buffer(self, event):
-        self.buffer = np.append(self.buffer, event)
+        self.buffer[self.buffer_i] = event
+        self.buffer_i+=1
 
     def add_to_local_txs(self, tx):
-        self.local_txs = np.append(self.local_txs, tx)
+        self.local_txs[self.local_tx_i] = tx
+        self.local_tx_i+=1
 
     def broadcast(self, event, max_block_size, delay_model):
         if event.__class__.__name__=='Transaction':
@@ -53,9 +60,27 @@ class Node():
         for neighbor in self.neighbors:
             neighbor.add_to_buffer(event)
 
+    def add_orphan_blocks(self):
+        # loop over orphans repeatedly while we added an orphan block
+        added_orphan_block = True
+        while added_orphan_block:
+            # assume we did not add an orphan block
+            added_orphan_block = False
+            # loop over orphans and update remaining orphans
+            remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
+            for i, proposal in enumerate(self.orphans):
+                parent_block = self.local_blocktree.add_block_by_parent_id(proposal.block)
+                if parent_block==None:
+                    # did not add orphan block, block remains as orphan
+                    remaining_orphans[i] = True
+                else:
+                    # we did add an orphan block
+                    added_orphan_block = True
+            self.orphans = self.orphans[remaining_orphans]
+
     def process_buffer(self, timestamp):
         b_i = 0
-        while b_i<len(self.buffer):
+        while b_i<self.buffer_i:
             if self.buffer[b_i].timestamp>timestamp:
                 break
             event = self.buffer[b_i]
@@ -82,23 +107,9 @@ class Node():
 
         # remove already processed items in buffer
         self.buffer = self.buffer[b_i:]
+        self.buffer_i = 0
 
-        # loop over orphans repeatedly while we added an orphan block
-        added_orphan_block = True
-        while added_orphan_block:
-            # assume we did not add an orphan block
-            added_orphan_block = False
-            # loop over orphans and update remaining orphans
-            remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
-            for i, proposal in enumerate(self.orphans):
-                parent_block = self.local_blocktree.add_block_by_parent_id(proposal.block)
-                if parent_block==None:
-                    # did not add orphan block, block remains as orphan
-                    remaining_orphans[i] = True
-                else:
-                    # we did add an orphan block
-                    added_orphan_block = True
-            self.orphans = self.orphans[remaining_orphans]
+        self.add_orphan_blocks()
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
             global_blocktree):
@@ -117,7 +128,7 @@ class Node():
                     b.txs)
 
         tx_i = 0
-        while tx_i<len(self.local_txs):
+        while tx_i<self.local_tx_i:
             # if we exceed current time, exit loop
             if self.local_txs[tx_i].timestamp>proposal.timestamp:
                 break

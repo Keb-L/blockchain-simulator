@@ -53,7 +53,9 @@ if __name__=='__main__':
     os.mkdir('./logs')
 
     c = Coordinator(params) 
+
     nodes = np.empty(params['num_nodes'], dtype=Node)
+
     if 'topology' in params and 'locations' in params:
         num_nodes, locations, G = get_topology(params['locations'],
         params['topology'])
@@ -72,7 +74,8 @@ if __name__=='__main__':
                 n.add_neighbor(nodes[neighbor])
     else:
         # generate num_nodes nodes
-        for node_id in range(0, params['num_nodes']): 
+        num_nodes = params['num_nodes']
+        for node_id in range(0, num_nodes): 
             n = Node(node_id, params['fork_choice_rule'])
             nodes[node_id] = n
             c.add_node(n)
@@ -92,10 +95,16 @@ if __name__=='__main__':
         tx_dataset = generate_tx_dataset.deterministic(tx_rate,
                 params['duration'], 0, c.nodes)
 
+
     # generate proposal events
     c.generate_proposals()
     # set transaction dataset
     c.set_transactions(tx_dataset)
+
+    # create arrays to store proposals and transactions
+    for node_id in range(0, num_nodes):
+        nodes[node_id].create_arrays(len(tx_dataset), c.proposals.shape[0])
+
 
     # run simulation
     c.run()
