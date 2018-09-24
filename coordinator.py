@@ -117,7 +117,9 @@ class Coordinator():
                     # transaction index and move global clock
                     tx = self.txs[tx_i]
                     source_node = tx.source
-                    source_node.add_to_local_txs(tx)
+
+                    source_node.local_txs[source_node.local_tx_i] = tx
+                    source_node.local_tx_i+=1
                     source_node.broadcast(tx, self.params['max_block_size'],
                             self.params['model'])
                     tx_i+=1

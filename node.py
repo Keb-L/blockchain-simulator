@@ -33,14 +33,6 @@ class Node():
     def add_neighbor(self, neighbor_node):
         self.neighbors = np.append(self.neighbors, neighbor_node)
 
-    def add_to_buffer(self, event):
-        self.buffer[self.buffer_i] = event
-        self.buffer_i+=1
-
-    def add_to_local_txs(self, tx):
-        self.local_txs[self.local_tx_i] = tx
-        self.local_tx_i+=1
-
     def broadcast(self, event, max_block_size, delay_model):
         if event.__class__.__name__=='Transaction':
             msg_size = TX_SIZE
@@ -58,7 +50,8 @@ class Node():
         event.timestamp+=delay
 
         for neighbor in self.neighbors:
-            neighbor.add_to_buffer(event)
+            neighbor.buffer[neighbor.buffer_i] = event
+            neighbor.buffer_i+=1
 
     def add_orphan_blocks(self):
         # loop over orphans repeatedly while we added an orphan block
@@ -86,7 +79,8 @@ class Node():
             event = self.buffer[b_i]
             if event.__class__.__name__=='Transaction':
                 # transactions should be added to local transaction queue
-                self.add_to_local_txs(event)
+                self.local_txs[self.local_tx_i] = event
+                self.local_tx_i+=1
             elif event.__class__.__name__=='Proposal':
                 if event.block.block_type=='tree':
                     # tree blocks should be added to local block tree
