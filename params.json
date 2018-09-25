@@ -53,7 +53,7 @@
   "longest-chain-with-pool":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
-    "Block size (txs)": 50, 
+    "Block size (txs)": 500, 
     "Probability of error in transaction confirmation": 0.1, 
     "Block tree proposal rate parameter": 0.1, 
     "Block pool proposal rate parameter": 1, 
@@ -61,7 +61,7 @@
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain-with-pool",
-    "Duration (sec)": 250,
+    "Duration (sec)": 100,
     "Logging enabled": true
   }
 }

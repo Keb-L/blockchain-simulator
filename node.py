@@ -72,38 +72,35 @@ class Node():
             self.orphans = self.orphans[remaining_orphans]
 
     def process_buffer(self, timestamp):
-        b_i = 0
-        while b_i<self.buffer_i:
-            if self.buffer[b_i].timestamp>timestamp:
-                break
-            event = self.buffer[b_i]
-            if event.__class__.__name__=='Transaction':
-                # transactions should be added to local transaction queue
-                self.local_txs[self.local_tx_i] = event
-                self.local_tx_i+=1
-            elif event.__class__.__name__=='Proposal':
-                if event.block.block_type=='tree':
-                    # tree blocks should be added to local block tree
-                    copied_block = Block(event.block.txs, event.block.id,
-                            event.block.parent_id,
-                            proposal_timestamp=event.timestamp) 
-                    # add block based on parent id
-                    parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
-                    if parent_block==None:
-                        self.orphans = np.append(self.orphans, event)
-                elif event.block.block_type=='pool':
-                    # blocks should be added to local block tree
-                    copied_block = Block(event.block.txs, event.block.id,
-                            proposal_timestamp=event.timestamp) 
-                    self.local_blocktree.add_pool_block(copied_block)
+        if self.buffer_i>0:
+            b_i=0
+            for elem in np.nditer(self.buffer[:self.buffer_i], flags=['refs_ok']):
+                event = elem.item()
+                if event.__class__.__name__=='Transaction':
+                    # transactions should be added to local transaction queue
+                    self.local_txs[self.local_tx_i] = event
+                    self.local_tx_i+=1
+                elif event.__class__.__name__=='Proposal':
+                    if event.block.block_type=='tree':
+                        # tree blocks should be added to local block tree
+                        copied_block = Block(event.block.txs, event.block.id,
+                                event.block.parent_id,
+                                proposal_timestamp=event.timestamp) 
+                        # add block based on parent id
+                        parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
+                        if parent_block==None:
+                            self.orphans = np.append(self.orphans, event)
+                    elif event.block.block_type=='pool':
+                        # blocks should be added to local block tree
+                        copied_block = Block(event.block.txs, event.block.id,
+                                proposal_timestamp=event.timestamp) 
+                        self.local_blocktree.add_pool_block(copied_block)
+                b_i+=1
+            # remove already processed items in buffer
+            self.buffer = self.buffer[b_i:]
+            self.buffer_i = 0
 
-            b_i+=1
-
-        # remove already processed items in buffer
-        self.buffer = self.buffer[b_i:]
-        self.buffer_i = 0
-
-        self.add_orphan_blocks()
+            self.add_orphan_blocks()
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
             global_blocktree):
@@ -122,10 +119,10 @@ class Node():
             for elem in np.nditer(self.local_txs[:self.local_tx_i],
                     flags=['refs_ok']):
                 tx = elem.item()
-                if tx.timestamp>proposal.timestamp or new_block.txs.shape[0]<max_block_size:
+                if tx.timestamp>proposal.timestamp or new_block.txs.shape[0]>max_block_size:
                     break
                 if tx not in main_chain_txs:
-                    new_block.add_tx(it[0].item())
+                    new_block.add_tx(tx)
 
 
         proposal.set_block(new_block)
