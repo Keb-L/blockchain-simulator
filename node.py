@@ -116,20 +116,11 @@ class Node():
 
         # find all txs in main chain
         main_chain = self.local_blocktree.random_main_chain()
-        main_chain_txs = np.array([])
-        for b in main_chain:
-            main_chain_txs = np.append(main_chain_txs,
-                    b.txs)
+        main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
 
         tx_i = 0
-        while tx_i<self.local_tx_i:
-            # if we exceed current time, exit loop
-            if self.local_txs[tx_i].timestamp>proposal.timestamp:
-                break
-            # if we exceed max block size, exit loop
-            elif len(new_block.txs)>max_block_size:
-                break
-            elif self.local_txs[tx_i] not in main_chain_txs:
+        while tx_i<self.local_tx_i  and self.local_txs[tx_i].timestamp<proposal.timestamp and new_block.txs.shape[0]<max_block_size:
+            if self.local_txs[tx_i] not in main_chain_txs:
                 new_block.add_tx(self.local_txs[tx_i])
             tx_i+=1
 
