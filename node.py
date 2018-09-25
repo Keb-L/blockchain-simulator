@@ -118,11 +118,15 @@ class Node():
         main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
 
-        tx_i = 0
-        while tx_i<self.local_tx_i  and self.local_txs[tx_i].timestamp<proposal.timestamp and new_block.txs.shape[0]<max_block_size:
-            if self.local_txs[tx_i] not in main_chain_txs:
-                new_block.add_tx(self.local_txs[tx_i])
-            tx_i+=1
+        if self.local_tx_i>0:
+            for elem in np.nditer(self.local_txs[:self.local_tx_i],
+                    flags=['refs_ok']):
+                tx = elem.item()
+                if tx.timestamp>proposal.timestamp or new_block.txs.shape[0]<max_block_size:
+                    break
+                if tx not in main_chain_txs:
+                    new_block.add_tx(it[0].item())
+
 
         proposal.set_block(new_block)
         if proposal.proposal_type=='pool':
