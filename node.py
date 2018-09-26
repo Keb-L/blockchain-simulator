@@ -76,6 +76,8 @@ class Node():
             b_i=0
             for elem in np.nditer(self.buffer[:self.buffer_i], flags=['refs_ok']):
                 event = elem.item()
+                if event.timestamp>timestamp:
+                    break
                 if event.__class__.__name__=='Transaction':
                     # transactions should be added to local transaction queue
                     self.local_txs[self.local_tx_i] = event
