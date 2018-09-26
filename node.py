@@ -6,7 +6,7 @@ from algorithms import *
 from constants import TX_SIZE
 
 class Node():
-    def __init__(self, node_id, algorithm, location=None):
+    def __init__(self, node_id, algorithm, tx_rule, location=None):
         self.node_id = node_id
 
         if algorithm=='longest-chain-with-pool':
@@ -15,6 +15,8 @@ class Node():
             self.local_blocktree = LongestChain()
         elif algorithm=='GHOST':
             self.local_blocktree = GHOST()
+
+        self.tx_rule = tx_rule
 
         self.location=location
 
@@ -32,6 +34,14 @@ class Node():
 
     def add_neighbor(self, neighbor_node):
         self.neighbors = np.append(self.neighbors, neighbor_node)
+
+    def add_block_by_tx_rule(self, new_block, tx):
+        if self.tx_rule=='FIFO':
+            new_block.add_tx(tx)
+        # m should range from f*delta (block pool proposal rate * block delay)
+        # to 10*f*delta
+        elif self.tx_rule=='1/m' and random.random()<1.0/(2*2.3333):
+            new_block.add_tx(tx)
 
     def broadcast(self, event, max_block_size, delay_model):
         if event.__class__.__name__=='Transaction':
@@ -70,6 +80,7 @@ class Node():
                     # we did add an orphan block
                     added_orphan_block = True
             self.orphans = self.orphans[remaining_orphans]
+
 
     def process_buffer(self, timestamp):
         if self.buffer_i>0:
@@ -124,7 +135,7 @@ class Node():
                 if tx.timestamp>proposal.timestamp or new_block.txs.shape[0]>max_block_size:
                     break
                 if tx not in main_chain_txs:
-                    new_block.add_tx(tx)
+                    self.add_block_by_tx_rule(new_block, tx)
 
 
         proposal.set_block(new_block)

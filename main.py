@@ -26,6 +26,7 @@ def get_params(filename):
             params['proposal_rate'] = d['Block proposal rate parameter']
         if 'Transaction rate parameter' in d:
             params['transaction_rate'] = d['Transaction rate parameter']
+        params['transaction_schedule'] = d['Transaction scheduling rule']
         params['dataset'] = d['Transaction dataset']
         params['model'] = d['Network model']
         params['duration'] = d['Duration (sec)']
@@ -64,7 +65,8 @@ if __name__=='__main__':
             sys.exit()
         # generate num_nodes nodes
         for node_id in range(0, num_nodes): 
-            n = Node(node_id, params['fork_choice_rule'], locations[node_id])
+            n = Node(node_id, params['fork_choice_rule'],
+                    params['transaction_schedule'], locations[node_id])
             nodes[node_id] = n
             c.add_node(n)
 
@@ -76,7 +78,8 @@ if __name__=='__main__':
         # generate num_nodes nodes
         num_nodes = params['num_nodes']
         for node_id in range(0, num_nodes): 
-            n = Node(node_id, params['fork_choice_rule'])
+            n = Node(node_id, params['fork_choice_rule'],
+                    params['transaction_schedule'])
             nodes[node_id] = n
             c.add_node(n)
         
