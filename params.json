@@ -61,7 +61,7 @@
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain-with-pool",
-    "Duration (sec)": 100,
+    "Duration (sec)": 250,
     "Logging enabled": true
   }
 }
