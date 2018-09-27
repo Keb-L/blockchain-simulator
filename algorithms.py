@@ -144,9 +144,10 @@ class LongestChain(Algorithm):
         return parent_blocks
 
 class LongestChainWithPool(LongestChain):
-    def __init__(self):
+    def __init__(self, block_size=50):
         super(LongestChainWithPool, self).__init__()
         self.pool_blocks = np.array([])
+        self.max_referenced_blocks = 10*block_size
 
     def add_pool_block(self, new_pool_block):
         self.pool_blocks = np.append(self.pool_blocks, new_pool_block)
@@ -158,7 +159,7 @@ class LongestChainWithPool(LongestChain):
         if self.pool_blocks.shape[0]>0:
             it = np.nditer(self.pool_blocks, flags=['f_index', 'refs_ok'])
 
-            while not it.finished:
+            while not it.finished and new_block.referenced_blocks.shape[0]<=self.max_referenced_blocks:
                 pool_block = self.pool_blocks[it.index]
                 new_block.add_referenced_block(pool_block)
                 it.iternext()

@@ -1,4 +1,4 @@
-import logging, copy, numpy as np
+import logging, copy, json, numpy as np
 from block import Block
 import graph_tool.all as gt
 from network import zero_latency, decker_wattenhorf, constant_decker_wattenhorf
@@ -10,7 +10,13 @@ class Node():
         self.node_id = node_id
 
         if algorithm=='longest-chain-with-pool':
-            self.local_blocktree = LongestChainWithPool() 
+            with open(f'params.json') as f:
+                contents = json.load(f)
+                setting_name = contents['setting-name']
+                d = contents[setting_name]
+                block_size = d['Block size (txs)']
+
+            self.local_blocktree = LongestChainWithPool(block_size=block_size) 
         elif algorithm=='longest-chain':
             self.local_blocktree = LongestChain()
         elif algorithm=='GHOST':
