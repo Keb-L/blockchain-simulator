@@ -80,7 +80,7 @@ class Coordinator():
                 # set main chain arrival and finalization timestamp of all transactions in top block
                 for tx in top_block.txs:
                     tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
-                    tx.set_finalization_timestamp(top_block.finalization_timestamp)
+                    tx.add_finalization_timestamp(top_block.finalization_timestamp)
 
                 # set finalization timestamps for referenced blocks and
                 # transactions within them
@@ -88,7 +88,7 @@ class Coordinator():
                     pool_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
                     for tx in pool_block.txs:
                         tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
-                        tx.set_finalization_timestamp(top_block.finalization_timestamp)
+                        tx.add_finalization_timestamp(top_block.finalization_timestamp)
 
     '''
     Main simulation function

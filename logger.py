@@ -45,16 +45,21 @@ def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 'source node', 'generated timestamp', 
                 'main chain arrival timestamp', 'pool block timestamp', 
-                'finalization timestamp']
+                'finalization timestamps']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for tx in txs:
+            if tx.finalization_timestamps is None:
+                finalization_timestamp_str = None
+            else:
+                finalization_timestamp_str = ';'.join(str(t) for t in
+                        tx.finalization_timestamps)
             writer.writerow({'id': f'{tx.id}', 'source node':
                 f'{tx.source.node_id}', 'generated timestamp':
                 f'{tx.timestamp}', 'main chain arrival timestamp':
                 f'{tx.main_chain_timestamp}', 'pool block timestamp':
-                f'{tx.pool_block_timestamp}', 'finalization timestamp':
-                f'{tx.finalization_timestamp}'})
+                f'{tx.pool_block_timestamp}', 'finalization timestamps':
+                f'{finalization_timestamp_str}'})
 
 def log_statistics(params, global_blocktree):
     with open('./logs/stats.csv', 'w+') as csvfile:

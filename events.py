@@ -8,7 +8,7 @@ class Transaction():
 
         self.pool_block_timestamp = None
         self.main_chain_timestamp = None
-        self.finalization_timestamp = None
+        self.finalization_timestamps = None
 
     def set_pool_block_timestamp(self, pool_block_timestamp):
         self.pool_block_timestamp = pool_block_timestamp
@@ -16,8 +16,10 @@ class Transaction():
     def set_main_chain_arrival_timestamp(self, main_chain_timestamp):
         self.main_chain_timestamp = main_chain_timestamp
 
-    def set_finalization_timestamp(self, finalization_timestamp):
-        self.finalization_timestamp = finalization_timestamp
+    def add_finalization_timestamp(self, finalization_timestamp):
+        if self.finalization_timestamps is None:
+            self.finalization_timestamps = []
+        self.finalization_timestamps.append(finalization_timestamp)
 
 class Proposal():
     def __init__(self, timestamp, proposal_type ='tree'):

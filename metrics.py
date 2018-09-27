@@ -12,7 +12,7 @@ def dump_params():
     pp.pprint(d)
     print('\n')
 
-def compute_throughput():
+def compute_throughputs():
     with open(f'params.json') as f:
         contents = json.load(f)
         setting_name = contents['setting-name']
@@ -21,11 +21,14 @@ def compute_throughput():
     with open('./logs/transactions.csv', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         num_transactions_finalized = 0
+        num_unique_transactions_finalized = 0
         for row in reader:
-            if row['finalization timestamp']!='None':
+            if row['finalization timestamps']!='None':
                 num_transactions_finalized+=1
+                if ';' not in row['finalization timestamps']:
+                    num_unique_transactions_finalized+=1
 
-    return float(num_transactions_finalized)/duration
+    return float(num_transactions_finalized)/duration, float(num_unique_transactions_finalized)/duration
 
 def compute_latency():
     with open('./logs/transactions.csv', newline='') as csvfile:
@@ -43,8 +46,10 @@ def compute_latency():
             if row['pool block timestamp']!='None':
                 pool_block_sum += float(row['pool block timestamp']) - float(row['generated timestamp'])
                 pool_block_count += 1
-            if row['finalization timestamp']!='None':
-                finalization_sum += float(row['finalization timestamp']) - float(row['main chain arrival timestamp'])
+            if row['finalization timestamps']!='None':
+                max_finalization_timestamp = max(list(map(lambda t: float(t),
+                    row['finalization timestamps'].split(';')))) 
+                finalization_sum += max_finalization_timestamp - float(row['main chain arrival timestamp'])
                 finalization_count += 1
 
     avg_main_chain_arrival_latency = 0 if main_chain_arrival_count==0 else main_chain_arrival_sum/main_chain_arrival_count
@@ -55,7 +60,9 @@ def compute_latency():
 def dump_results():
     print('Results:')
     avg_main_chain_arrival_latency, avg_pool_block_latency, avg_finalization_latency = compute_latency() 
-    print(f'Transaction Throughput: {compute_throughput()} transactions/sec')
+    transaction_throughput, unique_transaction_throughput = compute_throughputs()
+    print(f'Transaction Throughput: {transaction_throughput} transactions/sec')
+    print(f'Unique Transaction Throughput: {unique_transaction_throughput} transactions/sec')
     print(f'Main Chain Arrival Latency: {avg_main_chain_arrival_latency} sec/transaction')
     print(f'Pool Block Latency: {avg_pool_block_latency} sec/transaction')
     print(f'Finalization Latency: {avg_finalization_latency} sec/transaction')
