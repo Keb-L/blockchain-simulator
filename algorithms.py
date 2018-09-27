@@ -79,7 +79,7 @@ class Algorithm():
 
     # add block based on fork choice rule
     def add_block_by_fork_choice_rule(self, new_block):
-        parent_block = random.choice(self.fork_choice_rule())
+        parent_block = self.fork_choice_rule()[0]
         new_block.set_parent_id(parent_block.id)
         self.add_block(parent_block, new_block)
 
@@ -123,7 +123,7 @@ class Algorithm():
                 break
             else:
                 k+=1
-        return k
+        return 6
 
 class LongestChain(Algorithm):
     def fork_choice_rule(self):

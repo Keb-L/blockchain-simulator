@@ -34,12 +34,14 @@ class Coordinator():
             proposal = Proposal(timestamp, proposal_type='tree') 
             proposals.append(proposal)
 
-        timestamp = 0
-        # generate pool proposal events
-        while timestamp<self.params['duration']+start_time: 
-            timestamp = timestamp + np.random.exponential(1.0/self.params['pool_proposal_rate'])
-            proposal = Proposal(timestamp, proposal_type='pool') 
-            proposals.append(proposal)
+        if self.params['fork_choice_rule']=='longest-chain-with-pool':
+            self.global_blocktree = LongestChainWithPool()
+            timestamp = 0
+            # generate pool proposal events
+            while timestamp<self.params['duration']+start_time: 
+                timestamp = timestamp + np.random.exponential(1.0/self.params['pool_proposal_rate'])
+                proposal = Proposal(timestamp, proposal_type='pool') 
+                proposals.append(proposal)
 
         self.proposals = np.asarray(sorted(proposals, key = lambda
             proposal: proposal.timestamp))

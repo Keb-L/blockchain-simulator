@@ -23,7 +23,7 @@ def get_params(filename):
             params['tree_proposal_rate'] = d['Block tree proposal rate parameter']
             params['pool_proposal_rate'] = d['Block pool proposal rate parameter']
         else:
-            params['proposal_rate'] = d['Block proposal rate parameter']
+            params['tree_proposal_rate'] = d['Block proposal rate parameter']
         if 'Transaction rate parameter' in d:
             params['transaction_rate'] = d['Transaction rate parameter']
         params['transaction_schedule'] = d['Transaction scheduling rule']

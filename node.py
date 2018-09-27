@@ -98,7 +98,8 @@ class Node():
                         # tree blocks should be added to local block tree
                         copied_block = Block(event.block.txs, event.block.id,
                                 event.block.parent_id,
-                                proposal_timestamp=event.timestamp) 
+                                proposal_timestamp=event.timestamp,
+                                block_type='tree') 
                         # add block based on parent id
                         parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                         if parent_block==None:
@@ -106,7 +107,8 @@ class Node():
                     elif event.block.block_type=='pool':
                         # blocks should be added to local block tree
                         copied_block = Block(event.block.txs, event.block.id,
-                                proposal_timestamp=event.timestamp) 
+                                proposal_timestamp=event.timestamp,
+                                block_type='pool') 
                         self.local_blocktree.add_pool_block(copied_block)
                 b_i+=1
             # remove already processed items in buffer
@@ -149,7 +151,8 @@ class Node():
             # copy block and add new block to global blocktree
             copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
                     proposal_timestamp=new_block.proposal_timestamp,
-                    referenced_blocks=new_block.referenced_blocks) 
+                    referenced_blocks=new_block.referenced_blocks,
+                    block_type=new_block.block_type) 
             global_parent_block = global_blocktree.add_block_by_parent_id(copied_block)
             copied_block.set_parent_id(global_parent_block.id)
     
