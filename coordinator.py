@@ -34,8 +34,7 @@ class Coordinator():
             proposal = Proposal(timestamp, proposal_type='tree') 
             proposals.append(proposal)
 
-        if self.params['fork_choice_rule']=='longest-chain-with-pool':
-            self.global_blocktree = LongestChainWithPool()
+        if self.params['fork_choice_rule']=='longest-chain-with-pool' and self.params['pool_proposal_rate']>0:
             timestamp = 0
             # generate pool proposal events
             while timestamp<self.params['duration']+start_time: 
