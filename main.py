@@ -106,7 +106,7 @@ if __name__=='__main__':
 
     # create arrays to store proposals and transactions
     for node_id in range(0, num_nodes):
-        nodes[node_id].create_arrays(len(tx_dataset), c.proposals.shape[0])
+        nodes[node_id].create_arrays(len(tx_dataset))
 
 
     # run simulation
