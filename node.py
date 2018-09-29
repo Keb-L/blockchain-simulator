@@ -23,12 +23,10 @@ class Node():
         # transactions
         self.neighbors = np.array([])
 
-    def create_arrays(self, num_txs, num_proposals):
+    def create_arrays(self, num_txs):
         self.local_tx_i = 0
-        self.buffer_i = 0
-
         self.local_txs = np.empty(num_txs, dtype=object)
-        self.buffer = np.empty(num_txs+num_proposals, dtype=object)
+        self.buffer = np.array([])
 
     def add_neighbor(self, neighbor_node):
         self.neighbors = np.append(self.neighbors, neighbor_node)
@@ -50,8 +48,7 @@ class Node():
         event.timestamp+=delay
 
         for neighbor in self.neighbors:
-            neighbor.buffer[neighbor.buffer_i] = event
-            neighbor.buffer_i+=1
+            neighbor.buffer = np.append(neighbor.buffer, event)
 
     def add_orphan_blocks(self):
         # loop over orphans repeatedly while we added an orphan block
@@ -72,35 +69,39 @@ class Node():
             self.orphans = self.orphans[remaining_orphans]
 
     def process_buffer(self, timestamp):
-        if self.buffer_i>0:
-            b_i=0
-            for elem in np.nditer(self.buffer[:self.buffer_i], flags=['refs_ok']):
-                event = elem.item()
-                if event.__class__.__name__=='Transaction':
-                    # transactions should be added to local transaction queue
-                    self.local_txs[self.local_tx_i] = event
-                    self.local_tx_i+=1
-                elif event.__class__.__name__=='Proposal':
-                    if event.block.block_type=='tree':
-                        # tree blocks should be added to local block tree
-                        copied_block = Block(event.block.txs, event.block.id,
-                                event.block.parent_id,
-                                proposal_timestamp=event.timestamp) 
-                        # add block based on parent id
-                        parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
-                        if parent_block==None:
-                            self.orphans = np.append(self.orphans, event)
-                    elif event.block.block_type=='pool':
-                        # blocks should be added to local block tree
-                        copied_block = Block(event.block.txs, event.block.id,
-                                proposal_timestamp=event.timestamp) 
-                        self.local_blocktree.add_pool_block(copied_block)
-                b_i+=1
-            # remove already processed items in buffer
-            self.buffer = self.buffer[b_i:]
-            self.buffer_i = 0
+        b_i = 0 
+        while b_i<len(self.buffer):
+            if self.buffer[b_i].timestamp>timestamp:
+                break
+            event = self.buffer[b_i]
+            if event.__class__.__name__=='Transaction':
+                # transactions should be added to local transaction queue
+                self.local_txs[self.local_tx_i] = event
+                self.local_tx_i+=1
+            elif event.__class__.__name__=='Proposal':
+                if event.block.block_type=='tree':
+                    # tree blocks should be added to local block tree
+                    copied_block = Block(event.block.txs, event.block.id,
+                            event.block.parent_id,
+                            proposal_timestamp=event.timestamp) 
+                    # add block based on parent id
+                    parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
+                    if parent_block==None:
+                        self.orphans = np.append(self.orphans, event)
+                elif event.block.block_type=='pool':
+                    # blocks should be added to local block tree
+                    copied_block = Block(event.block.txs, event.block.id,
+                            proposal_timestamp=event.timestamp) 
+                    self.local_blocktree.add_pool_block(copied_block)
 
-            self.add_orphan_blocks()
+            b_i+=1
+
+        # remove already processed items in buffer
+        self.buffer = self.buffer[b_i:]
+        self.buffer_i = 0 
+
+        self.add_orphan_blocks()
+
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model,
             global_blocktree):

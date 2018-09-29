@@ -41,27 +41,27 @@
   "GHOST-test":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
-    "Block size (txs)": 100, 
+    "Block size (txs)": 50, 
     "Probability of error in transaction confirmation": 0.1, 
     "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "GHOST",
-    "Duration (sec)": 1200,
+    "Duration (sec)": 1000,
     "Logging enabled": true
   },
   "longest-chain-with-pool":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
-    "Block size (txs)": 500, 
+    "Block size (txs)": 50, 
     "Probability of error in transaction confirmation": 0.1, 
     "Block tree proposal rate parameter": 0.1, 
-    "Block pool proposal rate parameter": 1, 
-    "Transaction rate parameter": 100,
+    "Block pool proposal rate parameter": 0.1, 
+    "Transaction rate parameter": 1,
     "Transaction dataset": "poisson",
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain-with-pool",
-    "Duration (sec)": 100,
+    "Duration (sec)": 1000,
     "Logging enabled": true
   }
 }

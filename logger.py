@@ -71,7 +71,9 @@ def log_statistics(params, global_blocktree):
         csvfile.write(f'Finalization depth,{finalization_depth}\n')
 
         # log main chain information blocks
-        num_blocks = len(global_blocktree.tree.get_vertices())
+        num_blocks = 0
+        for v in global_blocktree.tree.get_vertices():
+            num_blocks+=(len(global_blocktree.vertex_to_blocks[v].referenced_blocks)+1)
         main_chain_length = len(global_blocktree.main_chains()[0])
         num_orphan_blocks = num_blocks - main_chain_length 
         csvfile.write(f'Number of blocks,{num_blocks}\n')
