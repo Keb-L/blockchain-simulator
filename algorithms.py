@@ -159,7 +159,7 @@ class LongestChainWithPool(LongestChain):
         if self.pool_blocks.shape[0]>0:
             it = np.nditer(self.pool_blocks, flags=['f_index', 'refs_ok'])
 
-            while not it.finished and new_block.referenced_blocks.shape[0]<=self.max_referenced_blocks:
+            while not it.finished: #and new_block.referenced_blocks.shape[0]<=self.max_referenced_blocks:
                 pool_block = self.pool_blocks[it.index]
                 new_block.add_referenced_block(pool_block)
                 it.iternext()

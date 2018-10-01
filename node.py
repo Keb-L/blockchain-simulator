@@ -40,6 +40,9 @@ class Node():
         self.neighbors = np.append(self.neighbors, neighbor_node)
 
     def add_block_by_tx_rule(self, new_block, tx):
+        if new_block.block_type=='pool':
+            # set time tx is assigned a pool block
+            tx.set_pool_block_arr_timestamp(new_block.proposal_timestamp)
         if self.tx_rule=='FIFO':
             new_block.add_tx(tx)
         # m should range from f*delta (block pool proposal rate * block delay)

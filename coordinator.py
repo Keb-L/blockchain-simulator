@@ -50,12 +50,12 @@ class Coordinator():
 
     def set_timestamps(self):
 
-        # set pool block timestamp
+        # set pool block reference timestamp
         for block in self.global_blocktree.vertex_to_blocks:
             for referenced_block in block.referenced_blocks:
-                referenced_block.set_pool_block_timestamp(block.proposal_timestamp)
+                referenced_block.set_pool_block_ref_timestamp(block.proposal_timestamp)
                 for tx in referenced_block.txs:
-                    tx.set_pool_block_timestamp(block.proposal_timestamp)
+                    tx.set_pool_block_ref_timestamp(block.proposal_timestamp)
 
         # get main chain
         main_chain = self.global_blocktree.random_main_chain()

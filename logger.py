@@ -15,8 +15,10 @@ def log_local_blocktree(node):
                 f'{block.optimistic_confirmation_timestamp}'})
 
 def log_global_blocktree(global_blocktree):
+    '''
     with open('./logs/global_blocktree.log', 'w+') as f:
         f.write(f'{global_blocktree.graph_to_str()}') 
+    '''
 
     with open('./logs/blocks.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 'parent id', 'proposal timestamp', 'pool block timestamp', 'finalization timestamp', 'depth', 'finalized', 'transactions']
@@ -30,7 +32,7 @@ def log_global_blocktree(global_blocktree):
             writer.writerow({'id': f'{block.id}', 'parent id':
                 f'{block.parent_id}', 'proposal timestamp':
                 f'{block.proposal_timestamp}', 'pool block timestamp':
-                f'{block.pool_block_timestamp}', 'finalization timestamp':
+                f'{block.pool_block_ref_timestamp}', 'finalization timestamp':
                 f'{block.finalization_timestamp}', 'depth': f'{depth}',
                 'finalized': f'{is_finalized}', 'transactions': f'{tx_str}'})
             for pool_block in block.referenced_blocks:
@@ -44,7 +46,8 @@ def log_global_blocktree(global_blocktree):
 def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 'source node', 'generated timestamp', 
-                'main chain arrival timestamp', 'pool block timestamp', 
+                'pool block arrival timestamp', 'pool block reference timestamp',
+                'main chain arrival timestamp', 
                 'finalization timestamps']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -56,9 +59,11 @@ def log_txs(txs):
                         tx.finalization_timestamps)
             writer.writerow({'id': f'{tx.id}', 'source node':
                 f'{tx.source.node_id}', 'generated timestamp':
-                f'{tx.timestamp}', 'main chain arrival timestamp':
-                f'{tx.main_chain_timestamp}', 'pool block timestamp':
-                f'{tx.pool_block_timestamp}', 'finalization timestamps':
+                f'{tx.timestamp}', 'pool block arrival timestamp':
+                f'{tx.pool_block_arr_timestamp}', 'pool block reference timestamp':
+                f'{tx.pool_block_ref_timestamp}', 'main chain arrival timestamp':
+                f'{tx.main_chain_timestamp}',
+                f'finalization timestamps':
                 f'{finalization_timestamp_str}'})
 
 def log_statistics(params, global_blocktree):

@@ -55,7 +55,7 @@
     "Logging enabled": true
   },
   "longest-chain-with-pool":  {
-    "Number of nodes": 100, 
+    "Number of nodes": 50, 
     "Number of adversaries": 1,
     "Block size (txs)": 50, 
     "Probability of error in transaction confirmation": 0.1, 
