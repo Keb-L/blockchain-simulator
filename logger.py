@@ -15,13 +15,17 @@ def log_local_blocktree(node):
                 f'{block.optimistic_confirmation_timestamp}'})
 
 def log_global_blocktree(global_blocktree):
-    '''
-    with open('./logs/global_blocktree.log', 'w+') as f:
-        f.write(f'{global_blocktree.graph_to_str()}') 
-    '''
+    with open(f'params.json') as f:
+        contents = json.load(f)
+        setting_name = contents['setting-name']
+        d = contents[setting_name]
+
+    max_block_size = d['Block size (txs)']
 
     with open('./logs/blocks.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'parent id', 'proposal timestamp', 'pool block timestamp', 'finalization timestamp', 'depth', 'finalized', 'transactions']
+        fieldnames = ['id', 'parent id', 'proposal timestamp', 'pool block timestamp', 
+                'finalization timestamp', 'depth', 'finalized', 
+                'block size - number of transactions', 'number of transactions available', 'transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for block in global_blocktree.vertex_to_blocks:
@@ -29,19 +33,30 @@ def log_global_blocktree(global_blocktree):
             tx_str = ';'.join(tx.id for tx in block.txs)
             depth = global_blocktree.depth[vertex]
             is_finalized = False if block.finalization_timestamp==None else True
-            writer.writerow({'id': f'{block.id}', 'parent id':
-                f'{block.parent_id}', 'proposal timestamp':
-                f'{block.proposal_timestamp}', 'pool block timestamp':
-                f'{block.pool_block_ref_timestamp}', 'finalization timestamp':
-                f'{block.finalization_timestamp}', 'depth': f'{depth}',
-                'finalized': f'{is_finalized}', 'transactions': f'{tx_str}'})
+            writer.writerow({
+                'id': f'{block.id}', 
+                'parent id': f'{block.parent_id}', 
+                'proposal timestamp': f'{block.proposal_timestamp}', 
+                'pool block timestamp': f'{block.pool_block_ref_timestamp}', 
+                'finalization timestamp': f'{block.finalization_timestamp}', 
+                'depth': f'{depth}',
+                'finalized': f'{is_finalized}', 
+                'block size - number of transactions': f'{max_block_size-len(block.txs)}',
+                'number of transactions available': f'{block.potential_txs}',
+                'transactions': f'{tx_str}'})
             for pool_block in block.referenced_blocks:
                 pool_tx_str = ';'.join(tx.id for tx in pool_block.txs)
-                writer.writerow({'id': f'{pool_block.id}', 'parent id':
-                    f'{pool_block.parent_id}', 'proposal timestamp':
-                    f'{pool_block.proposal_timestamp}', 'finalization timestamp':
-                    f'{block.finalization_timestamp}', 'depth': f'NA',
-                    'finalized': f'{is_finalized}', 'transactions': f'{pool_tx_str}'})
+                writer.writerow({
+                    'id': f'{pool_block.id}', 
+                    'parent id': f'{pool_block.parent_id}', 
+                    'proposal timestamp': f'{pool_block.proposal_timestamp}', 
+                    'finalization timestamp': f'{block.finalization_timestamp}', 
+                    'depth': f'NA',
+                    'finalized': f'{is_finalized}',
+                    'block size - number of transactions': f'{max_block_size-len(pool_block.txs)}',
+                    'number of transactions available': f'{block.potential_txs}',
+                    'transactions': f'{pool_tx_str}'
+                    })
 
 def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:

@@ -2,7 +2,7 @@ import numpy as np, uuid
 
 class Block():
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'tree', referenced_blocks=None):
+            block_type = 'tree', referenced_blocks=None, potential_txs = 0):
         if txs is None:
             self.txs = np.array([])
         else:
@@ -18,6 +18,7 @@ class Block():
 
         self.pool_block_ref_timestamp = None
         self.finalization_timestamp = None
+        self.potential_txs = potential_txs
 
         if referenced_blocks is None:
             self.referenced_blocks = np.array([])
@@ -37,6 +38,9 @@ class Block():
 
     def set_finalization_timestamp(self, finalization_timestamp):
         self.finalization_timestamp = finalization_timestamp
+
+    def set_potential_txs(self, potential_txs):
+        self.potential_txs = potential_txs
 
     def add_referenced_block(self, referenced_block):
         self.referenced_blocks = np.append(self.referenced_blocks,

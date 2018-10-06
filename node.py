@@ -103,7 +103,8 @@ class Node():
                     # tree blocks should be added to local block tree
                     copied_block = Block(event.block.txs, event.block.id,
                             event.block.parent_id,
-                            proposal_timestamp=event.timestamp) 
+                            proposal_timestamp=event.timestamp, 
+                            potential_txs=event.block.potential_txs) 
                     # add block based on parent id
                     parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                     if parent_block==None:
@@ -141,6 +142,8 @@ class Node():
                     flags=['refs_ok']):
                 tx = elem.item()
                 if tx.timestamp>proposal.timestamp or new_block.txs.shape[0]>max_block_size:
+                    potential_txs = self.local_tx_i - new_block.txs.shape[0]
+                    new_block.set_potential_txs(potential_txs)
                     break
                 if tx not in main_chain_txs:
                     self.add_block_by_tx_rule(new_block, tx)
@@ -158,7 +161,8 @@ class Node():
             copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
                     proposal_timestamp=new_block.proposal_timestamp,
                     referenced_blocks=new_block.referenced_blocks,
-                    block_type=new_block.block_type) 
+                    block_type=new_block.block_type,
+                    potential_txs=new_block.potential_txs) 
             global_parent_block = global_blocktree.add_block_by_parent_id(copied_block)
             copied_block.set_parent_id(global_parent_block.id)
     
