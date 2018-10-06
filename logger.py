@@ -1,4 +1,4 @@
-import csv
+import csv, json
 from graph_tool.all import *
 from network import constant_decker_wattenhorf
 from constants import TX_SIZE
@@ -66,8 +66,15 @@ def log_txs(txs):
                 f'finalization timestamps':
                 f'{finalization_timestamp_str}'})
 
-def log_statistics(params, global_blocktree):
+def log_statistics(params, global_blocktree, time_elapsed):
+    with open(f'params.json') as f:
+        contents = json.load(f)
+        setting_name = contents['setting-name']
+        d = json.dumps(contents[setting_name])
     with open('./logs/stats.csv', 'w+') as csvfile:
+        csvfile.write(d+'\n')
+        csvfile.write(f'Time elapsed,{time_elapsed}\n')
+
         delta_blocks = constant_decker_wattenhorf(params['max_block_size'])
         delta_txs = constant_decker_wattenhorf(TX_SIZE)
         f = params['tree_proposal_rate']

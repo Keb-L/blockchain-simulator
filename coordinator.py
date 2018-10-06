@@ -1,4 +1,4 @@
-import random, csv, os, numpy as np
+import random, csv, os, numpy as np, time
 import logger
 from node import Node
 from events import Proposal
@@ -102,6 +102,8 @@ class Coordinator():
         - After main loop, loop over all all nodes and process buffer
     '''
     def run(self):
+        start = time.time()
+
         tx_i = 0
         p_i = 0
 
@@ -158,6 +160,7 @@ class Coordinator():
 
         self.set_timestamps()
 
+        end = time.time()
         if self.params['logging']:
             logger.log_txs(self.txs)
             '''
@@ -165,7 +168,7 @@ class Coordinator():
                 log_local_blocktree(node)
             '''
             logger.log_global_blocktree(self.global_blocktree)
-            logger.log_statistics(self.params, self.global_blocktree)
+            logger.log_statistics(self.params, self.global_blocktree, end-start)
             logger.draw_global_blocktree(self.global_blocktree)
 
             os.system('cat ./logs/stats.csv')
