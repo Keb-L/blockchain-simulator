@@ -12,6 +12,17 @@ def dump_params():
     pp.pprint(d)
     print('\n')
 
+def compute_emptiness(foldername='logs'):
+    emptiness_sum = 0
+    emptiness_count = 0
+    with open(f'{foldername}/blocks.csv', newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if 'emptiness' in row:
+                emptiness_sum+=int(row['emptiness'])
+                emptiness_count+=1
+    return float(emptiness_sum)/emptiness_count
+
 def compute_throughputs(foldername='logs'):
     with open(f'params.json') as f:
         contents = json.load(f)
@@ -45,10 +56,10 @@ def compute_latency(foldername='logs'):
             if row['pool block arrival timestamp']!='None':
                 pool_block_arr_sum += float(row['pool block arrival timestamp']) - float(row['generated timestamp'])
                 pool_block_arr_count += 1
-            if row['pool block reference timestamp']!='None':
+            if row['pool block reference timestamp']!='None' and row['pool block arrival timestamp']!='None':
                 pool_block_ref_sum += float(row['pool block reference timestamp']) - float(row['pool block arrival timestamp'])
                 pool_block_ref_count += 1
-            if row['main chain arrival timestamp']!='None':
+            if row['main chain arrival timestamp']!='None' and row['pool block arrival timestamp']!='None':
                 main_chain_arrival_sum += float(row['main chain arrival timestamp']) - float(row['pool block arrival timestamp'])
                 main_chain_arrival_count += 1
             if row['finalization timestamps']!='None':
@@ -67,15 +78,16 @@ def dump_results(foldername='logs'):
     print('Results:')
     avg_pool_block_arr_latency, avg_pool_block_ref_latency, avg_main_chain_arrival_latency, avg_finalization_latency = compute_latency(foldername) 
     transaction_throughput, unique_transaction_throughput = compute_throughputs(foldername)
+    emptiness = compute_emptiness(foldername)
     print(f'Transaction Throughput: {transaction_throughput} transactions/sec')
     print(f'Unique Transaction Throughput: {unique_transaction_throughput} transactions/sec')
+    print(f'Emptiness: {emptiness} txs')
     print(f'Pool Block Arrival Latency: {avg_pool_block_arr_latency} sec/transaction')
     print(f'Pool Block Reference Latency: {avg_pool_block_ref_latency} sec/transaction')
     print(f'Main Chain Arrival Latency: {avg_main_chain_arrival_latency} sec/transaction')
     print(f'Finalization Latency: {avg_finalization_latency} sec/transaction')
 
 if __name__=='__main__':
-    print(sys.argv)
     if len(sys.argv)>1:
         foldername = sys.argv[1]
     else:

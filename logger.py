@@ -23,9 +23,15 @@ def log_global_blocktree(global_blocktree):
     max_block_size = d['Block size (txs)']
 
     with open('./logs/blocks.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'parent id', 'proposal timestamp', 'pool block timestamp', 
-                'finalization timestamp', 'depth', 'finalized', 
-                'block size - number of transactions', 'number of transactions available', 'transactions']
+        fieldnames = ['id', 
+                    'parent id', 
+                    'proposal timestamp', 
+                    'pool block timestamp', 
+                    'finalization timestamp', 
+                    'depth', 
+                    'finalized', 
+                    'emptiness',
+                    'transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for block in global_blocktree.vertex_to_blocks:
@@ -41,8 +47,7 @@ def log_global_blocktree(global_blocktree):
                 'finalization timestamp': f'{block.finalization_timestamp}', 
                 'depth': f'{depth}',
                 'finalized': f'{is_finalized}', 
-                'block size - number of transactions': f'{max_block_size-len(block.txs)}',
-                'number of transactions available': f'{block.potential_txs}',
+                'emptiness': f'{block.emptiness}',
                 'transactions': f'{tx_str}'})
             for pool_block in block.referenced_blocks:
                 pool_tx_str = ';'.join(tx.id for tx in pool_block.txs)
@@ -53,8 +58,7 @@ def log_global_blocktree(global_blocktree):
                     'finalization timestamp': f'{block.finalization_timestamp}', 
                     'depth': f'NA',
                     'finalized': f'{is_finalized}',
-                    'block size - number of transactions': f'{max_block_size-len(pool_block.txs)}',
-                    'number of transactions available': f'{block.potential_txs}',
+                    'emptiness': f'{pool_block.emptiness}',
                     'transactions': f'{pool_tx_str}'
                     })
 

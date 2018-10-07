@@ -104,7 +104,7 @@ class Node():
                     copied_block = Block(event.block.txs, event.block.id,
                             event.block.parent_id,
                             proposal_timestamp=event.timestamp, 
-                            potential_txs=event.block.potential_txs) 
+                            emptiness=event.block.emptiness) 
                     # add block based on parent id
                     parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                     if parent_block==None:
@@ -137,18 +137,25 @@ class Node():
         main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
 
+        added_txs = 0
+        remaining_txs = 0
         if self.local_tx_i>0:
             for elem in np.nditer(self.local_txs[:self.local_tx_i],
                     flags=['refs_ok']):
                 tx = elem.item()
-                if tx.timestamp>proposal.timestamp or new_block.txs.shape[0]>max_block_size:
-                    potential_txs = self.local_tx_i - new_block.txs.shape[0]
-                    new_block.set_potential_txs(potential_txs)
+                if tx.timestamp>proposal.timestamp:
+                    # no potential txs left
                     break
+                if new_block.txs.shape[0]>max_block_size:
+                    # there are potential txs left on the table
+                    remaining_txs+=1
+                    continue
                 if tx not in main_chain_txs:
                     self.add_block_by_tx_rule(new_block, tx)
+                    added_txs+=1
 
 
+        new_block.set_emptiness(added_txs - (remaining_txs - max_block_size))
         proposal.set_block(new_block)
         if proposal.proposal_type=='pool':
             self.local_blocktree.add_pool_block(new_block)
@@ -162,7 +169,7 @@ class Node():
                     proposal_timestamp=new_block.proposal_timestamp,
                     referenced_blocks=new_block.referenced_blocks,
                     block_type=new_block.block_type,
-                    potential_txs=new_block.potential_txs) 
+                    emptiness=new_block.emptiness) 
             global_parent_block = global_blocktree.add_block_by_parent_id(copied_block)
             copied_block.set_parent_id(global_parent_block.id)
     
