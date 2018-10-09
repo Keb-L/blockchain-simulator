@@ -6,17 +6,11 @@ from algorithms import *
 from constants import TX_SIZE
 
 class Node():
-    def __init__(self, node_id, algorithm, tx_rule, location=None):
+    def __init__(self, node_id, algorithm, tx_rule, max_block_size, location=None):
         self.node_id = node_id
 
         if algorithm=='longest-chain-with-pool':
-            with open(f'params.json') as f:
-                contents = json.load(f)
-                setting_name = contents['setting-name']
-                d = contents[setting_name]
-                block_size = d['Block size (txs)']
-
-            self.local_blocktree = LongestChainWithPool(block_size=block_size) 
+            self.local_blocktree = LongestChainWithPool(block_size=max_block_size) 
         elif algorithm=='longest-chain':
             self.local_blocktree = LongestChain()
         elif algorithm=='GHOST':

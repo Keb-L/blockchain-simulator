@@ -1,9 +1,9 @@
 import sys, re, json, pprint, csv, glob
 from constants import TX_RATE
 
-def dump_params():
+def dump_params(filename='params.json'):
     print('Parameters:')
-    with open(f'params.json') as f:
+    with open(f'{filename}') as f:
         contents = json.load(f)
         setting_name = contents['setting-name']
         d = contents[setting_name]
@@ -23,8 +23,8 @@ def compute_emptiness(foldername='logs'):
                 emptiness_count+=1
     return float(emptiness_sum)/emptiness_count
 
-def compute_throughputs(foldername='logs'):
-    with open(f'params.json') as f:
+def compute_throughputs(foldername='logs', filename='params.json'):
+    with open(f'{filename}') as f:
         contents = json.load(f)
         setting_name = contents['setting-name']
         d = contents[setting_name]

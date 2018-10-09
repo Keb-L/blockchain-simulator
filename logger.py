@@ -14,13 +14,8 @@ def log_local_blocktree(node):
                 writer.writerow({'id': f'{tx.id}', 'Optimistic confirmation timestamp':
                 f'{block.optimistic_confirmation_timestamp}'})
 
-def log_global_blocktree(global_blocktree):
-    with open(f'params.json') as f:
-        contents = json.load(f)
-        setting_name = contents['setting-name']
-        d = contents[setting_name]
-
-    max_block_size = d['Block size (txs)']
+def log_global_blocktree(params, global_blocktree):
+    max_block_size = params['max_block_size']
 
     with open('./logs/blocks.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 
@@ -86,12 +81,8 @@ def log_txs(txs):
                 f'{finalization_timestamp_str}'})
 
 def log_statistics(params, global_blocktree, time_elapsed):
-    with open(f'params.json') as f:
-        contents = json.load(f)
-        setting_name = contents['setting-name']
-        d = json.dumps(contents[setting_name])
     with open('./logs/stats.csv', 'w+') as csvfile:
-        csvfile.write(d+'\n')
+        csvfile.write(json.dumps(params)+'\n')
         csvfile.write(f'Time elapsed,{time_elapsed}\n')
 
         delta_blocks = constant_decker_wattenhorf(params['max_block_size'])

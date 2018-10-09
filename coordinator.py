@@ -167,7 +167,7 @@ class Coordinator():
             for node in self.nodes:
                 log_local_blocktree(node)
             '''
-            logger.log_global_blocktree(self.global_blocktree)
+            logger.log_global_blocktree(self.params, self.global_blocktree)
             logger.log_statistics(self.params, self.global_blocktree, end-start)
             logger.draw_global_blocktree(self.global_blocktree)
 

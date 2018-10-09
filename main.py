@@ -66,7 +66,7 @@ if __name__=='__main__':
         # generate num_nodes nodes
         for node_id in range(0, num_nodes): 
             n = Node(node_id, params['fork_choice_rule'],
-                    params['transaction_schedule'], locations[node_id])
+                    params['transaction_schedule'], params['max_block_size'], locations[node_id])
             nodes[node_id] = n
             c.add_node(n)
 
@@ -79,7 +79,8 @@ if __name__=='__main__':
         num_nodes = params['num_nodes']
         for node_id in range(0, num_nodes): 
             n = Node(node_id, params['fork_choice_rule'],
-                    params['transaction_schedule'])
+                    params['transaction_schedule'],
+                    params['max_block_size'])
             nodes[node_id] = n
             c.add_node(n)
         
