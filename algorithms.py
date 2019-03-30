@@ -123,7 +123,7 @@ class Algorithm():
                 break
             else:
                 k+=1
-        return 6
+        return k
 
 class LongestChain(Algorithm):
     def fork_choice_rule(self):

@@ -11,7 +11,7 @@ From the green line in Fig 1, we can approximate the function as:
 
 We use this as a parameter into our exponential delay
 '''
-SEC_PER_TRANSACTION = 16.0/600
+SEC_PER_TRANSACTION = 19.0/600
 
 '''
 Required depth for longest chain to consider a block to be finalized

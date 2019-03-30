@@ -20,7 +20,7 @@ We use this as a parameter into our exponential delay
 '''
 def decker_wattenhorf(msg_size):
     from constants import SEC_PER_TRANSACTION
-    delta = SEC_PER_TRANSACTION * msg_size + 1
+    delta = SEC_PER_TRANSACTION * msg_size
     return np.random.exponential(delta)
 
 '''
@@ -28,5 +28,5 @@ A constant delta value used for testing purposes
 '''
 def constant_decker_wattenhorf(msg_size):
     from constants import SEC_PER_TRANSACTION
-    delta = SEC_PER_TRANSACTION * msg_size + 1
+    delta = SEC_PER_TRANSACTION * msg_size
     return delta

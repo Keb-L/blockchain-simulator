@@ -26,6 +26,7 @@ def log_global_blocktree(params, global_blocktree):
                     'depth', 
                     'finalized', 
                     'emptiness',
+                    'pool blocks',
                     'transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -34,6 +35,7 @@ def log_global_blocktree(params, global_blocktree):
             tx_str = ';'.join(tx.id for tx in block.txs)
             depth = global_blocktree.depth[vertex]
             is_finalized = False if block.finalization_timestamp==None else True
+            pool_block_str = ';'.join(block.id for block in block.referenced_blocks)
             writer.writerow({
                 'id': f'{block.id}', 
                 'parent id': f'{block.parent_id}', 
@@ -43,6 +45,7 @@ def log_global_blocktree(params, global_blocktree):
                 'depth': f'{depth}',
                 'finalized': f'{is_finalized}', 
                 'emptiness': f'{block.emptiness}',
+                'pool blocks': f'{pool_block_str}',
                 'transactions': f'{tx_str}'})
             for pool_block in block.referenced_blocks:
                 pool_tx_str = ';'.join(tx.id for tx in pool_block.txs)
@@ -54,6 +57,7 @@ def log_global_blocktree(params, global_blocktree):
                     'depth': f'NA',
                     'finalized': f'{is_finalized}',
                     'emptiness': f'{pool_block.emptiness}',
+                    'pool blocks': f'NA',
                     'transactions': f'{pool_tx_str}'
                     })
 
@@ -92,16 +96,20 @@ def log_statistics(params, global_blocktree, time_elapsed):
         if params['model']=='Decker-Wattenhorf' or params['model']=='Constant-Decker-Wattenhorf':
             csvfile.write(f'Average network latency for blocks (sec),{delta_blocks}\n')
             csvfile.write(f'Average network latency for txs (sec),{delta_txs}\n')
+        if params['model']=='Zero':
+            csvfile.write(f'Average network latency for blocks (sec),0\n')
+            csvfile.write(f'Average network latency for txs (sec),0\n')
 
         # log finalization depth
         finalization_depth = global_blocktree.compute_k(params['tx_error_prob'], params['num_nodes'], params['num_adversaries'])
         csvfile.write(f'Finalization depth,{finalization_depth}\n')
 
         # log main chain information blocks
-        num_blocks = 0
-        for v in global_blocktree.tree.get_vertices():
-            num_blocks+=(len(global_blocktree.vertex_to_blocks[v].referenced_blocks)+1)
-        main_chain_length = len(global_blocktree.main_chains()[0])
+        num_blocks = len(global_blocktree.tree.get_vertices())
+        # filter main chain to only have tree blocks
+        main_chain = list(filter(lambda block: block.block_type=='tree',
+            global_blocktree.main_chains()[0]))
+        main_chain_length = len(main_chain)
         num_orphan_blocks = num_blocks - main_chain_length 
         csvfile.write(f'Number of blocks,{num_blocks}\n')
         csvfile.write(f'Main chain length,{main_chain_length}\n')

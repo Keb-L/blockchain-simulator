@@ -23,21 +23,25 @@ class Coordinator():
         self.nodes = np.append(self.nodes, node)
 
     def generate_proposals(self):
-        start_time = 0
         timestamp = 0
 
         proposals = []
 
         # generate tree proposal events
-        while timestamp<self.params['duration']+start_time: 
+        while timestamp<self.params['duration']: 
             timestamp = timestamp + np.random.exponential(1.0/self.params['tree_proposal_rate'])
             proposal = Proposal(timestamp, proposal_type='tree') 
             proposals.append(proposal)
 
+        del proposals[-1]
+        last_proposal = Proposal(self.params['duration'], proposal_type='tree')
+        proposals.append(last_proposal)
+
+
         if self.params['fork_choice_rule']=='longest-chain-with-pool' and self.params['pool_proposal_rate']>0:
             timestamp = 0
             # generate pool proposal events
-            while timestamp<self.params['duration']+start_time: 
+            while timestamp<self.params['duration']: 
                 timestamp = timestamp + np.random.exponential(1.0/self.params['pool_proposal_rate'])
                 proposal = Proposal(timestamp, proposal_type='pool') 
                 proposals.append(proposal)
@@ -59,6 +63,14 @@ class Coordinator():
 
         # get main chain
         main_chain = self.global_blocktree.random_main_chain()
+
+        # filter main chain to only have tree blocks
+        main_chain = list(filter(lambda block: block.block_type=='tree',
+            main_chain))
+
+        # sort by proposal timestamp
+        main_chain.sort(key=lambda block: block.proposal_timestamp)
+        
 
         # initialize vertex depth to 0 and get finalization depth
         finalization_depth = self.global_blocktree.compute_k(self.params['tx_error_prob'],
@@ -175,7 +187,6 @@ class Coordinator():
 
         # ******* 
         # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
-        # *********
         # loop over all nodes and process buffer
-        # for node in self.nodes:
-        #    node.process_buffer(self.params['duration'])
+        for node in self.nodes:
+            node.process_buffer(self.params['duration'])

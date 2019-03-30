@@ -1,5 +1,20 @@
 {
   "setting-name": "longest-chain-with-pool",
+  "longest-chain-with-pool":  {
+    "Number of nodes": 10, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block tree proposal rate parameter": 0.1, 
+    "Block pool proposal rate parameter": 0.1, 
+    "Transaction rate parameter": 9,
+    "Transaction dataset": "poisson",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "longest-chain-with-pool",
+    "Transaction scheduling rule": "FIFO",
+    "Duration (sec)": 300,
+    "Logging enabled": true
+  },
   "default":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
@@ -29,16 +44,16 @@
     "Logging enabled": true
   },
   "longest-chain-test":  {
-    "Number of nodes": 100, 
+    "Number of nodes": 10, 
     "Number of adversaries": 1,
     "Block size (txs)": 50, 
     "Probability of error in transaction confirmation": 0.1, 
-    "Block proposal rate parameter": 0.01, 
+    "Block proposal rate parameter": 1.0, 
     "Transaction dataset": "poisson",
     "Transaction scheduling rule": "FIFO",
-    "Network model": "Constant-Decker-Wattenhorf",
+    "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "longest-chain",
-    "Duration (sec)": 2400,
+    "Duration (sec)": 500,
     "Logging enabled": true
   },
   "GHOST-test":  {
@@ -52,21 +67,6 @@
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "GHOST",
     "Duration (sec)": 1000,
-    "Logging enabled": true
-  },
-  "longest-chain-with-pool":  {
-    "Number of nodes": 50, 
-    "Number of adversaries": 1,
-    "Block size (txs)": 50, 
-    "Probability of error in transaction confirmation": 0.1, 
-    "Block tree proposal rate parameter": 0.1, 
-    "Block pool proposal rate parameter": 0.1, 
-    "Transaction rate parameter": 5,
-    "Transaction dataset": "poisson",
-    "Network model": "Decker-Wattenhorf",
-    "Fork choice rule": "longest-chain-with-pool",
-    "Transaction scheduling rule": "FIFO",
-    "Duration (sec)": 600,
     "Logging enabled": true
   }
 }

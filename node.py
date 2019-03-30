@@ -97,16 +97,18 @@ class Node():
                     # tree blocks should be added to local block tree
                     copied_block = Block(event.block.txs, event.block.id,
                             event.block.parent_id,
-                            proposal_timestamp=event.timestamp, 
+                            proposal_timestamp=event.timestamp,
+                            block_type=event.block.block_type, 
                             emptiness=event.block.emptiness) 
                     # add block based on parent id
                     parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                     if parent_block==None:
                         self.orphans = np.append(self.orphans, event)
                 elif event.block.block_type=='pool':
-                    # blocks should be added to local block tree
                     copied_block = Block(event.block.txs, event.block.id,
-                            proposal_timestamp=event.timestamp) 
+                            proposal_timestamp=event.timestamp,
+                            block_type=event.block.block_type,
+                            emptiness=event.block.emptiness) 
                     self.local_blocktree.add_pool_block(copied_block)
 
             b_i+=1
@@ -132,7 +134,6 @@ class Node():
         main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
 
         added_txs = 0
-        remaining_txs = 0
         if self.local_tx_i>0:
             for elem in np.nditer(self.local_txs[:self.local_tx_i],
                     flags=['refs_ok']):
@@ -142,14 +143,13 @@ class Node():
                     break
                 if new_block.txs.shape[0]>max_block_size:
                     # there are potential txs left on the table
-                    remaining_txs+=1
                     continue
                 if tx not in main_chain_txs:
                     self.add_block_by_tx_rule(new_block, tx)
                     added_txs+=1
 
+        new_block.set_emptiness(max_block_size - added_txs)
 
-        new_block.set_emptiness(added_txs - (remaining_txs - max_block_size))
         proposal.set_block(new_block)
         if proposal.proposal_type=='pool':
             self.local_blocktree.add_pool_block(new_block)
