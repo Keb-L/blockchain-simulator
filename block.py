@@ -29,12 +29,9 @@ class Block():
 
     def set_block_type(self, block_type, chain=0):
         self.block_type = block_type
-        if self.block_type=='proposer':
-            self.votes = 0
-        else:
+        if self.block_type=='voter':
             self.block_chain = chain
             
-
     def add_tx(self, tx):
         self.txs = np.append(self.txs, tx)
 

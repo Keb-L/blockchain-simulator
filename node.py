@@ -158,7 +158,7 @@ class Node():
             # find selected chain based on schema and add block
             local_parent_block = self.local_blocktree.add_block_by_fork_choice_rule(new_block)
             new_block.set_parent_id(local_parent_block.id)
-            
+            '''    
             # copy block and add new block to global blocktree
             copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
                     proposal_timestamp=new_block.proposal_timestamp,
@@ -167,5 +167,6 @@ class Node():
                     emptiness=new_block.emptiness) 
             global_parent_block = global_blocktree.add_block_by_parent_id(copied_block)
             copied_block.set_parent_id(global_parent_block.id)
+            '''
     
         return proposal

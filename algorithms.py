@@ -163,26 +163,74 @@ class Prism(LongestChain):
         if choice==0:
             block.set_block_type('proposer')
         else:
-            block.set_block_type('voter', choice)
+            block.set_block_type('voter', choice-1)
+
+    def add_block_by_fork_choice_rule(self, block):
+        # Choose which type of block
+        self.set_block_chain(block)
+
+        if block.block_type=='proposer':
+            print(f'adding {block.block_type} block to main chain')
+        else:
+            print(f'adding {block.block_type} block to chain {block.block_chain}')
+        if block.block_type=='proposer':
+            # If proposer block, call LongestChain's add_block_by_fork_choice_rule
+            return super(Prism, self).add_block_by_fork_choice_rule(block)
+        else:
+            # If voting block, call LongestChain's add_block_by_fork_choice_rule
+            # on specified chain
+            parent_block = self.voting_chains[block.block_chain].add_block_by_fork_choice_rule(block)
+
+            # Find max depth voted by parent
+            max_voted_depth = -1
+            for referenced_block in parent_block.referenced_blocks:
+                vertex = self.block_to_vertices[referenced_block.id]
+                if self.depth[vertex]>max_voted_depth:
+                    max_voted_depth = self.depth[vertex]
+
+            vote_depth = max_voted_depth+1
+
+            # Get depth array
+            depth_array = self.depth.get_array()
+
+            # Find indices where depth is greater than max depth voted by parent
+            while True:
+                choices = np.where(depth_array==vote_depth)[0]
+                # Exhausted depth of proposer tree
+                if len(choices)==0:
+                    break
+                voted_block = self.vertex_to_blocks[self.tree.vertex(np.random.choice(choices))]
+                block.add_referenced_block(voted_block)
+                vote_depth+=1
+
+            return parent_block
+
 
     def fork_choice_rule(self, chain='main'):
         if chain=='main':
-            '''
-            If adding to main proposer blocktree, call LongestChain's fork
-            choice rule
-            '''
-            return super(LongestChain, self).fork_choice_rule()
+            # If adding to main proposer blocktree, call LongestChain's fork
+            # choice rule
+            return super(Prism, self).fork_choice_rule()
         else:
-            '''
-            If adding to voter blocktree, call LongestChain's fork choice rule
-            on specified blocktree
-            '''
+            # If adding to voter blocktree, call LongestChain's fork choice rule
+            # on specified blocktree
             return self.voting_chains[chain].fork_choice_rule()
 
-
     def main_chains(self):
+        # Call LongestChain's main_chains function on proposer tree
+        proposer_tree_main_chains = super(Prism, self).main_chains()
+
+        main_chains = []
+        
+        # Add all blocks referenced by proposer blocks
+        for main_chain in proposer_tree_main_chains:
+            main_chains.append([])
+            for proposer_block in main_chain:
+                added_blocks = list(proposer_block.referenced_blocks)
+                added_blocks.append(proposer_block)
+                main_chains[-1]+=added_blocks
          
-        return [self.tree]
+        return main_chains
 
 class LongestChainWithPool(LongestChain):
     def __init__(self, block_size=50):
