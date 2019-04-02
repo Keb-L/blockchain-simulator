@@ -18,6 +18,8 @@ class Coordinator():
             self.global_blocktree = LongestChain()
         elif params['fork_choice_rule']=='GHOST':
             self.global_blocktree = GHOST()
+        elif params['fork_choice_rule']=='Prism':
+            self.global_blocktree = Prism()
 
     def add_node(self, node):
         self.nodes = np.append(self.nodes, node)
@@ -185,8 +187,10 @@ class Coordinator():
 
             os.system('cat ./logs/stats.csv')
 
+        '''
         # ******* 
         # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
         # loop over all nodes and process buffer
         for node in self.nodes:
             node.process_buffer(self.params['duration'])
+        '''

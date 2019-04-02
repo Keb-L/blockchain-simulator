@@ -49,7 +49,6 @@ class Algorithm():
         leaf_blocks = self.fork_choice_rule()
         main_chains = []
 
-
         # traverse from leaf vertices up to root and add to main chain
         root_block = self.vertex_to_blocks[self.root]
         for leaf_block in leaf_blocks: 
@@ -125,6 +124,7 @@ class Algorithm():
                 k+=1
         return k
 
+
 class LongestChain(Algorithm):
     def fork_choice_rule(self):
         depth_array = self.depth.get_array()
@@ -142,6 +142,47 @@ class LongestChain(Algorithm):
             it.iternext()
 
         return parent_blocks
+
+class Prism(LongestChain):
+    def __init__(self, num_voting_chains=10):
+        # Initialize main proposer tree according to longest chain protocol
+        super(LongestChain, self).__init__()
+
+        # Initialize all voting chains
+        self.num_voting_chains = num_voting_chains
+        self.voting_chains = []
+
+
+        for i in range(0, self.num_voting_chains):
+            self.voting_chains.append(LongestChain())
+
+    def set_block_chain(self, block):
+        choice = np.random.randint(0, self.num_voting_chains+1)
+
+        # Selection of 0 corresponds to adding to proposer tree
+        if choice==0:
+            block.set_block_type('proposer')
+        else:
+            block.set_block_type('voter', choice)
+
+    def fork_choice_rule(self, chain='main'):
+        if chain=='main':
+            '''
+            If adding to main proposer blocktree, call LongestChain's fork
+            choice rule
+            '''
+            return super(LongestChain, self).fork_choice_rule()
+        else:
+            '''
+            If adding to voter blocktree, call LongestChain's fork choice rule
+            on specified blocktree
+            '''
+            return self.voting_chains[chain].fork_choice_rule()
+
+
+    def main_chains(self):
+         
+        return [self.tree]
 
 class LongestChainWithPool(LongestChain):
     def __init__(self, block_size=50):
@@ -242,3 +283,4 @@ class GHOST(Algorithm):
                 max_subtree_vertices]
 
         return parent_blocks
+

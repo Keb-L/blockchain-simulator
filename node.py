@@ -15,6 +15,8 @@ class Node():
             self.local_blocktree = LongestChain()
         elif algorithm=='GHOST':
             self.local_blocktree = GHOST()
+        elif algorithm=='Prism':
+            self.local_blocktree = Prism()
 
         self.tx_rule = tx_rule
 
@@ -128,7 +130,6 @@ class Node():
         # append new block to appropriate chain
         new_block = Block(proposal_timestamp=proposal.timestamp,
                 block_type=proposal.proposal_type)
-
         # find all txs in main chain
         main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
