@@ -76,12 +76,14 @@ class Node():
             # loop over orphans and update remaining orphans
             remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
             for i, proposal in enumerate(self.orphans):
-                parent_block = self.local_blocktree.add_block_by_parent_id(proposal.block)
+                parent_block = self.local_blocktree.get_block_by_id(proposal.block.parent_id)
                 if parent_block==None:
-                    # did not add orphan block, block remains as orphan
+                    # cannot add orphan block, block remains as orphan
                     remaining_orphans[i] = True
                 else:
-                    # we did add an orphan block
+                    # we can add an orphan block
+                    parent_block = self.local_blocktree.add_block(parent_block=parent_block,
+                            new_block=proposal.block)
                     added_orphan_block = True
             self.orphans = self.orphans[remaining_orphans]
 
@@ -97,22 +99,30 @@ class Node():
                 self.local_txs[self.local_tx_i] = event
                 self.local_tx_i+=1
             elif event.__class__.__name__=='Proposal':
-                if event.block.block_type=='tree':
-                    # tree blocks should be added to local block tree
-                    copied_block = Block(event.block.txs, event.block.id,
-                            event.block.parent_id,
-                            proposal_timestamp=event.timestamp,
-                            block_type=event.block.block_type) 
-                    # add block based on parent id
-                    parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
-                    if parent_block==None:
-                        self.orphans = np.append(self.orphans, event)
-                elif event.block.block_type=='pool':
-                    copied_block = Block(event.block.txs, event.block.id,
-                            proposal_timestamp=event.timestamp,
-                            block_type=event.block.block_type)
-                    self.local_blocktree.add_pool_block(copied_block)
-
+                proposal_block = event.block
+                if self.algorithm=='longest-chain' or self.algorithm=='GHOST':
+                    copied_block = Block(txs=proposal_block.txs,
+                            id=proposal_block.id, parent_id=proposal_block.parent_id,
+                            proposal_timestamp=proposal_block.proposal_timestamp)
+                elif self.algorithm=='longest-chain-with-pool':
+                    copied_block = LinkedBlock(txs=proposal_block.txs,
+                            id=proposal_block.id, parent_id=proposal_block.parent_id,
+                            proposal_timestamp=proposal_block.proposal_timestamp,
+                            referenced_blocks=proposal_block.referenced_blocks,
+                            block_type=proposal_block.block_type) 
+                elif self.algorithm=='Prism':
+                    copied_block = PrismBlock(txs=proposal_block.txs,
+                            id=proposal_block.id, parent_id=proposal_block.parent_id,
+                            proposal_timestamp=proposal_block.proposal_timestamp,
+                            referenced_blocks=proposal_block.referenced_blocks,
+                            block_type=proposal_block.block_type,
+                            max_voted_block_depth=proposal_block.max_voted_block_depth) 
+                parent_block = self.local_blocktree.get_block_by_id(copied_block.parent_id)
+                if parent_block==None:
+                    self.orphans = np.append(self.orphans, event)
+                else:
+                    self.local_blocktree.add_block(parent_block=parent_block,
+                            new_block=copied_block)
             b_i+=1
 
         # remove already processed items in buffer
@@ -162,15 +172,23 @@ class Node():
             # find selected chain based on schema and add block
             local_parent_block = self.local_blocktree.add_block_by_fork_choice_rule(new_block)
             new_block.set_parent_id(local_parent_block.id)
-            '''    
             # copy block and add new block to global blocktree
-            copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
-                    proposal_timestamp=new_block.proposal_timestamp,
-                    referenced_blocks=new_block.referenced_blocks,
-                    block_type=new_block.block_type,
-                    emptiness=new_block.emptiness) 
-            global_parent_block = global_blocktree.add_block_by_parent_id(copied_block)
+            if self.algorithm=='longest-chain' or self.algorithm=='GHOST':
+                copied_block = Block(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
+                        proposal_timestamp=new_block.proposal_timestamp)
+            elif self.algorithm=='longest-chain-with-pool':
+                copied_block = LinkedBlock(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
+                        proposal_timestamp=new_block.proposal_timestamp,
+                        referenced_blocks=new_block.referenced_blocks,
+                        block_type=new_block.block_type) 
+            elif self.algorithm=='Prism':
+                copied_block = PrismBlock(txs=new_block.txs, id=new_block.id, parent_id=new_block.parent_id,
+                        proposal_timestamp=new_block.proposal_timestamp,
+                        referenced_blocks=new_block.referenced_blocks,
+                        block_type=new_block.block_type,
+                        max_voted_block_depth=new_block.max_voted_block_depth) 
+            parent_block = global_blocktree.get_block_by_id(copied_block.parent_id)
+            global_parent_block = global_blocktree.add_block(parent_block=parent_block, new_block=copied_block)
             copied_block.set_parent_id(global_parent_block.id)
-            '''
     
         return proposal

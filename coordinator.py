@@ -89,11 +89,12 @@ class Coordinator():
 
                 # set finalization timestamps for referenced blocks and
                 # transactions within them
-                for pool_block in top_block.referenced_blocks:
-                    pool_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
-                    for tx in pool_block.txs:
-                        tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
-                        tx.add_finalization_timestamp(top_block.finalization_timestamp)
+                if hasattr(top_block, 'referenced_blocks'):
+                    for ref_block in top_block.referenced_blocks:
+                        ref_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
+                        for tx in pool_block.txs:
+                            tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
+                            tx.add_finalization_timestamp(top_block.finalization_timestamp)
 
     '''
     Main simulation function

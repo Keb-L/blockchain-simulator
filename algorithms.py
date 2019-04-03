@@ -24,24 +24,20 @@ class Algorithm():
         self.block_to_vertices[genesis.id] = self.root
         self.depth[self.root] = 0
 
-    @abstractmethod
-    def fork_choice_rule(self):
-        pass
-
-    def common_prefix(self, main_chains=None):
-        if main_chains is None:
-            main_chains = self.main_chains()
-
-        common_prefix = [v[0] for v in takewhile(lambda chain:
-            chain.count(chain[0])==len(chain), zip(*main_chains))]
-
-        return common_prefix
+    def get_block_by_id(self, id):
+        if id in self.block_to_vertices:
+            vertex = self.block_to_vertices[id]
+            return self.vertex_to_blocks[vertex]
 
     def random_main_chain(self, main_chains=None):
         if main_chains is None:
             main_chains = self.main_chains()
 
         return random.choice(main_chains)
+
+    @abstractmethod
+    def fork_choice_rule(self):
+        pass
 
     @abstractmethod
     def main_chains(self):
@@ -64,8 +60,17 @@ class Algorithm():
 
         return main_chains
 
+    def common_prefix(self, main_chains=None):
+        if main_chains is None:
+            main_chains = self.main_chains()
+
+        common_prefix = [v[0] for v in takewhile(lambda chain:
+            chain.count(chain[0])==len(chain), zip(*main_chains))]
+
+        return common_prefix
+
     # add a new block given a parent block
-    def add_block(self, parent_block, new_block):
+    def add_block(self, new_block, parent_block):
         # create new vertex
         new_vertex = self.tree.add_vertex()
         self.vertex_to_blocks[new_vertex] = new_block
@@ -76,27 +81,15 @@ class Algorithm():
         self.tree.add_edge(parent_vertex, new_vertex)
         self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
 
+        return parent_block
+
     # add block based on fork choice rule
     def add_block_by_fork_choice_rule(self, new_block):
         parent_block = self.fork_choice_rule()[0]
         new_block.set_parent_id(parent_block.id)
-        self.add_block(parent_block, new_block)
+        self.add_block(new_block, parent_block)
 
         return parent_block
-
-    # adds block based on parent id
-    def add_block_by_parent_id(self, new_block):
-        parent_id = new_block.parent_id
-
-        # if parent id is in mapping, add the block and return the block.
-        # otherwise, return None
-        if parent_id in self.block_to_vertices:
-            parent_vertex = self.block_to_vertices[parent_id]
-            parent_block = self.vertex_to_blocks[parent_vertex]
-            self.add_block(parent_block, new_block)
-            return parent_block
-        else:
-            return None
 
     def graph_to_str(self, vertex=None, level=0):
         if vertex==None:
@@ -123,7 +116,6 @@ class Algorithm():
             else:
                 k+=1
         return k
-
 
 class LongestChain(Algorithm):
     def fork_choice_rule(self):
@@ -270,9 +262,10 @@ class LongestChainWithPool(LongestChain):
     def add_pool_block(self, new_pool_block):
         self.pool_blocks = np.append(self.pool_blocks, new_pool_block)
 
-    def add_block(self, parent_block, new_block):
+    def add_tree_block(self, new_block, parent_block):
         # call LongestChain's add_block function
-        super(LongestChainWithPool, self).add_block(parent_block, new_block)
+        super(LongestChainWithPool, self).add_block(new_block,
+                parent_block)
 
         if self.pool_blocks.shape[0]>0:
             it = np.nditer(self.pool_blocks, flags=['f_index', 'refs_ok'])
@@ -283,6 +276,12 @@ class LongestChainWithPool(LongestChain):
                 it.iternext()
 
             self.pool_blocks = np.array([])
+
+    def add_block(self, new_block, parent_block=None):
+        if new_block.block_type=='pool':
+            self.add_pool_block(new_block)
+        elif new_block.block_type=='tree':
+            self.add_tree_block(new_block, parent_block)
 
     def main_chains(self):
         # call LongestChain's main_chains function
@@ -318,9 +317,9 @@ class GHOST(Algorithm):
 
         return main_chains
 
-    def add_block(self, parent_block, new_block):
+    def add_block(self, new_block, parent_block):
         # call Algorithm's add_block function
-        super(GHOST, self).add_block(parent_block, new_block)
+        super(GHOST, self).add_block(new_block, parent_block)
 
         # set subtree size of leaf vertex to be 0
         vertex = self.block_to_vertices[new_block.id]
