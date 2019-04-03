@@ -2,7 +2,8 @@ import numpy as np, uuid
 
 class Block():
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'tree', referenced_blocks=None, emptiness = 0):
+            block_type = 'tree', referenced_blocks=None, emptiness = 0,
+            max_voted_block_depth=0):
         if txs is None:
             self.txs = np.array([])
         else:
@@ -16,6 +17,7 @@ class Block():
         self.parent_id = parent_id 
 
 
+        self.max_voted_block_depth = max_voted_block_depth
         self.pool_block_ref_timestamp = None
         self.finalization_timestamp = None
         self.emptiness = emptiness
@@ -26,6 +28,9 @@ class Block():
             self.referenced_blocks = referenced_blocks.copy()
 
         self.block_type = block_type 
+
+    def set_max_voted_block_depth(self, max_voted_block_depth):
+        self.max_voted_block_depth = max_voted_block_depth
 
     def set_block_type(self, block_type, chain=0):
         self.block_type = block_type

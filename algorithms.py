@@ -168,7 +168,8 @@ class Prism(LongestChain):
 
     def add_block_by_fork_choice_rule(self, block):
         # Choose which type of block
-        self.set_block_chain(block)
+        if block.block_type=='tree':
+            self.set_block_chain(block)
 
         if block.block_type=='proposer':
             # If proposer block, call LongestChain's add_block_by_fork_choice_rule
@@ -176,16 +177,14 @@ class Prism(LongestChain):
         else:
             # If voting block, call LongestChain's add_block_by_fork_choice_rule
             # on specified chain
-            parent_block = self.voting_chains[block.block_chain].add_block_by_fork_choice_rule(block)
+            voting_chain = self.voting_chains[block.block_chain]
+            parent_block = voting_chain.add_block_by_fork_choice_rule(block)
 
-            # Find max depth voted by parent
-            max_voted_depth = -1
-            for referenced_block in parent_block.referenced_blocks:
-                vertex = self.block_to_vertices[referenced_block.id]
-                if self.depth[vertex]>max_voted_depth:
-                    max_voted_depth = self.depth[vertex]
-
-            vote_depth = max_voted_depth+1
+            # Find max depth voted by parent and have new block vote for all
+            # subsequent depths up to its own
+            block_depth = voting_chain.depth[voting_chain.block_to_vertices[block.id]]
+            block.set_max_voted_block_depth(parent_block.max_voted_block_depth)
+            vote_depth = parent_block.max_voted_block_depth+1
 
             # Get depth array
             depth_array = self.depth.get_array()
@@ -199,6 +198,7 @@ class Prism(LongestChain):
                 voted_block = self.vertex_to_blocks[self.tree.vertex(np.random.choice(choices))]
                 block.add_referenced_block(voted_block)
                 voted_block.add_referenced_block(block)
+                block.set_max_voted_block_depth(vote_depth)
                 vote_depth+=1
 
             return parent_block
@@ -215,7 +215,7 @@ class Prism(LongestChain):
             return self.voting_chains[chain].fork_choice_rule()
 
     def main_chains(self):
-        depth = 0
+        depth = 1
 
         vote_dict = {}
         for voting_chain in self.voting_chains:
@@ -228,9 +228,9 @@ class Prism(LongestChain):
 
         # Get depth array
         depth_array = self.depth.get_array()
-        depth = 0
+        depth = 1
 
-        main_chains = [[]]
+        main_chains = [[self.vertex_to_blocks[self.root]]]
         while True:
             vertices_at_depth = np.where(depth_array==depth)[0]
             # Exhausted depth of proposer tree
