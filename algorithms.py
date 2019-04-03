@@ -154,7 +154,8 @@ class Prism(LongestChain):
 
 
         for i in range(0, self.num_voting_chains):
-            self.voting_chains.append(LongestChain())
+            voting_chain = LongestChain()
+            self.voting_chains.append(voting_chain)
 
     def set_block_chain(self, block):
         choice = np.random.randint(0, self.num_voting_chains+1)
@@ -169,10 +170,6 @@ class Prism(LongestChain):
         # Choose which type of block
         self.set_block_chain(block)
 
-        if block.block_type=='proposer':
-            print(f'adding {block.block_type} block to main chain')
-        else:
-            print(f'adding {block.block_type} block to chain {block.block_chain}')
         if block.block_type=='proposer':
             # If proposer block, call LongestChain's add_block_by_fork_choice_rule
             return super(Prism, self).add_block_by_fork_choice_rule(block)
@@ -201,6 +198,7 @@ class Prism(LongestChain):
                     break
                 voted_block = self.vertex_to_blocks[self.tree.vertex(np.random.choice(choices))]
                 block.add_referenced_block(voted_block)
+                voted_block.add_referenced_block(block)
                 vote_depth+=1
 
             return parent_block
@@ -217,21 +215,44 @@ class Prism(LongestChain):
             return self.voting_chains[chain].fork_choice_rule()
 
     def main_chains(self):
-        # Call LongestChain's main_chains function on proposer tree
-        proposer_tree_main_chains = super(Prism, self).main_chains()
+        depth = 0
 
-        main_chains = []
-        
-        # Add all blocks referenced by proposer blocks
-        for main_chain in proposer_tree_main_chains:
-            main_chains.append([])
-            for proposer_block in main_chain:
-                added_blocks = list(proposer_block.referenced_blocks)
-                added_blocks.append(proposer_block)
-                main_chains[-1]+=added_blocks
-         
+        vote_dict = {}
+        for voting_chain in self.voting_chains:
+            main_voting_chain = voting_chain.main_chains()[0]
+            for block in main_voting_chain:
+                for voted_block in block.referenced_blocks:
+                    if voted_block.id not in vote_dict:
+                        vote_dict[voted_block.id]=0
+                    vote_dict[voted_block.id]+=1
+
+        # Get depth array
+        depth_array = self.depth.get_array()
+        depth = 0
+
+        main_chains = [[]]
+        while True:
+            vertices_at_depth = np.where(depth_array==depth)[0]
+            # Exhausted depth of proposer tree
+            if len(vertices_at_depth)==0:
+                break
+            max_votes = 0
+            max_voted_block = None
+            for vertex in vertices_at_depth:
+                if self.vertex_to_blocks[vertex].id in vote_dict:
+                    votes = vote_dict[self.vertex_to_blocks[vertex].id]
+                else:
+                    votes = 0
+                if votes>=max_votes:
+                    max_votes = votes
+                    max_voted_block = self.vertex_to_blocks[vertex]
+
+            main_chains[0]+=list(max_voted_block.referenced_blocks)
+            main_chains[0].append(max_voted_block)
+            depth+=1
+
         return main_chains
-
+            
 class LongestChainWithPool(LongestChain):
     def __init__(self, block_size=50):
         super(LongestChainWithPool, self).__init__()
