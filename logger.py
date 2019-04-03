@@ -3,17 +3,6 @@ from graph_tool.all import *
 from network import constant_decker_wattenhorf
 from constants import TX_SIZE
 
-def log_local_blocktree(node):
-    with open(f'./logs/{node.node_id}-transactions.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'optimistic confirmation timestamp']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-        for vertex in node.local_blocktree.main_chains()[0]:
-            block = node.local_blocktree.vertex_to_blocks[vertex]
-            for tx in block.txs:
-                writer.writerow({'id': f'{tx.id}', 'Optimistic confirmation timestamp':
-                f'{block.optimistic_confirmation_timestamp}'})
-
 def log_global_blocktree(params, global_blocktree):
     max_block_size = params['max_block_size']
 
@@ -21,12 +10,9 @@ def log_global_blocktree(params, global_blocktree):
         fieldnames = ['id', 
                     'parent id', 
                     'proposal timestamp', 
-                    'pool block timestamp', 
                     'finalization timestamp', 
                     'depth', 
                     'finalized', 
-                    'emptiness',
-                    'pool blocks',
                     'transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -35,36 +21,29 @@ def log_global_blocktree(params, global_blocktree):
             tx_str = ';'.join(tx.id for tx in block.txs)
             depth = global_blocktree.depth[vertex]
             is_finalized = False if block.finalization_timestamp==None else True
-            pool_block_str = ';'.join(block.id for block in block.referenced_blocks)
             writer.writerow({
                 'id': f'{block.id}', 
                 'parent id': f'{block.parent_id}', 
                 'proposal timestamp': f'{block.proposal_timestamp}', 
-                'pool block timestamp': f'{block.pool_block_ref_timestamp}', 
                 'finalization timestamp': f'{block.finalization_timestamp}', 
                 'depth': f'{depth}',
                 'finalized': f'{is_finalized}', 
-                'emptiness': f'{block.emptiness}',
-                'pool blocks': f'{pool_block_str}',
                 'transactions': f'{tx_str}'})
-            for pool_block in block.referenced_blocks:
-                pool_tx_str = ';'.join(tx.id for tx in pool_block.txs)
-                writer.writerow({
-                    'id': f'{pool_block.id}', 
-                    'parent id': f'{pool_block.parent_id}', 
-                    'proposal timestamp': f'{pool_block.proposal_timestamp}', 
-                    'finalization timestamp': f'{block.finalization_timestamp}', 
-                    'depth': f'NA',
-                    'finalized': f'{is_finalized}',
-                    'emptiness': f'{pool_block.emptiness}',
-                    'pool blocks': f'NA',
-                    'transactions': f'{pool_tx_str}'
-                    })
+            if hasattr(block, 'referenced_blocks'):
+                for ref_block in block.referenced_blocks:
+                    pool_tx_str = ';'.join(tx.id for tx in ref_block.txs)
+                    writer.writerow({
+                        'id': f'{block.id}', 
+                        'parent id': f'{ref_block.parent_id}', 
+                        'proposal timestamp': f'{ref_block.proposal_timestamp}', 
+                        'finalization timestamp': f'{block.finalization_timestamp}', 
+                        'depth': f'NA',
+                        'finalized': f'{is_finalized}',
+                        })
 
 def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 'source node', 'generated timestamp', 
-                'pool block arrival timestamp', 'pool block reference timestamp',
                 'main chain arrival timestamp', 
                 'finalization timestamps']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -77,9 +56,8 @@ def log_txs(txs):
                         tx.finalization_timestamps)
             writer.writerow({'id': f'{tx.id}', 'source node':
                 f'{tx.source.node_id}', 'generated timestamp':
-                f'{tx.timestamp}', 'pool block arrival timestamp':
-                f'{tx.pool_block_arr_timestamp}', 'pool block reference timestamp':
-                f'{tx.pool_block_ref_timestamp}', 'main chain arrival timestamp':
+                f'{tx.timestamp}', 
+                'main chain arrival timestamp':
                 f'{tx.main_chain_timestamp}',
                 f'finalization timestamps':
                 f'{finalization_timestamp_str}'})
@@ -149,14 +127,15 @@ def draw_global_blocktree(global_blocktree):
             v = global_blocktree.block_to_vertices[b.id]
             # main chain color
             color_vp[global_blocktree.tree.vertex(v)] = 1
-            for pool_block in b.referenced_blocks:
-                pool_vertex = global_blocktree.tree.add_vertex()
-                text_vp[global_blocktree.tree.vertex(pool_vertex)] = pool_block.id
-                # circles for pool blocks
-                shape_vp[pool_vertex] = 0
-                # blue for pool blocks
-                color_vp[pool_vertex] = 0
-                global_blocktree.tree.add_edge(v, pool_vertex)
+            if hasattr(b, 'referenced_blocks'):
+                for ref_block in b.referenced_blocks:
+                    pool_vertex = global_blocktree.tree.add_vertex()
+                    text_vp[global_blocktree.tree.vertex(pool_vertex)] = ref_block.id
+                    # circles for pool blocks
+                    shape_vp[pool_vertex] = 0
+                    # blue for pool blocks
+                    color_vp[pool_vertex] = 0
+                    global_blocktree.tree.add_edge(v, pool_vertex)
 
     pos = radial_tree_layout(global_blocktree.tree, global_blocktree.tree.vertex(0))
 

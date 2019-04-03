@@ -6,16 +6,8 @@ class Transaction():
         self.source = source
         self.id = uuid.uuid4().hex[0:10]
 
-        self.pool_block_arr_timestamp = None
-        self.pool_block_ref_timestamp = None
         self.main_chain_timestamp = None
         self.finalization_timestamps = None
-
-    def set_pool_block_arr_timestamp(self, pool_block_arr_timestamp):
-        self.pool_block_arr_timestamp = pool_block_arr_timestamp
-
-    def set_pool_block_ref_timestamp(self, pool_block_ref_timestamp):
-        self.pool_block_ref_timestamp = pool_block_ref_timestamp
 
     def set_main_chain_arrival_timestamp(self, main_chain_timestamp):
         self.main_chain_timestamp = main_chain_timestamp
@@ -26,7 +18,7 @@ class Transaction():
         self.finalization_timestamps.append(finalization_timestamp)
 
 class Proposal():
-    def __init__(self, timestamp, proposal_type ='tree'):
+    def __init__(self, timestamp, proposal_type ='normal'):
         self.timestamp = timestamp
         self.id = uuid.uuid4().hex[0:6]
         self.proposal_type = proposal_type

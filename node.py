@@ -1,5 +1,5 @@
 import logging, copy, json, numpy as np
-from block import Block
+from block import *
 import graph_tool.all as gt
 from network import zero_latency, decker_wattenhorf, constant_decker_wattenhorf
 from algorithms import *
@@ -17,6 +17,8 @@ class Node():
             self.local_blocktree = GHOST()
         elif algorithm=='Prism':
             self.local_blocktree = Prism()
+
+        self.algorithm = algorithm
 
         self.tx_rule = tx_rule
 
@@ -100,8 +102,7 @@ class Node():
                     copied_block = Block(event.block.txs, event.block.id,
                             event.block.parent_id,
                             proposal_timestamp=event.timestamp,
-                            block_type=event.block.block_type, 
-                            emptiness=event.block.emptiness) 
+                            block_type=event.block.block_type) 
                     # add block based on parent id
                     parent_block = self.local_blocktree.add_block_by_parent_id(copied_block)
                     if parent_block==None:
@@ -109,8 +110,7 @@ class Node():
                 elif event.block.block_type=='pool':
                     copied_block = Block(event.block.txs, event.block.id,
                             proposal_timestamp=event.timestamp,
-                            block_type=event.block.block_type,
-                            emptiness=event.block.emptiness) 
+                            block_type=event.block.block_type)
                     self.local_blocktree.add_pool_block(copied_block)
 
             b_i+=1
@@ -128,8 +128,14 @@ class Node():
         self.process_buffer(proposal.timestamp)
 
         # append new block to appropriate chain
-        new_block = Block(proposal_timestamp=proposal.timestamp,
-                block_type=proposal.proposal_type)
+        if self.algorithm=='longest-chain' or self.algorithm=='GHOST':
+            new_block = Block(proposal_timestamp=proposal.timestamp)
+        elif self.algorithm=='longest-chain-with-pool':
+            new_block = LinkedBlock(proposal_timestamp=proposal.timestamp,
+                    block_type=proposal.proposal_type)
+        elif self.algorithm=='Prism':
+            new_block = LinkedBlock(proposal_timestamp=proposal.timestamp)
+
         # find all txs in main chain
         main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
@@ -148,8 +154,6 @@ class Node():
                 if tx not in main_chain_txs:
                     self.add_block_by_tx_rule(new_block, tx)
                     added_txs+=1
-
-        new_block.set_emptiness(max_block_size - added_txs)
 
         proposal.set_block(new_block)
         if proposal.proposal_type=='pool':
