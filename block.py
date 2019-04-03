@@ -2,7 +2,7 @@ import numpy as np, uuid
 
 class Block():
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'tree', referenced_blocks=None, emptiness = 0,
+            block_type = 'tree', referenced_blocks=None,
             max_voted_block_depth=0):
         if txs is None:
             self.txs = np.array([])
@@ -15,43 +15,49 @@ class Block():
 
         self.proposal_timestamp = proposal_timestamp
         self.parent_id = parent_id 
-
-
-        self.max_voted_block_depth = max_voted_block_depth
-        self.pool_block_ref_timestamp = None
         self.finalization_timestamp = None
-        self.emptiness = emptiness
-
-        if referenced_blocks is None:
-            self.referenced_blocks = np.array([])
-        else:
-            self.referenced_blocks = referenced_blocks.copy()
 
         self.block_type = block_type 
 
-    def set_max_voted_block_depth(self, max_voted_block_depth):
-        self.max_voted_block_depth = max_voted_block_depth
-
-    def set_block_type(self, block_type, chain=0):
-        self.block_type = block_type
-        if self.block_type=='voter':
-            self.block_chain = chain
-            
     def add_tx(self, tx):
         self.txs = np.append(self.txs, tx)
 
     def set_parent_id(self, parent_id):
         self.parent_id = parent_id
 
-    def set_pool_block_ref_timestamp(self, pool_block_ref_timestamp):
-        self.pool_block_ref_timestamp = pool_block_ref_timestamp
-
     def set_finalization_timestamp(self, finalization_timestamp):
         self.finalization_timestamp = finalization_timestamp
 
-    def set_emptiness(self, emptiness):
-        self.emptiness = emptiness
+
+class LinkedBlock(Block):
+    def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
+            block_type = 'proposer', referenced_blocks=None):
+        super(LinkedBlock, self).__init__(txs, id, parent_id, proposal_timestamp,
+                block_type)
+
+        if referenced_blocks is None:
+            self.referenced_blocks = np.array([])
+        else:
+            self.referenced_blocks = referenced_blocks.copy()
 
     def add_referenced_block(self, referenced_block):
         self.referenced_blocks = np.append(self.referenced_blocks,
                 referenced_block)
+
+class PrismBlock(LinkedBlock):
+    def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
+            block_type = 'proposer', referenced_blocks=None,
+            max_voted_block_depth=0):
+
+        super(PrismBlock, self).__init__(txs, id, parent_id, proposal_timestamp,
+                referenced_blocks)
+
+        self.max_voted_block_depth = max_voted_block_depth
+
+    def set_block_type(self, block_type, chain=0):
+        self.block_type = block_type
+        if self.block_type=='voter':
+            self.block_chain = chain
+
+    def set_max_voted_block_depth(self, max_voted_block_depth):
+        self.max_voted_block_depth = max_voted_block_depth

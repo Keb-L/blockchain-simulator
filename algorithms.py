@@ -180,17 +180,23 @@ class Prism(LongestChain):
             voting_chain = self.voting_chains[block.block_chain]
             parent_block = voting_chain.add_block_by_fork_choice_rule(block)
 
+            voting_chain_genesis = voting_chain.vertex_to_blocks[voting_chain.root]
+
             # Find max depth voted by parent and have new block vote for all
             # subsequent depths up to its own
-            block_depth = voting_chain.depth[voting_chain.block_to_vertices[block.id]]
-            block.set_max_voted_block_depth(parent_block.max_voted_block_depth)
-            vote_depth = parent_block.max_voted_block_depth+1
+            if parent_block.id==voting_chain_genesis.id:
+                block.set_max_voted_block_depth(0)
+                vote_depth = 1
+            else:
+                block.set_max_voted_block_depth(parent_block.max_voted_block_depth)
+                vote_depth = parent_block.max_voted_block_depth+1
 
+            block_depth = voting_chain.depth[voting_chain.block_to_vertices[block.id]]
             # Get depth array
             depth_array = self.depth.get_array()
 
             # Find indices where depth is greater than max depth voted by parent
-            while True:
+            while vote_depth<=block_depth:
                 choices = np.where(depth_array==vote_depth)[0]
                 # Exhausted depth of proposer tree
                 if len(choices)==0:
@@ -217,14 +223,16 @@ class Prism(LongestChain):
     def main_chains(self):
         depth = 1
 
+        # tabulate votes for all blocks
         vote_dict = {}
         for voting_chain in self.voting_chains:
             main_voting_chain = voting_chain.main_chains()[0]
             for block in main_voting_chain:
-                for voted_block in block.referenced_blocks:
-                    if voted_block.id not in vote_dict:
-                        vote_dict[voted_block.id]=0
-                    vote_dict[voted_block.id]+=1
+                if block.id!='Genesis':
+                    for voted_block in block.referenced_blocks:
+                        if voted_block.id not in vote_dict:
+                            vote_dict[voted_block.id]=0
+                        vote_dict[voted_block.id]+=1
 
         # Get depth array
         depth_array = self.depth.get_array()
@@ -285,9 +293,9 @@ class LongestChainWithPool(LongestChain):
         for main_chain in tree_main_chains:
             main_chains.append([])
             for tree_block in main_chain:
-                added_blocks = list(tree_block.referenced_blocks)
-                added_blocks.append(tree_block)
-                main_chains[-1]+=added_blocks
+                if self.block_to_vertices[tree_block.id]!=self.root:
+                    main_chains[-1]+=list(tree_block.referenced_blocks)
+                main_chains[-1].append(tree_block)
 
         return main_chains
 
