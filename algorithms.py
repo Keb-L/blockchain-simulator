@@ -160,8 +160,7 @@ class Prism(LongestChain):
 
     def add_block_by_fork_choice_rule(self, block):
         # Choose which type of block
-        if block.block_type=='tree':
-            self.set_block_chain(block)
+        self.set_block_chain(block)
 
         if block.block_type=='proposer':
             # If proposer block, call LongestChain's add_block_by_fork_choice_rule

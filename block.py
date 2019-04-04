@@ -31,7 +31,7 @@ class Block():
 
 class LinkedBlock(Block):
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'proposer', referenced_blocks=None):
+            block_type = 'tree', referenced_blocks=None):
         super(LinkedBlock, self).__init__(txs, id, parent_id, proposal_timestamp,
                 block_type)
 
@@ -50,7 +50,7 @@ class PrismBlock(LinkedBlock):
             max_voted_block_depth=0):
 
         super(PrismBlock, self).__init__(txs, id, parent_id, proposal_timestamp,
-                referenced_blocks)
+                block_type, referenced_blocks)
 
         self.max_voted_block_depth = max_voted_block_depth
 

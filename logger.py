@@ -85,7 +85,8 @@ def log_statistics(params, global_blocktree, time_elapsed):
         # log main chain information blocks
         num_blocks = len(global_blocktree.tree.get_vertices())
         # filter main chain to only have tree blocks
-        main_chain = list(filter(lambda block: block.block_type=='tree',
+        main_chain = list(filter(lambda block: block.block_type=='tree' or
+            block.block_type=='proposer',
             global_blocktree.main_chains()[0]))
         main_chain_length = len(main_chain)
         num_orphan_blocks = num_blocks - main_chain_length 

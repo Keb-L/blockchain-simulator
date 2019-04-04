@@ -59,7 +59,8 @@ class Coordinator():
         main_chain = self.global_blocktree.random_main_chain()
 
         # filter main chain to only have tree blocks
-        main_chain = list(filter(lambda block: block.block_type=='tree',
+        main_chain = list(filter(lambda block: block.block_type=='tree' or
+            block.block_type=='proposer',
             main_chain))
 
         # sort by proposal timestamp
@@ -92,7 +93,7 @@ class Coordinator():
                 if hasattr(top_block, 'referenced_blocks'):
                     for ref_block in top_block.referenced_blocks:
                         ref_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
-                        for tx in pool_block.txs:
+                        for tx in ref_block.txs:
                             tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
                             tx.add_finalization_timestamp(top_block.finalization_timestamp)
 

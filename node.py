@@ -38,12 +38,9 @@ class Node():
         self.neighbors = np.append(self.neighbors, neighbor_node)
 
     def add_block_by_tx_rule(self, new_block, tx):
-        if new_block.block_type=='pool':
-            # set time tx is assigned a pool block
-            tx.set_pool_block_arr_timestamp(new_block.proposal_timestamp)
         if self.tx_rule=='FIFO':
             new_block.add_tx(tx)
-        # m should range from f*delta (block pool proposal rate * block delay)
+        # m should range from f*delta (block proposal rate * block delay)
         # to 10*f*delta
         elif self.tx_rule=='1/m' and random.random()<1.0/(2*2.3333):
             new_block.add_tx(tx)
@@ -144,7 +141,7 @@ class Node():
             new_block = LinkedBlock(proposal_timestamp=proposal.timestamp,
                     block_type=proposal.proposal_type)
         elif self.algorithm=='Prism':
-            new_block = LinkedBlock(proposal_timestamp=proposal.timestamp)
+            new_block = PrismBlock(proposal_timestamp=proposal.timestamp)
 
         # find all txs in main chain
         main_chain = self.local_blocktree.random_main_chain()
@@ -188,7 +185,7 @@ class Node():
                         block_type=new_block.block_type,
                         max_voted_block_depth=new_block.max_voted_block_depth) 
             parent_block = global_blocktree.get_block_by_id(copied_block.parent_id)
-            global_parent_block = global_blocktree.add_block(parent_block=parent_block, new_block=copied_block)
-            copied_block.set_parent_id(global_parent_block.id)
+            global_blocktree.add_block(parent_block=parent_block, new_block=copied_block)
+            copied_block.set_parent_id(parent_block.id)
     
         return proposal
