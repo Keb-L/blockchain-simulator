@@ -8,7 +8,7 @@ import generate_tx_dataset
 
 def get_params(filename):
     params = {}
-    with open(f'{filename}') as f:
+    with open(filename) as f:
         contents = json.load(f)
         setting_name = contents['setting-name']
         d = contents[setting_name]

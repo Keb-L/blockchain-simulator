@@ -30,7 +30,6 @@ def compute_throughputs(foldername='logs', filename='params.json'):
                 else:
                     num_transactions_finalized+=1
 
-    print(num_transactions_finalized, num_unique_transactions_finalized)
     return float(num_transactions_finalized)/duration, float(num_unique_transactions_finalized)/duration
 
 def compute_latency(foldername='logs'):
