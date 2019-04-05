@@ -7,6 +7,23 @@ from block import Block
 from abc import ABC, abstractmethod
 from constants import FINALIZATION_DEPTH
 
+def compute_finalization_depth(epsilon, num_nodes, num_adversaries):
+    # compute finalization depth
+    k = 0
+    q = float(num_adversaries)/num_nodes
+    p = 1-q
+    while True:
+        s = 0
+        _lambda = k*q/p
+        for i in range(0, k):
+            s+=pow(_lambda, i)*pow(e, -_lambda)/factorial(i)*(1-pow(q/p, k-i))
+        result = 1-s
+        if result<=epsilon:
+            break
+        else:
+            k+=1
+    return k
+
 class Algorithm():
     def __init__(self):
         self.tree = Graph()
@@ -100,22 +117,6 @@ class Algorithm():
             ret += self.graph_to_str(vertex=child, level=level+1)
         return ret
 
-    def compute_k(self, epsilon, num_nodes, num_adversaries):
-        # compute finalization depth
-        k = 0
-        q = float(num_adversaries)/num_nodes
-        p = 1-q
-        while True:
-            s = 0
-            _lambda = k*q/p
-            for i in range(0, k):
-                s+=pow(_lambda, i)*pow(e, -_lambda)/factorial(i)*(1-pow(q/p, k-i))
-            result = 1-s
-            if result<=epsilon:
-                break
-            else:
-                k+=1
-        return k
 
 class LongestChain(Algorithm):
     def fork_choice_rule(self):
