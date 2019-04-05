@@ -2,8 +2,7 @@ import numpy as np, uuid
 
 class Block():
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'tree', referenced_blocks=None,
-            max_voted_block_depth=0):
+            block_type = 'tree', depth=0):
         if txs is None:
             self.txs = np.array([])
         else:
@@ -16,8 +15,12 @@ class Block():
         self.proposal_timestamp = proposal_timestamp
         self.parent_id = parent_id 
         self.finalization_timestamp = None
+        self.depth = depth
 
         self.block_type = block_type 
+
+    def set_depth(self, depth):
+        self.depth = depth 
 
     def add_tx(self, tx):
         self.txs = np.append(self.txs, tx)
