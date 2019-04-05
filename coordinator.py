@@ -12,15 +12,6 @@ class Coordinator():
 
         self.params = params
 
-        if params['fork_choice_rule']=='longest-chain-with-pool':
-            self.global_blocktree = LongestChainWithPool()
-        elif params['fork_choice_rule']=='longest-chain':
-            self.global_blocktree = LongestChain()
-        elif params['fork_choice_rule']=='GHOST':
-            self.global_blocktree = GHOST()
-        elif params['fork_choice_rule']=='Prism':
-            self.global_blocktree = Prism()
-
     def add_node(self, node):
         self.nodes = np.append(self.nodes, node)
 
@@ -54,48 +45,62 @@ class Coordinator():
     def set_transactions(self, dataset):
         self.txs = np.asarray(dataset)
 
-    def set_timestamps(self):
-        # get main chain
-        main_chain = self.global_blocktree.random_main_chain()
-
-        # filter main chain to only have tree blocks
-        main_chain = list(filter(lambda block: block.block_type=='tree' or
-            block.block_type=='proposer',
-            main_chain))
-
-        # sort by proposal timestamp
-        main_chain.sort(key=lambda block: block.proposal_timestamp)
-        
-
-        # initialize vertex depth to 0 and get finalization depth
-        finalization_depth = self.global_blocktree.compute_k(self.params['tx_error_prob'],
+    def set_timestamps(self, global_main_chain):
+        finalization_depth = compute_finalization_depth(self.params['tx_error_prob'],
                 self.params['num_nodes'], self.params['num_adversaries'])
 
-        for depth in range(0, len(main_chain)):
-            if depth+finalization_depth>len(main_chain)-1:
-                break
-            else:
-                # top block is block depth blocks deep on main chain
-                top_block = main_chain[depth]
-                # bottom block is block depth+finalization_depth blocks deep on
-                # main chain
-                bottom_block = main_chain[depth+finalization_depth]
-                # top block's finalization timestamp is bottom block's proposal
-                # timestamp
-                top_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
-                # set main chain arrival and finalization timestamp of all transactions in top block
-                for tx in top_block.txs:
-                    tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
-                    tx.add_finalization_timestamp(top_block.finalization_timestamp)
-
-                # set finalization timestamps for referenced blocks and
-                # transactions within them
-                if hasattr(top_block, 'referenced_blocks'):
-                    for ref_block in top_block.referenced_blocks:
-                        ref_block.set_finalization_timestamp(bottom_block.proposal_timestamp)
+        # For each common block
+        # iterate through all transactions and set to complete and add
+        # finalization, main chain arrival timestamps
+        for common_block in global_main_chain:
+            # finalized blocks are finalization depth above common block
+            finalized_blocks = filter(lambda block:
+                 block.depth<=common_block.depth-finalization_depth,
+                global_main_chain)
+            for finalized_block in finalized_blocks:
+                finalized_block.set_finalization_timestamp(common_block.proposal_timestamp)
+                for tx in finalized_block.txs:
+                    # transaction arrives to main chain when finalized block
+                    # is proposed
+                    tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
+                    # transaction is finalized when common block is proposed
+                    tx.set_complete()
+                    tx.add_finalization_timestamp(common_block.proposal_timestamp)
+                if hasattr(finalized_block, 'referenced_blocks'):
+                    # referenced blocks have a finalization timestamp and
+                    # proposal timestamp equal
+                    # to the finalized block on the main chain
+                    for ref_block in finalized_block.referenced_blocks:
+                        ref_block.set_finalization_timestamp(finalized_block.finalization_timestamp)
                         for tx in ref_block.txs:
-                            tx.set_main_chain_arrival_timestamp(top_block.proposal_timestamp)
-                            tx.add_finalization_timestamp(top_block.finalization_timestamp)
+                            tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
+                            tx.add_finalization_timestamp(finalized_block.finalization_timestamp)
+
+
+    def global_main_chain(self):
+        main_chains = []
+        main_chain_ids = []
+
+        # Get block ids in all main chains
+        for node in self.nodes:
+            main_chain = node.local_blocktree.random_main_chain()
+            main_chains.append(node.local_blocktree.random_main_chain())
+            main_chain_ids.append(list(map(lambda block: block.id,
+                main_chains[-1])))
+
+        # Find blocks common to all main chains
+        common_blocks_ids = set(main_chain_ids[0])
+        for blocks in main_chain_ids[1:]:
+            common_blocks_ids.intersection_update(blocks)
+
+
+        common_blocks = []
+        for common_block_id in common_blocks_ids:
+            common_block = next(filter(lambda block: block.id==common_block_id,
+                    main_chains[0]))
+            common_blocks.append(common_block)
+
+        return common_blocks 
 
     '''
     Main simulation function
@@ -141,7 +146,7 @@ class Coordinator():
                     proposal = proposer.propose(self.proposals[p_i],
                         self.params['max_block_size'],
                         self.params['fork_choice_rule'],
-                        self.params['model'], self.global_blocktree)
+                        self.params['model'])
                     # broadcast to rest of network
                     proposer.broadcast(proposal, self.params['max_block_size'],
                             self.params['model'])
@@ -160,31 +165,22 @@ class Coordinator():
                 proposal = proposer.propose(self.proposals[p_i], 
                     self.params['max_block_size'],
                     self.params['fork_choice_rule'],
-                    self.params['model'], self.global_blocktree)
+                    self.params['model'])
                 # broadcast to rest of network
                 proposer.broadcast(proposal, self.params['max_block_size'],
                         self.params['model'])
                 p_i+=1
 
-        self.set_timestamps()
+        for node in self.nodes:
+            node.process_buffer(self.params['duration'])
+
+        common_blocks = self.global_main_chain() 
+        self.set_timestamps(common_blocks)
 
         end = time.time()
         if self.params['logging']:
             logger.log_txs(self.txs)
-            '''
-            for node in self.nodes:
-                log_local_blocktree(node)
-            '''
-            logger.log_global_blocktree(self.params, self.global_blocktree)
-            logger.log_statistics(self.params, self.global_blocktree, end-start)
-            logger.draw_global_blocktree(self.global_blocktree)
+            logger.log_blocks(self.params, self.proposals)
+            logger.log_statistics(self.params, common_blocks, self.proposals, end-start)
 
             os.system('cat ./logs/stats.csv')
-
-        '''
-        # ******* 
-        # Commenting this out for now: since our metrics are calculated from the global tree, we don't actually need the local blocktrees to be up to date at the end of the simulation. If we were computing metrics from the local blocktrees, we would need to cut off the buffer processing at time 'duration', otherwise all the nodes would have the same local blocktree
-        # loop over all nodes and process buffer
-        for node in self.nodes:
-            node.process_buffer(self.params['duration'])
-        '''

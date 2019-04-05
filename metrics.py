@@ -44,7 +44,7 @@ def compute_latency(foldername='logs'):
                 main_chain_arrival_sum += float(row['main chain arrival timestamp']) - float(row['generated timestamp'])
                 main_chain_arrival_count += 1
             if row['finalization timestamps']!='None':
-                max_finalization_timestamp = max(list(map(lambda t: float(t),
+                max_finalization_timestamp = min(list(map(lambda t: float(t),
                     row['finalization timestamps'].split(';')))) 
                 finalization_sum += max_finalization_timestamp - float(row['main chain arrival timestamp'])
                 finalization_count += 1

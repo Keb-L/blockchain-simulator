@@ -1,9 +1,9 @@
 {
-  "setting-name": "Prism",
+  "setting-name": "longest-chain",
   "longest-chain":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
-    "Block size (txs)": 50, 
+    "Block size (txs)": 100, 
     "Probability of error in transaction confirmation": 0.01, 
     "Block proposal rate parameter": 0.1, 
     "Transaction dataset": "poisson",

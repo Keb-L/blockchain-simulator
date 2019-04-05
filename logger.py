@@ -1,11 +1,10 @@
 import csv, json
+from algorithms import compute_finalization_depth
 from graph_tool.all import *
 from network import constant_decker_wattenhorf
 from constants import TX_SIZE
 
-def log_global_blocktree(params, global_blocktree):
-    max_block_size = params['max_block_size']
-
+def log_blocks(params, proposals):
     with open('./logs/blocks.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 
                     'parent id', 
@@ -16,10 +15,10 @@ def log_global_blocktree(params, global_blocktree):
                     'transactions']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        for block in global_blocktree.vertex_to_blocks:
-            vertex = global_blocktree.block_to_vertices[block.id] 
+        for proposal in proposals:
+            block = proposal.block
             tx_str = ';'.join(tx.id for tx in block.txs)
-            depth = global_blocktree.depth[vertex]
+            depth = block.depth
             is_finalized = False if block.finalization_timestamp==None else True
             writer.writerow({
                 'id': f'{block.id}', 
@@ -31,19 +30,20 @@ def log_global_blocktree(params, global_blocktree):
                 'transactions': f'{tx_str}'})
             if hasattr(block, 'referenced_blocks'):
                 for ref_block in block.referenced_blocks:
-                    pool_tx_str = ';'.join(tx.id for tx in ref_block.txs)
+                    ref_block_tx_str = ';'.join(tx.id for tx in ref_block.txs)
                     writer.writerow({
-                        'id': f'{block.id}', 
+                        'id': f'{ref_block.id}', 
                         'parent id': f'{ref_block.parent_id}', 
                         'proposal timestamp': f'{ref_block.proposal_timestamp}', 
                         'finalization timestamp': f'{block.finalization_timestamp}', 
                         'depth': f'NA',
                         'finalized': f'{is_finalized}',
+                        'transactions': f'{ref_block_tx_str}'
                         })
 
 def log_txs(txs):
     with open('./logs/transactions.csv', 'w', newline='') as csvfile:
-        fieldnames = ['id', 'source node', 'generated timestamp', 
+        fieldnames = ['id', 'source node', 'generated timestamp', 'complete', 
                 'main chain arrival timestamp', 
                 'finalization timestamps']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -56,13 +56,13 @@ def log_txs(txs):
                         tx.finalization_timestamps)
             writer.writerow({'id': f'{tx.id}', 'source node':
                 f'{tx.source.node_id}', 'generated timestamp':
-                f'{tx.timestamp}', 
+                f'{tx.timestamp}', 'complete': f'{tx.complete}',
                 'main chain arrival timestamp':
                 f'{tx.main_chain_timestamp}',
                 f'finalization timestamps':
                 f'{finalization_timestamp_str}'})
 
-def log_statistics(params, global_blocktree, time_elapsed):
+def log_statistics(params, global_main_chain, proposals, time_elapsed):
     with open('./logs/stats.csv', 'w+') as csvfile:
         csvfile.write(json.dumps(params)+'\n')
         csvfile.write(f'Time elapsed,{time_elapsed}\n')
@@ -79,15 +79,15 @@ def log_statistics(params, global_blocktree, time_elapsed):
             csvfile.write(f'Average network latency for txs (sec),0\n')
 
         # log finalization depth
-        finalization_depth = global_blocktree.compute_k(params['tx_error_prob'], params['num_nodes'], params['num_adversaries'])
+        finalization_depth = compute_finalization_depth(params['tx_error_prob'], params['num_nodes'], params['num_adversaries'])
         csvfile.write(f'Finalization depth,{finalization_depth}\n')
 
         # log main chain information blocks
-        num_blocks = len(global_blocktree.tree.get_vertices())
+        num_blocks = len(proposals)
         # filter main chain to only have tree blocks
         main_chain = list(filter(lambda block: block.block_type=='tree' or
             block.block_type=='proposer',
-            global_blocktree.main_chains()[0]))
+            global_main_chain))
         main_chain_length = len(main_chain)
         num_orphan_blocks = num_blocks - main_chain_length 
         csvfile.write(f'Number of blocks,{num_blocks}\n')
@@ -100,6 +100,7 @@ def log_statistics(params, global_blocktree, time_elapsed):
 
         # log information about latencies
         csvfile.write(f'Expected arrival rate,{float(f)/(1+f*delta_blocks)}\n')
+        csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+f*delta_blocks))}\n')
         csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
 
 def draw_global_blocktree(global_blocktree):

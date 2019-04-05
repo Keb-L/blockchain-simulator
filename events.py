@@ -6,8 +6,12 @@ class Transaction():
         self.source = source
         self.id = uuid.uuid4().hex[0:10]
 
+        self.complete = False
         self.main_chain_timestamp = None
         self.finalization_timestamps = None
+
+    def set_complete(self):
+        self.complete = True
 
     def set_main_chain_arrival_timestamp(self, main_chain_timestamp):
         self.main_chain_timestamp = main_chain_timestamp
