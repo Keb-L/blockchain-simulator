@@ -25,13 +25,14 @@ class Node():
         self.location=location
 
         self.orphans = np.array([])
-        # this is an event buffer containing broadcasted both block proposals and
-        # transactions
         self.neighbors = np.array([])
 
     def create_arrays(self, num_txs):
         self.local_tx_i = 0
         self.local_txs = np.empty(num_txs, dtype=object)
+
+        # this is an event buffer containing broadcasted both block proposals and
+        # transactions
         self.buffer = np.array([])
 
     def add_neighbor(self, neighbor_node):
@@ -64,28 +65,6 @@ class Node():
         for neighbor in self.neighbors:
             neighbor.buffer = np.append(neighbor.buffer, event)
 
-    def add_orphan_blocks(self):
-        # loop over orphans repeatedly while we added an orphan block
-        added_orphan_block = True
-        while added_orphan_block:
-            # assume we did not add an orphan block
-            added_orphan_block = False
-            # loop over orphans and update remaining orphans
-            remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
-            for i, proposal in enumerate(self.orphans):
-                parent_block = self.local_blocktree.get_block_by_id(proposal.block.parent_id)
-                if parent_block==None:
-                    # cannot add orphan block, block remains as orphan
-                    remaining_orphans[i] = True
-                else:
-                    # we can add an orphan block
-                    parent_block = self.local_blocktree.add_block(parent_block=parent_block,
-                            new_block=proposal.block)
-                    new_block.set_depth(parent_block.depth+1)
-                    added_orphan_block = True
-            self.orphans = self.orphans[remaining_orphans]
-
-
     def process_buffer(self, timestamp):
         b_i = 0 
         while b_i<len(self.buffer):
@@ -115,20 +94,41 @@ class Node():
                             referenced_blocks=proposal_block.referenced_blocks,
                             block_type=proposal_block.block_type,
                             max_voted_block_depth=proposal_block.max_voted_block_depth) 
+                # check if parent block is acquired yet
+                # if parent block is found, then we can add to node's local
+                # blocktree
+                # if parent block is not found, then the block is deemed an
+                # orphan
                 parent_block = self.local_blocktree.get_block_by_id(copied_block.parent_id)
                 if parent_block==None:
-                    self.orphans = np.append(self.orphans, event)
+                    self.orphans = np.append(self.orphans, copied_block)
                 else:
-                    self.local_blocktree.add_block(parent_block=parent_block,
+                    self.local_blocktree.add_block_by_parent(parent_block=parent_block,
                             new_block=copied_block)
-                    copied_block.set_depth(parent_block.depth+1)
             b_i+=1
 
         # remove already processed items in buffer
         self.buffer = self.buffer[b_i:]
         self.buffer_i = 0 
 
-        self.add_orphan_blocks()
+        # loop over orphans repeatedly while we added an orphan block
+        added_orphan_block = True
+        while added_orphan_block:
+            # assume we did not add an orphan block
+            added_orphan_block = False
+            # loop over orphans and update remaining orphans
+            remaining_orphans = np.zeros(self.orphans.shape, dtype=bool)
+            for i, block in enumerate(self.orphans):
+                parent_block = self.local_blocktree.get_block_by_id(block.parent_id)
+                if parent_block==None:
+                    # cannot add orphan block, block remains as orphan
+                    remaining_orphans[i] = True
+                else:
+                    # we can add an orphan block
+                    parent_block = self.local_blocktree.add_block_by_parent(parent_block=parent_block,
+                            new_block=block)
+                    added_orphan_block = True
+            self.orphans = self.orphans[remaining_orphans]
 
 
     def propose(self, proposal, max_block_size, fork_choice_rule, delay_model):
@@ -164,12 +164,6 @@ class Node():
                     added_txs+=1
 
         proposal.set_block(new_block)
-        if proposal.proposal_type=='pool':
-            self.local_blocktree.add_pool_block(new_block)
-        elif proposal.proposal_type=='tree':
-            # find selected chain based on schema and add block
-            local_parent_block = self.local_blocktree.add_block_by_fork_choice_rule(new_block)
-            new_block.set_depth(local_parent_block.depth+1)
-            new_block.set_parent_id(local_parent_block.id)
+        self.local_blocktree.add_block_by_fork_choice_rule(new_block)
     
         return proposal

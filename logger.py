@@ -8,6 +8,7 @@ def log_blocks(params, proposals):
     with open('./logs/blocks.csv', 'w', newline='') as csvfile:
         fieldnames = ['id', 
                     'parent id', 
+                    'block type',
                     'proposal timestamp', 
                     'finalization timestamp', 
                     'depth', 
@@ -23,6 +24,7 @@ def log_blocks(params, proposals):
             writer.writerow({
                 'id': f'{block.id}', 
                 'parent id': f'{block.parent_id}', 
+                'block type': f'{block.block_type}', 
                 'proposal timestamp': f'{block.proposal_timestamp}', 
                 'finalization timestamp': f'{block.finalization_timestamp}', 
                 'depth': f'{depth}',
@@ -83,7 +85,9 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
         csvfile.write(f'Finalization depth,{finalization_depth}\n')
 
         # log main chain information blocks
-        num_blocks = len(proposals)
+        num_blocks = len(list(filter(lambda proposal:
+            proposal.block.block_type=='tree' or
+            proposal.block.block_type=='proposer', proposals)))
         # filter main chain to only have tree blocks
         main_chain = list(filter(lambda block: block.block_type=='tree' or
             block.block_type=='proposer',
@@ -93,55 +97,63 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
         csvfile.write(f'Number of blocks,{num_blocks}\n')
         csvfile.write(f'Main chain length,{main_chain_length}\n')
         csvfile.write(f'Fraction of main blocks,{float(main_chain_length)/num_blocks}\n')
-        csvfile.write(f'Expected fraction of main blocks,{1.0/(1+f*delta_blocks)}\n')
+
         csvfile.write(f'Number of orphan blocks,{num_orphan_blocks}\n')
         csvfile.write(f'Fraction of orphan blocks,{float(num_orphan_blocks)/num_blocks}\n')
-        csvfile.write(f'Expected fraction of orphan blocks,{float(f*delta_blocks)/(1+f*delta_blocks)}\n')
 
-        # log information about latencies
-        csvfile.write(f'Expected arrival rate,{float(f)/(1+f*delta_blocks)}\n')
-        csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+f*delta_blocks))}\n')
-        csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
+        if params['fork_choice_rule']=='longest-chain' or params['fork_choice_rule']=='GHOST':
+            csvfile.write(f'Expected fraction of main blocks,{1.0/(1+f*delta_blocks)}')
+            csvfile.write(f'Expected fraction of orphan blocks,{float(f*delta_blocks)/(1+f*delta_blocks)}\n')
+            csvfile.write(f'Expected arrival rate,{float(f)/(1+f*delta_blocks)}\n')
+            csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+f*delta_blocks))}\n')
+            csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
 
-def draw_global_blocktree(global_blocktree):
-    color_vp = global_blocktree.tree.new_vertex_property('double')
-    shape_vp = global_blocktree.tree.new_vertex_property('int')
-    text_vp = global_blocktree.tree.new_vertex_property('string')
+def draw_blocktree(params, proposals, main_chain):
+    g = Graph()
+    color_vp = g.new_vertex_property('double')
+    shape_vp = g.new_vertex_property('int')
+    text_vp = g.new_vertex_property('string')
 
-    main_chain = global_blocktree.random_main_chain()
-    main_chain_ids = list(map(lambda b: b.id, main_chain))
+    # maps vertex to block
+    vertex_to_blocks = g.new_vertex_property('object')
+    # maps block to vertex
+    block_to_vertices = {}
 
-    for b_id in global_blocktree.block_to_vertices:
-        v = global_blocktree.block_to_vertices[b_id]
-        text_vp[global_blocktree.tree.vertex(v)] = b_id
-        # squares for tree blocks
-        shape_vp[global_blocktree.tree.vertex(v)] = 2
-        if b_id in main_chain_ids:
-            # yellow for main chain blocks
-            color_vp[global_blocktree.tree.vertex(v)] = 0.8
-        else:
-            # red for orphan blocks
-            color_vp[global_blocktree.tree.vertex(v)] = 0.2
+    added_edges = 0
+    # add all vertices
+    for block in main_chain:
+        v = g.add_vertex()
+        color_vp[v] = 1
+        shape_vp[v] = 1
+        text_vp[v] = block.id
+        block_to_vertices[block.id] = v
 
-    # color main chain a different color
-    for b in global_blocktree.main_chains()[0]:
-        if b.id in global_blocktree.block_to_vertices:
-            v = global_blocktree.block_to_vertices[b.id]
-            # main chain color
-            color_vp[global_blocktree.tree.vertex(v)] = 1
-            if hasattr(b, 'referenced_blocks'):
-                for ref_block in b.referenced_blocks:
-                    pool_vertex = global_blocktree.tree.add_vertex()
-                    text_vp[global_blocktree.tree.vertex(pool_vertex)] = ref_block.id
-                    # circles for pool blocks
-                    shape_vp[pool_vertex] = 0
-                    # blue for pool blocks
-                    color_vp[pool_vertex] = 0
-                    global_blocktree.tree.add_edge(v, pool_vertex)
+    # add all edges
+    for block in main_chain:
+        child_vertex = block_to_vertices[block.id]
+        if block.parent_id!=None:
+            if block.parent_id not in block_to_vertices:
+                parent_vertex = g.add_vertex()
+                color_vp[parent_vertex] = 1
+                shape_vp[parent_vertex] = 1
+                text_vp[parent_vertex] = block.parent_id
+                block_to_vertices[block.parent_id] = parent_vertex
+            else:
+                parent_vertex = block_to_vertices[block.parent_id]
+            g.add_edge(child_vertex, parent_vertex) 
+        # if a block has referenced blocks, add them
+        if hasattr(block, 'referenced_blocks'):
+            for ref_block in block.referenced_blocks:
+                ref_vertex = g.add_vertex()
+                color_vp[ref_vertex] = 0.5
+                shape_vp[ref_vertex] = 0.5
+                text_vp[ref_vertex] = ref_block.id
+                g.add_edge(ref_vertex, child_vertex)
+                block_to_vertices[ref_block.id] = ref_vertex
 
-    pos = radial_tree_layout(global_blocktree.tree, global_blocktree.tree.vertex(0))
+    pos = fruchterman_reingold_layout(g, n_iter=1)
 
-    graph_draw(global_blocktree.tree,
+    graph_draw(g,
             vertex_size=50,
             vertex_text=text_vp,
             vertex_shape=shape_vp,
@@ -149,3 +161,4 @@ def draw_global_blocktree(global_blocktree):
             vertex_font_size=15, output_size=(4200, 4200),
             edge_pen_width=1.0,
             output="./logs/blocktree.png")
+

@@ -87,8 +87,7 @@ class Algorithm():
         return common_prefix
 
     # add a new block given a parent block
-    def add_block(self, new_block, parent_block):
-        # create new vertex
+    def add_block_by_parent(self, new_block, parent_block):
         new_vertex = self.tree.add_vertex()
         self.vertex_to_blocks[new_vertex] = new_block
         self.block_to_vertices[new_block.id] = new_vertex
@@ -97,15 +96,15 @@ class Algorithm():
 
         self.tree.add_edge(parent_vertex, new_vertex)
         self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+        new_block.set_parent_id(parent_block.id)
+        new_block.set_depth(parent_block.depth+1)
 
         return parent_block
 
     # add block based on fork choice rule
     def add_block_by_fork_choice_rule(self, new_block):
         parent_block = self.fork_choice_rule()[0]
-        new_block.set_parent_id(parent_block.id)
-        self.add_block(new_block, parent_block)
-
+        self.add_block_by_parent(new_block, parent_block)
         return parent_block
 
     def graph_to_str(self, vertex=None, level=0):
@@ -150,6 +149,14 @@ class Prism(LongestChain):
             voting_chain = LongestChain()
             self.voting_chains.append(voting_chain)
 
+    def get_referenced_blocks(self, proposer_block_id):
+        if proposer_block_id in self.block_to_vertices:
+            proposer_vertex = self.block_to_vertices[proposer_block_id]
+            proposer_block = self.vertex_to_blocks[proposer_vertex] 
+            if proposer_vertex!=self.root:
+                return proposer_block.referenced_blocks
+        return []
+
     def set_block_chain(self, block):
         choice = np.random.randint(0, self.num_voting_chains+1)
 
@@ -158,6 +165,48 @@ class Prism(LongestChain):
             block.set_block_type('proposer')
         else:
             block.set_block_type('voter', choice-1)
+
+    def add_block_by_parent(self, new_block, parent_block):
+        if new_block.block_type=='proposer':
+            # If proposer block, call LongestChain's add_block_by_parent
+            return super(Prism, self).add_block_by_parent(new_block,
+                    parent_block)
+        else:
+            # If voting block, call LongestChain's add_block_by_parent
+            # on specified chain
+            choice = np.random.randint(0, self.num_voting_chains)
+            new_block.set_block_type('voter', choice)
+            voting_chain = self.voting_chains[new_block.block_chain]
+            parent_block = voting_chain.add_block_by_fork_choice_rule(new_block)
+
+            voting_chain_genesis = voting_chain.vertex_to_blocks[voting_chain.root]
+
+            # Find max depth voted by parent and have new block vote for all
+            # subsequent depths up to its own
+            if parent_block.id==voting_chain_genesis.id:
+                new_block.set_max_voted_block_depth(0)
+                vote_depth = 1
+            else:
+                new_block.set_max_voted_block_depth(parent_block.max_voted_block_depth)
+                vote_depth = parent_block.max_voted_block_depth+1
+
+            block_depth = voting_chain.depth[voting_chain.block_to_vertices[new_block.id]]
+            # Get depth array
+            depth_array = self.depth.get_array()
+
+            # Find indices where depth is greater than max depth voted by parent
+            while vote_depth<=block_depth:
+                choices = np.where(depth_array==vote_depth)[0]
+                # Exhausted depth of proposer tree
+                if len(choices)==0:
+                    break
+                voted_block = self.vertex_to_blocks[self.tree.vertex(np.random.choice(choices))]
+                new_block.add_referenced_block(voted_block)
+                voted_block.add_referenced_block(new_block)
+                new_block.set_max_voted_block_depth(vote_depth)
+                vote_depth+=1
+
+            return parent_block
 
     def add_block_by_fork_choice_rule(self, block):
         # Choose which type of block
@@ -250,7 +299,6 @@ class Prism(LongestChain):
             main_chains[0]+=list(max_voted_block.referenced_blocks)
             main_chains[0].append(max_voted_block)
             depth+=1
-
         return main_chains
             
 class LongestChainWithPool(LongestChain):
@@ -262,10 +310,8 @@ class LongestChainWithPool(LongestChain):
     def add_pool_block(self, new_pool_block):
         self.pool_blocks = np.append(self.pool_blocks, new_pool_block)
 
-    def add_tree_block(self, new_block, parent_block):
-        # call LongestChain's add_block function
-        super(LongestChainWithPool, self).add_block(new_block,
-                parent_block)
+    def add_tree_block(self, new_block):
+        super(LongestChainWithPool, self).add_block_by_fork_choice_rule(new_block)
 
         if self.pool_blocks.shape[0]>0:
             it = np.nditer(self.pool_blocks, flags=['f_index', 'refs_ok'])
@@ -277,18 +323,17 @@ class LongestChainWithPool(LongestChain):
 
             self.pool_blocks = np.array([])
 
-    def add_block(self, new_block, parent_block=None):
+    def add_block_by_fork_choice_rule(self, new_block):
         if new_block.block_type=='pool':
             self.add_pool_block(new_block)
         elif new_block.block_type=='tree':
-            self.add_tree_block(new_block, parent_block)
+            self.add_tree_block(new_block)
 
     def main_chains(self):
         # call LongestChain's main_chains function
         tree_main_chains = super(LongestChainWithPool, self).main_chains()
 
         main_chains = []
-
         for main_chain in tree_main_chains:
             main_chains.append([])
             for tree_block in main_chain:
@@ -317,9 +362,9 @@ class GHOST(Algorithm):
 
         return main_chains
 
-    def add_block(self, new_block, parent_block):
+    def add_block_by_fork_choice_rule(self, new_block):
         # call Algorithm's add_block function
-        super(GHOST, self).add_block(new_block, parent_block)
+        super(GHOST, self).add_block_by_fork_choice_rule(new_block)
 
         # set subtree size of leaf vertex to be 0
         vertex = self.block_to_vertices[new_block.id]

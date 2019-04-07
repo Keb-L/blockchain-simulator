@@ -84,7 +84,12 @@ class Coordinator():
         # Get block ids in all main chains
         for node in self.nodes:
             main_chain = node.local_blocktree.random_main_chain()
-            main_chains.append(node.local_blocktree.random_main_chain())
+            # Prism has unique protocol 
+            # exclusively add non voter blocks
+            if self.params['fork_choice_rule']=='Prism':
+                main_chain = list(filter(lambda block:
+                block.block_type!='voter', main_chain))
+            main_chains.append(main_chain)
             main_chain_ids.append(list(map(lambda block: block.id,
                 main_chains[-1])))
 
@@ -93,12 +98,22 @@ class Coordinator():
         for blocks in main_chain_ids[1:]:
             common_blocks_ids.intersection_update(blocks)
 
-
         common_blocks = []
         for common_block_id in common_blocks_ids:
             common_block = next(filter(lambda block: block.id==common_block_id,
                     main_chains[0]))
             common_blocks.append(common_block)
+
+        # In Prism, once we have common proposer blocks, add ALL referenced
+        # blocks
+        if self.params['fork_choice_rule']=='Prism':
+            updated_common_blocks = []
+            for common_block in common_blocks:
+                for node in self.nodes:
+                    referenced_blocks = node.local_blocktree.get_referenced_blocks(common_block.id)
+                    updated_common_blocks+=list(referenced_blocks)
+                updated_common_blocks+=[common_block]
+            common_blocks = updated_common_blocks
 
         return common_blocks 
 
@@ -182,5 +197,6 @@ class Coordinator():
             logger.log_txs(self.txs)
             logger.log_blocks(self.params, self.proposals)
             logger.log_statistics(self.params, common_blocks, self.proposals, end-start)
+            logger.draw_blocktree(self.params, self.proposals, common_blocks)
 
             os.system('cat ./logs/stats.csv')
