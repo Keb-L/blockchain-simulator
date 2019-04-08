@@ -94,12 +94,12 @@ class Coordinator():
                 main_chains[-1])))
 
         # Find blocks common to all main chains
-        common_blocks_ids = set(main_chain_ids[0])
+        common_block_ids = set(main_chain_ids[0])
         for blocks in main_chain_ids[1:]:
-            common_blocks_ids.intersection_update(blocks)
+            common_block_ids.intersection_update(blocks)
 
         common_blocks = []
-        for common_block_id in common_blocks_ids:
+        for common_block_id in common_block_ids:
             common_block = next(filter(lambda block: block.id==common_block_id,
                     main_chains[0]))
             common_blocks.append(common_block)

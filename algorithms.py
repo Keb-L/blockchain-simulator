@@ -345,7 +345,7 @@ class LongestChainWithPool(LongestChain):
 
 
 class GHOST(Algorithm):
-    def __init__(self, validate_length=True):
+    def __init__(self, validate_length=False):
         super(GHOST, self).__init__()
         self.subtree_size = self.tree.new_vertex_property('int')
         self.subtree_size[self.root] = 0
