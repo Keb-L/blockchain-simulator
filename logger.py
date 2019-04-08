@@ -101,12 +101,20 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
         csvfile.write(f'Number of orphan blocks,{num_orphan_blocks}\n')
         csvfile.write(f'Fraction of orphan blocks,{float(num_orphan_blocks)/num_blocks}\n')
 
-        if params['fork_choice_rule']=='longest-chain' or params['fork_choice_rule']=='GHOST':
-            csvfile.write(f'Expected fraction of main blocks,{1.0/(1+f*delta_blocks)}')
+        if params['fork_choice_rule']=='longest-chain':
+            # These numbers can be found in https://eprint.iacr.org/2013/881.pdf
+            # Expect the main chain to grow at a rate of f/(1+f*delta)
+            csvfile.write(f'Expected fraction of main blocks,{1.0/(1+f*delta_blocks)}\n')
             csvfile.write(f'Expected fraction of orphan blocks,{float(f*delta_blocks)/(1+f*delta_blocks)}\n')
             csvfile.write(f'Expected arrival rate,{float(f)/(1+f*delta_blocks)}\n')
             csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+f*delta_blocks))}\n')
             csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
+        elif params['fork_choice_rule']=='GHOST':
+            csvfile.write(f'Expected fraction of main blocks,{1.0/(1+2.0*f*delta_blocks)}\n')
+            csvfile.write(f'Expected fraction of orphan blocks,{float(2.0*f*delta_blocks)/(1+2.0*f*delta_blocks)}\n')
+            csvfile.write(f'Expected arrival rate,{float(f)/(1+2.0*f*delta_blocks)}\n')
+            csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+2.0*f*delta_blocks))}\n')
+            csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*2.0*delta_blocks)/f}\n')
 
 def draw_blocktree(params, proposals, main_chain):
     g = Graph()
@@ -119,37 +127,60 @@ def draw_blocktree(params, proposals, main_chain):
     # maps block to vertex
     block_to_vertices = {}
 
-    added_edges = 0
-    # add all vertices
-    for block in main_chain:
-        v = g.add_vertex()
-        color_vp[v] = 1
-        shape_vp[v] = 1
-        text_vp[v] = block.id
-        block_to_vertices[block.id] = v
+    genesis = g.add_vertex()
+    color_vp[genesis] = 0
+    shape_vp[genesis] = 0
+    text_vp[genesis] = 'Genesis'
 
-    # add all edges
-    for block in main_chain:
-        child_vertex = block_to_vertices[block.id]
-        if block.parent_id!=None:
-            if block.parent_id not in block_to_vertices:
-                parent_vertex = g.add_vertex()
-                color_vp[parent_vertex] = 1
-                shape_vp[parent_vertex] = 1
-                text_vp[parent_vertex] = block.parent_id
-                block_to_vertices[block.parent_id] = parent_vertex
+    if params['fork_choice_rule']=='Prism':
+        main_chain = list(filter(lambda block: block.block_type!='voter', main_chain))
+        main_chain = sorted(main_chain, key=lambda block: block.depth)
+        added_parent = genesis
+        added_depths = 0
+
+    main_chain_ids = list(map(lambda block: block.id, main_chain))
+
+    type_filter = lambda proposal: proposal.block.block_type=='tree' or proposal.block.block_type=='proposer'
+    added_filter = lambda proposal: not proposal.added 
+
+    filtered_proposals = list(filter(type_filter, proposals))
+    while len(filtered_proposals)>0:
+        for proposal in filtered_proposals:
+            block = proposal.block
+            if block.id not in block_to_vertices:
+                v = g.add_vertex()
+                if block.id in main_chain_ids:
+                    color_vp[v] = 0
+                    shape_vp[v] = 0
+                else:
+                    color_vp[v] = 1
+                    shape_vp[v] = 1
+                text_vp[v] = block.id
+                block_to_vertices[block.id] = v
+            if hasattr(block, 'referenced_blocks'):
+                for ref_block in block.referenced_blocks:
+                    ref_vertex = g.add_vertex()
+                    color_vp[ref_vertex] = 0.5
+                    shape_vp[ref_vertex] = 0.5
+                    text_vp[ref_vertex] = ref_block.id
+                    g.add_edge(v, ref_vertex)
+            if params['fork_choice_rule']=='Prism':
+                # if Prism, main chain chooses one from each depth 
+                if block.id in main_chain_ids:
+                    g.add_edge(added_parent, v)
+                    added_parent = v
+                proposal.added = True
             else:
-                parent_vertex = block_to_vertices[block.parent_id]
-            g.add_edge(child_vertex, parent_vertex) 
-        # if a block has referenced blocks, add them
-        if hasattr(block, 'referenced_blocks'):
-            for ref_block in block.referenced_blocks:
-                ref_vertex = g.add_vertex()
-                color_vp[ref_vertex] = 0.5
-                shape_vp[ref_vertex] = 0.5
-                text_vp[ref_vertex] = ref_block.id
-                g.add_edge(ref_vertex, child_vertex)
-                block_to_vertices[ref_block.id] = ref_vertex
+                if block.parent_id in block_to_vertices:
+                    w = block_to_vertices[block.parent_id]
+                    g.add_edge(v, w)
+                    proposal.added = True
+                elif block.parent_id=='Genesis':
+                    g.add_edge(v, genesis)
+                    proposal.added = True
+                else:
+                    proposal.added = False
+        filtered_proposals = list(filter(added_filter, filtered_proposals))
 
     pos = fruchterman_reingold_layout(g, n_iter=1)
 
