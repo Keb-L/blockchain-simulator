@@ -1,5 +1,5 @@
 # blockchain-simulator
-An experimental blockchain simulator written in python. Current algorithms available for testing are the Longest Chain Protocol and GHOST.
+An experimental blockchain simulator written in python. Current algorithms available for testing are the Longest Chain Protocol and GHOST. Current algorithms in development include Longest Chain With Pool (i.e. Prism v1) and Prism.
 
 ## Requirements
 - [Python 3](https://docs.python.org/3/)
@@ -67,7 +67,7 @@ An experimental blockchain simulator written in python. Current algorithms avail
 - Fraction of main blocks
 - Expected fraction of main blocks computed according to 1.0/(1+proposal_rate*block_delay)
 - Fraction of orphan blocks
-- Expected fraction of main blocks computed according to 1-1.0/(1+proposal_rate*block_delay)
+- Expected fraction of orphan blocks computed according to 1-1.0/(1+proposal_rate*block_delay)
 - Expected arrival rate of blocks onto main chain
 - Expected finalization latency of a block
 
@@ -79,6 +79,6 @@ An experimental blockchain simulator written in python. Current algorithms avail
 - Finalization timestamp (on global blocktree)
 
 #### Blocktree.png
-  Visualization of longest chain of blocktree’s main chain
+  Visualization of longest chain of blocktree’s main chain created via graphtool library
 
 
