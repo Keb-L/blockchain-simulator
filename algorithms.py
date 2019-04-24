@@ -135,6 +135,9 @@ class LongestChain(Algorithm):
 
         return parent_blocks
 
+'''
+NOTE: Prism algorithm simulations are still under development
+'''
 class Prism(LongestChain):
     def __init__(self, num_voting_chains=10):
         # Initialize main proposer tree according to longest chain protocol
