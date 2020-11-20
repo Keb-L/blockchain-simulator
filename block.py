@@ -16,6 +16,7 @@ class Block():
         self.parent_id = parent_id 
         self.finalization_timestamp = None
         self.depth = depth
+        self.weight = 1
 
         self.block_type = block_type 
 
@@ -64,3 +65,15 @@ class PrismBlock(LinkedBlock):
 
     def set_max_voted_block_depth(self, max_voted_block_depth):
         self.max_voted_block_depth = max_voted_block_depth
+
+class BitcoinNGBlock(Block):
+    def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
+            block_type = 'key', depth=0):
+        
+        super(BitcoinNGBlock, self).__init__(txs, id, parent_id, proposal_timestamp,
+                block_type, depth)
+        if block_type == 'micro':
+            self.weight = 0
+
+    def set_block_type(self, block_type):
+        self.block_type = block_type

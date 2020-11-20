@@ -97,7 +97,9 @@ class Algorithm():
         self.tree.add_edge(parent_vertex, new_vertex)
         self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
         new_block.set_parent_id(parent_block.id)
-        new_block.set_depth(parent_block.depth+1)
+        
+        # Add weight to depth (microblocks have a weight of 0)
+        new_block.set_depth(parent_block.depth + new_block.weight)
 
         return parent_block
 
@@ -408,3 +410,23 @@ class GHOST(Algorithm):
 
         return parent_blocks
 
+class BitcoinNG(LongestChain):
+    def __init__(self):
+        super(LongestChain, self).__init__()
+
+    def fork_choice_rule(self):
+        depth_array = self.depth.get_array()
+        # find max depth
+        max_depth = np.amax(depth_array)
+
+        # find indices where depth is max depth
+        max_indices = np.where(depth_array==np.amax(depth_array))[0]
+
+        # copy blocks into parent blocks array
+        it = np.nditer(max_indices, flags=['f_index'])
+        parent_blocks = np.empty(shape=max_indices.shape[0], dtype=object)
+        while not it.finished:
+            parent_blocks[it.index] = self.vertex_to_blocks[self.tree.vertex(it[0])]
+            it.iternext()
+
+        return parent_blocks

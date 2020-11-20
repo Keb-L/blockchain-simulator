@@ -22,6 +22,9 @@ def get_params(filename):
         if d['Fork choice rule']=='longest-chain-with-pool':
             params['tree_proposal_rate'] = d['Block tree proposal rate parameter']
             params['pool_proposal_rate'] = d['Block pool proposal rate parameter']
+        elif d['Fork choice rule']=='BitcoinNG':
+            params['tree_proposal_rate'] = d['Block tree proposal rate parameter']
+            params['microblock_proposal_rate'] = d['Block micro proposal rate parameter']
         else:
             params['tree_proposal_rate'] = d['Block proposal rate parameter']
         if 'Transaction rate parameter' in d:
@@ -42,7 +45,7 @@ if __name__=='__main__':
     parser = OptionParser(usage=usage)
 
     parser.add_option('-f', '--filename', type='string',
-            action='store', dest='filename', default='params.json',
+            action='store', dest='filename', default='results/longest_chain.json',#''results/bitcoin_ng.json', #'params.json', 'results/longest_chain.json', #
             help='filename to set parameters; default parameters are in params.json')
 
     (options, args) = parser.parse_args(sys.argv[1:])

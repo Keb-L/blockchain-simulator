@@ -12,6 +12,8 @@ class Coordinator():
 
         self.params = params
 
+        self.leader = None
+
     def add_node(self, node):
         self.nodes = np.append(self.nodes, node)
 
@@ -38,6 +40,41 @@ class Coordinator():
                 timestamp = timestamp + np.random.exponential(1.0/self.params['pool_proposal_rate'])
                 proposal = Proposal(timestamp, proposal_type='pool') 
                 proposals.append(proposal)
+
+        elif self.params['fork_choice_rule']=='BitcoinNG' and self.params['microblock_proposal_rate']>0:
+            proposals = []
+
+            # Generate timestamp for the first block
+            timestamp = np.random.exponential(1.0/self.params['tree_proposal_rate'])
+            while timestamp<self.params['duration']: 
+                # Generate and append key block
+                proposal = Proposal(timestamp, proposal_type='key') 
+                proposals.append(proposal)
+
+                # Compute arrival time of next keyblock
+                next_arrival = np.random.exponential(1.0/self.params['tree_proposal_rate'])
+                micro_timestamp = self.params['microblock_proposal_rate']
+
+                # Generate microblocks 
+                while (micro_timestamp + self.params['microblock_proposal_rate']) < next_arrival:
+                    if timestamp + micro_timestamp > self.params['duration']:
+                        break
+                    proposal = Proposal(timestamp + micro_timestamp, proposal_type='micro') 
+                    proposals.append(proposal)
+
+                    # Compute the next micro timestamp
+                    micro_timestamp = micro_timestamp + self.params['microblock_proposal_rate']
+
+
+                # End microblock loop
+                timestamp = timestamp + next_arrival
+            # End keyblock loop        
+            
+            # Last Proposal     
+            del proposals[-1]
+            last_proposal = Proposal(self.params['duration'], proposal_type='key')
+            proposals.append(last_proposal)
+        # End bitcoinNG proposal generation
 
         self.proposals = np.asarray(sorted(proposals, key = lambda
             proposal: proposal.timestamp))
@@ -137,6 +174,7 @@ class Coordinator():
 
         # run main loop
         while tx_i<self.txs.shape[0] or p_i<self.proposals.shape[0]:
+            # Print the current progress
             if (tx_i+p_i)%100==0:
                 print(float(tx_i+p_i)/(self.txs.shape[0]+self.proposals.shape[0]))
             # still have valid txs and proposals
@@ -156,8 +194,13 @@ class Coordinator():
                     tx_i+=1
                 # proposal before transaction
                 else:
-                    # choose proposer uniformly at random
-                    proposer = random.choice(self.nodes)
+                    # choose proposer uniformly at random (for key proposals)
+                    # Otherwise, for microblocks, use the leader
+                    proposal_type = self.proposals[p_i].proposal_type
+                    if proposal_type != 'micro': # If not a micro proposal, randomize the leader
+                        self.leader = random.choice(self.nodes)
+
+                    proposer = self.leader
                     proposal = proposer.propose(self.proposals[p_i],
                         self.params['max_block_size'],
                         self.params['fork_choice_rule'],
@@ -193,6 +236,9 @@ class Coordinator():
         self.set_timestamps(common_blocks)
 
         end = time.time()
+
+        print("Complete! Logging results")
+
         if self.params['logging']:
             logger.log_txs(self.txs)
             logger.log_blocks(self.params, self.proposals)

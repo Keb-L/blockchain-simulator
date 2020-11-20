@@ -17,6 +17,8 @@ class Node():
             self.local_blocktree = GHOST()
         elif algorithm=='Prism':
             self.local_blocktree = Prism()
+        elif algorithm=="BitcoinNG":
+            self.local_blocktree = BitcoinNG()
 
         self.algorithm = algorithm
 
@@ -94,6 +96,12 @@ class Node():
                             referenced_blocks=proposal_block.referenced_blocks,
                             block_type=proposal_block.block_type,
                             max_voted_block_depth=proposal_block.max_voted_block_depth) 
+                elif self.algorithm=="BitcoinNG":
+                    copied_block = BitcoinNGBlock(txs=proposal_block.txs,
+                            id=proposal_block.id, parent_id=proposal_block.parent_id,
+                            proposal_timestamp=proposal_block.proposal_timestamp,
+                            block_type=proposal_block.block_type) 
+
                 # check if parent block is acquired yet
                 # if parent block is found, then we can add to node's local
                 # blocktree
@@ -143,25 +151,29 @@ class Node():
                     block_type=proposal.proposal_type)
         elif self.algorithm=='Prism':
             new_block = PrismBlock(proposal_timestamp=proposal.timestamp)
+        elif self.algorithm=="BitcoinNG":
+            new_block = BitcoinNGBlock(proposal_timestamp=proposal.timestamp, 
+                    block_type=proposal.proposal_type)
 
         # find all txs in main chain
         main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
 
         added_txs = 0
-        if self.local_tx_i>0:
-            for elem in np.nditer(self.local_txs[:self.local_tx_i],
-                    flags=['refs_ok']):
-                tx = elem.item()
-                if tx.timestamp>proposal.timestamp:
-                    # no potential txs left
-                    break
-                if new_block.txs.shape[0]>max_block_size:
-                    # there are potential txs left on the table
-                    continue
-                if tx not in main_chain_txs:
-                    self.add_block_by_tx_rule(new_block, tx)
-                    added_txs+=1
+        if new_block.block_type != 'key': # Key blocks do not contain transactions
+            if self.local_tx_i>0:
+                for elem in np.nditer(self.local_txs[:self.local_tx_i],
+                        flags=['refs_ok']):
+                    tx = elem.item()
+                    if tx.timestamp>proposal.timestamp:
+                        # no potential txs left
+                        break
+                    if new_block.txs.shape[0]>max_block_size:
+                        # there are potential txs left on the table
+                        continue
+                    if tx not in main_chain_txs:
+                        self.add_block_by_tx_rule(new_block, tx)
+                        added_txs+=1
 
         proposal.set_block(new_block)
         self.local_blocktree.add_block_by_fork_choice_rule(new_block)

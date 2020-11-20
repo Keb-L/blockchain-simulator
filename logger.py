@@ -87,10 +87,11 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
         # log main chain information blocks
         num_blocks = len(list(filter(lambda proposal:
             proposal.block.block_type=='tree' or
-            proposal.block.block_type=='proposer', proposals)))
+            proposal.block.block_type=='proposer' or
+            proposal.block.block_type=='key', proposals)))
         # filter main chain to only have tree blocks
         main_chain = list(filter(lambda block: block.block_type=='tree' or
-            block.block_type=='proposer',
+            block.block_type=='proposer' or block.block_type=='key',
             global_main_chain))
         main_chain_length = len(main_chain)
         num_orphan_blocks = num_blocks - main_chain_length 
@@ -140,7 +141,7 @@ def draw_blocktree(params, proposals, main_chain):
 
     main_chain_ids = list(map(lambda block: block.id, main_chain))
 
-    type_filter = lambda proposal: proposal.block.block_type=='tree' or proposal.block.block_type=='proposer'
+    type_filter = lambda proposal: proposal.block.block_type=='tree' or proposal.block.block_type=='proposer' or proposal.block.block_type=='key' or proposal.block.block_type == 'micro'
     added_filter = lambda proposal: not proposal.added 
 
     filtered_proposals = list(filter(type_filter, proposals))
