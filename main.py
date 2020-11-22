@@ -35,6 +35,8 @@ def get_params(filename):
             params['topology'] = d['Topology file']
         if 'Locations file' in d:
             params['locations'] = d['Locations file']
+        if 'Longest chains' in d:
+            params['longest_chains'] = d['Longest chains']
     return params
 
 if __name__=='__main__':
@@ -66,7 +68,7 @@ if __name__=='__main__':
         # generate num_nodes nodes
         for node_id in range(0, num_nodes): 
             n = Node(node_id, params['fork_choice_rule'],
-                    params['transaction_schedule'], params['max_block_size'], locations[node_id])
+                    params['transaction_schedule'], params['max_block_size'], locations[node_id], params['longest_chains'])
             nodes[node_id] = n
             c.add_node(n)
 

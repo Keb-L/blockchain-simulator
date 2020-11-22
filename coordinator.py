@@ -81,6 +81,13 @@ class Coordinator():
         main_chains = []
         main_chain_ids = []
 
+        # OHIE is formed by mutliplre longest chains
+        # need to deal with them separately
+        if self.params['fork_choice_rule']=='OHIE':
+            for i in range(self.params['longest_chains']):
+                main_chains.append([])
+                main_chain_ids.append([])
+
         # Get block ids in all main chains
         for node in self.nodes:
             main_chain = node.local_blocktree.random_main_chain()
@@ -89,31 +96,52 @@ class Coordinator():
             if self.params['fork_choice_rule']=='Prism':
                 main_chain = list(filter(lambda block:
                 block.block_type!='voter', main_chain))
-            main_chains.append(main_chain)
-            main_chain_ids.append(list(map(lambda block: block.id,
-                main_chains[-1])))
+            common_blocks = []
+            if self.params['fork_choice_rule']=='OHIE':
+                # append the main chains to the corrresponding longest chain slot
+                for i in range(self.params['longest_chains']):
+                    main_chains[i].append(main_chain[i])
+                    main_chain_ids[i].append(list(map(lambda block: block.id,
+                        main_chains[i][-1])))
 
-        # Find blocks common to all main chains
-        common_block_ids = set(main_chain_ids[0])
-        for blocks in main_chain_ids[1:]:
-            common_block_ids.intersection_update(blocks)
+                # traverse all the longest chains in OHIE
+                for i in range(self.params['longest_chains']):
+                    common_chain = []
+                    common_block_ids = set(main_chain_ids[i][0])
+                    for blocks in main_chain_ids[i][1:]:
+                        common_block_ids.intersection_update(blocks)
+                    
+                    for common_block_id in common_block_ids:
+                        common_block = next(filter(lambda block: block.id==common_block_id,
+                            main_chains[i][0]))
+                        common_chain.append(common_block)
+                    
+                    common_blocks.append(common_chain)
+            else:
+                main_chains.append(main_chain)
+                main_chain_ids.append(list(map(lambda block: block.id,
+                    main_chains[-1])))
 
-        common_blocks = []
-        for common_block_id in common_block_ids:
-            common_block = next(filter(lambda block: block.id==common_block_id,
-                    main_chains[0]))
-            common_blocks.append(common_block)
+                # Find blocks common to all main chains
+                common_block_ids = set(main_chain_ids[0])
+                for blocks in main_chain_ids[1:]:
+                    common_block_ids.intersection_update(blocks)
 
-        # In Prism, once we have common proposer blocks, add ALL referenced
-        # blocks
-        if self.params['fork_choice_rule']=='Prism':
-            updated_common_blocks = []
-            for common_block in common_blocks:
-                for node in self.nodes:
-                    referenced_blocks = node.local_blocktree.get_referenced_blocks(common_block.id)
-                    updated_common_blocks+=list(referenced_blocks)
-                updated_common_blocks+=[common_block]
-            common_blocks = updated_common_blocks
+                for common_block_id in common_block_ids:
+                    common_block = next(filter(lambda block: block.id==common_block_id,
+                            main_chains[0]))
+                    common_blocks.append(common_block)
+
+                # In Prism, once we have common proposer blocks, add ALL referenced
+                # blocks
+                if self.params['fork_choice_rule']=='Prism':
+                    updated_common_blocks = []
+                    for common_block in common_blocks:
+                        for node in self.nodes:
+                            referenced_blocks = node.local_blocktree.get_referenced_blocks(common_block.id)
+                            updated_common_blocks+=list(referenced_blocks)
+                        updated_common_blocks+=[common_block]
+                    common_blocks = updated_common_blocks
 
         return common_blocks 
 
@@ -190,7 +218,11 @@ class Coordinator():
             node.process_buffer(self.params['duration'])
 
         common_blocks = self.global_main_chain() 
-        self.set_timestamps(common_blocks)
+        if self.params['fork_choice_rule']=='OHIE':
+            for common_chain in common_blocks:
+                self.set_timestamps(common_chain)
+        else:
+            self.set_timestamps(common_blocks)
 
         end = time.time()
         if self.params['logging']:

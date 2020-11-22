@@ -6,7 +6,7 @@ from algorithms import *
 from constants import TX_SIZE
 
 class Node():
-    def __init__(self, node_id, algorithm, tx_rule, max_block_size, location=None):
+    def __init__(self, node_id, algorithm, tx_rule, max_block_size, location=None, longest_chains=10):
         self.node_id = node_id
 
         if algorithm=='longest-chain-with-pool':
@@ -17,6 +17,8 @@ class Node():
             self.local_blocktree = GHOST()
         elif algorithm=='Prism':
             self.local_blocktree = Prism()
+        elif algorithm=='OHIE':
+            self.local_blocktree = OHIE(longest_chains)
 
         self.algorithm = algorithm
 
@@ -77,7 +79,7 @@ class Node():
                 self.local_tx_i+=1
             elif event.__class__.__name__=='Proposal':
                 proposal_block = event.block
-                if self.algorithm=='longest-chain' or self.algorithm=='GHOST':
+                if self.algorithm=='longest-chain' or self.algorithm=='GHOST' or self.algorithm=='OHIE':
                     copied_block = Block(txs=proposal_block.txs,
                             id=proposal_block.id, parent_id=proposal_block.parent_id,
                             proposal_timestamp=proposal_block.proposal_timestamp)
@@ -136,7 +138,7 @@ class Node():
         self.process_buffer(proposal.timestamp)
 
         # append new block to appropriate chain
-        if self.algorithm=='longest-chain' or self.algorithm=='GHOST':
+        if self.algorithm=='longest-chain' or self.algorithm=='GHOST' or self.algorithm=='OHIE':
             new_block = Block(proposal_timestamp=proposal.timestamp)
         elif self.algorithm=='longest-chain-with-pool':
             new_block = LinkedBlock(proposal_timestamp=proposal.timestamp,
@@ -146,7 +148,11 @@ class Node():
 
         # find all txs in main chain
         main_chain = self.local_blocktree.random_main_chain()
-        main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
+        if self.algorithm=='OHIE':
+            for chain in main_chain:
+                main_chain_txs = np.concatenate([b.txs for b in chain]).ravel()
+        else:
+            main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
 
         added_txs = 0
         if self.local_tx_i>0:

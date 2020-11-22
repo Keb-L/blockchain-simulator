@@ -8,16 +8,16 @@ class TestBlockchainSimulator(unittest.TestCase):
 
         # create our own tree 
         block_a = Block(id='a', parent_id='Genesis')
-        l.add_block(parent_block=l.vertex_to_blocks[l.root], new_block=block_a) 
+        l.add_block_by_parent(parent_block=l.vertex_to_blocks[l.root], new_block=block_a) 
 
         block_b = Block(id='b', parent_id='Genesis')
-        l.add_block(parent_block=block_a, new_block=block_b) 
+        l.add_block_by_parent(parent_block=block_a, new_block=block_b) 
 
         block_c = Block(id='c', parent_id='b')
-        l.add_block(parent_block=block_b, new_block=block_c) 
+        l.add_block_by_parent(parent_block=block_b, new_block=block_c) 
 
         block_d = Block(id='d', parent_id='b')
-        l.add_block(parent_block=block_b, new_block=block_d) 
+        l.add_block_by_parent(parent_block=block_b, new_block=block_d) 
 
         parent_blocks = l.fork_choice_rule()
 
@@ -40,16 +40,16 @@ class TestBlockchainSimulator(unittest.TestCase):
 
         # create our own tree 
         block_a = Block(id='a', parent_id='Genesis')
-        g.add_block(parent_block=g.vertex_to_blocks[g.root], new_block=block_a) 
+        g.add_block_by_parent(parent_block=g.vertex_to_blocks[g.root], new_block=block_a) 
 
         block_b = Block(id='b', parent_id='Genesis')
-        g.add_block(parent_block=g.vertex_to_blocks[g.root], new_block=block_b) 
+        g.add_block_by_parent(parent_block=g.vertex_to_blocks[g.root], new_block=block_b) 
 
         block_c = Block(id='c', parent_id='b')
-        g.add_block(parent_block=block_b, new_block=block_c) 
+        g.add_block_by_parent(parent_block=block_b, new_block=block_c) 
 
         block_d= Block(id='d', parent_id='b')
-        g.add_block(parent_block=block_b, new_block=block_d) 
+        g.add_block_by_parent(parent_block=block_b, new_block=block_d) 
 
         parent_blocks = g.fork_choice_rule()
 
@@ -71,16 +71,16 @@ class TestBlockchainSimulator(unittest.TestCase):
 
         # create our own tree 
         block_a = Block(id='a', parent_id='Genesis')
-        g.add_block(parent_block=g.vertex_to_blocks[g.root], new_block=block_a) 
+        g.add_block_by_parent(parent_block=g.vertex_to_blocks[g.root], new_block=block_a) 
 
         block_b = Block(id='b', parent_id='Genesis')
-        g.add_block(parent_block=g.vertex_to_blocks[g.root], new_block=block_b) 
+        g.add_block_by_parent(parent_block=g.vertex_to_blocks[g.root], new_block=block_b) 
 
         block_c = Block(id='c', parent_id='b')
-        g.add_block(parent_block=block_b, new_block=block_c) 
+        g.add_block_by_parent(parent_block=block_b, new_block=block_c) 
 
         block_d= Block(id='d', parent_id='b')
-        g.add_block(parent_block=block_b, new_block=block_d) 
+        g.add_block_by_parent(parent_block=block_b, new_block=block_d) 
 
         common_prefix = list(map(lambda block: block.id,
             g.common_prefix()))
@@ -91,7 +91,7 @@ class TestBlockchainSimulator(unittest.TestCase):
         l = LongestChainWithPool()
         # create our own tree 
         block_a= LinkedBlock(id='a', parent_id='Genesis', block_type='tree')
-        l.add_block(parent_block=l.vertex_to_blocks[l.root], new_block=block_a) 
+        l.add_block_by_parent(parent_block=l.vertex_to_blocks[l.root], new_block=block_a) 
 
         # create two pool blocks
         block_1 = LinkedBlock(id='1', block_type='pool')
@@ -116,7 +116,7 @@ class TestBlockchainSimulator(unittest.TestCase):
         p = Prism(num_voting_chains = 2)
         # create our own tree 
         block_a = PrismBlock(id='a', parent_id='Genesis', block_type='proposer')
-        p.add_block(parent_block=p.vertex_to_blocks[p.root], new_block=block_a) 
+        p.add_block_by_parent(parent_block=p.vertex_to_blocks[p.root], new_block=block_a) 
 
         # add some blocks to block tree 1
         block_a_1 = PrismBlock(id = 'a1', parent_id='Genesis', block_type='voter')
@@ -141,7 +141,7 @@ class TestBlockchainSimulator(unittest.TestCase):
 
         # add one more block to proposer tree
         block_b = PrismBlock(id='b', parent_id='a', block_type='proposer')
-        p.add_block(parent_block=block_a, new_block=block_b) 
+        p.add_block_by_parent(parent_block=block_a, new_block=block_b) 
 
         # add more blocks to block tree 1
         block_c_1 = PrismBlock(id = 'c1', parent_id='b1', block_type='voter')
@@ -150,7 +150,36 @@ class TestBlockchainSimulator(unittest.TestCase):
 
         block_chain = list(map(lambda b: b.id, p.main_chains()[0]))
         # now c1 should have voted on block b and be added to main chain
-        self.assertListEqual(block_chain, ['Genesis', block_a_1.id, block_a_2.id, block_a.id, block_c_1.id, block_b.id]) 
+        self.assertListEqual(block_chain, ['Genesis', block_a_1.id, block_a_2.id, block_a.id, block_c_1.id, block_b.id])
+
+    def test_OHIE(self):
+        o = OHIE(num_longest_chains=2)
+        block_a = Block(id='a')
+        o.add_block_to_chain(block_a, 0)
+        self.assertEqual(1, block_a.depth)
+
+        block_b = Block(id='b')
+        o.add_block_to_chain(block_b, 0)
+        self.assertEqual(2, block_b.depth)
+        
+        self.assertEqual(3, o.next_depths[0])
+        self.assertEqual(1, o.next_depths[1])
+
+        block_c = Block(id='c')
+        o.add_block_to_chain(block_c, 1)
+        self.assertEqual(1, block_c.depth)
+        self.assertEqual(3, o.next_depths[1])
+
+        block_d = Block(id='d')
+        o.add_block_to_chain(block_d, 1)
+        self.assertEqual(3, block_d.depth)
+        self.assertEqual(4, o.next_depths[1])
+
+        chains = o.main_chains()
+        block_chain_0 = list(map(lambda block: block.id, chains[0][0]))
+        self.assertListEqual(block_chain_0, ['Genesis0', 'a', 'b'])
+        block_chain_1 = list(map(lambda block: block.id, chains[1][0]))
+        self.assertListEqual(block_chain_1, ['Genesis1', 'c', 'd'])
 
 if __name__ == '__main__':
     unittest.main()

@@ -89,9 +89,16 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
             proposal.block.block_type=='tree' or
             proposal.block.block_type=='proposer', proposals)))
         # filter main chain to only have tree blocks
-        main_chain = list(filter(lambda block: block.block_type=='tree' or
-            block.block_type=='proposer',
-            global_main_chain))
+        if (params['fork_choice_rule'] == 'OHIE'):
+            main_chain = []
+            for chain in global_main_chain:
+                main_chain += list(filter(lambda block: block.block_type=='tree' or
+                    block.block_type=='proposer',
+                    chain))
+        else:
+            main_chain = list(filter(lambda block: block.block_type=='tree' or
+                block.block_type=='proposer',
+                global_main_chain))
         main_chain_length = len(main_chain)
         num_orphan_blocks = num_blocks - main_chain_length 
         csvfile.write(f'Number of blocks,{num_blocks}\n')
@@ -116,7 +123,7 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
             csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+2.0*f*delta_blocks))}\n')
             csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*2.0*delta_blocks)/f}\n')
 
-def draw_blocktree(params, proposals, main_chain):
+def draw_blocktree(params, proposals, common_blocks):
     g = Graph()
     color_vp = g.new_vertex_property('double')
     shape_vp = g.new_vertex_property('int')
@@ -127,10 +134,26 @@ def draw_blocktree(params, proposals, main_chain):
     # maps block to vertex
     block_to_vertices = {}
 
-    genesis = g.add_vertex()
-    color_vp[genesis] = 0
-    shape_vp[genesis] = 0
-    text_vp[genesis] = 'Genesis'
+    if params['fork_choice_rule']=='OHIE':
+        # OHIE is formed by chains with distinct genesis blocks
+        genesis = []
+        main_chain = []
+        for i in range(params['longest_chains']):
+            gen_block = g.add_vertex()
+            color_vp[gen_block] = 0
+            shape_vp[gen_block] = 0
+            text_vp[gen_block] = 'Genesis' + str(i)
+            genesis.append(gen_block)
+            # store all the blocks from distinct 
+            # chains together for graph purpose
+            main_chain += common_blocks[i]
+    else:
+        # there is just one single chain
+        main_chain = common_blocks
+        genesis = g.add_vertex()
+        color_vp[genesis] = 0
+        shape_vp[genesis] = 0
+        text_vp[genesis] = 'Genesis'
 
     if params['fork_choice_rule']=='Prism':
         main_chain = list(filter(lambda block: block.block_type!='voter', main_chain))
@@ -166,6 +189,7 @@ def draw_blocktree(params, proposals, main_chain):
                     g.add_edge(v, ref_vertex)
             if params['fork_choice_rule']=='Prism':
                 # if Prism, main chain chooses one from each depth 
+                    # if Prism, main chain chooses one from each depth 
                 if block.id in main_chain_ids:
                     g.add_edge(added_parent, v)
                     added_parent = v
@@ -175,6 +199,12 @@ def draw_blocktree(params, proposals, main_chain):
                     w = block_to_vertices[block.parent_id]
                     g.add_edge(v, w)
                     proposal.added = True
+                elif params['fork_choice_rule']=='OHIE':
+                    for gen_block in genesis:
+                        if block.parent_id==text_vp[gen_block]:
+                            g.add_edge(v, gen_block)
+                            proposal.added = True
+                            break
                 elif block.parent_id=='Genesis':
                     g.add_edge(v, genesis)
                     proposal.added = True

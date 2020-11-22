@@ -25,7 +25,7 @@ def compute_finalization_depth(epsilon, num_nodes, num_adversaries):
     return k
 
 class Algorithm():
-    def __init__(self):
+    def __init__(self, id='Genesis'):
         self.tree = Graph()
         # maps vertex to block
         self.vertex_to_blocks = self.tree.new_vertex_property('object')
@@ -36,7 +36,7 @@ class Algorithm():
 
         # add genesis block and vertex
         self.root = self.tree.add_vertex()
-        genesis = Block(id='Genesis')
+        genesis = Block(id=id)
         self.vertex_to_blocks[self.root] = genesis
         self.block_to_vertices[genesis.id] = self.root
         self.depth[self.root] = 0
@@ -408,3 +408,91 @@ class GHOST(Algorithm):
 
         return parent_blocks
 
+'''
+A helper method to find where a block should be inserted in the main chain
+'''
+def binary_search(list, block):
+    high = len(list) - 1
+    low = 0
+    while low < high:
+        mid = (high + low) / 2
+        if list[mid].depth > block.depth:
+            high = mid - 1
+        else:
+            low = mid + 1
+    return low
+
+class OHIE(Algorithm):
+    def __init__(self, num_longest_chains=10):
+        super(OHIE, self).__init__()
+        # OHIE is a protocol formed by combining multiple longest chains
+        self.num_longest_chains = num_longest_chains
+        self.longest_chains = []
+        self.next_depths = []
+
+        for i in range(0, self.num_longest_chains):
+            longest_chain = LongestChain(id='Genesis'+str(i))
+            self.longest_chains.append(longest_chain)
+            self.next_depths.append(1)
+
+    '''
+    This method is just for test only
+    '''
+    def add_block_to_chain(self, new_block, choice):
+        chain = self.longest_chains[choice]
+        parent_block = chain.add_block_by_fork_choice_rule(new_block)
+
+        # the depth of the new block is parent's next_depth
+        new_block.set_depth(self.next_depths[choice])
+        
+        # the new block in OHIE always uses the 
+        # max next_depth on all chains as its next_depth
+        next_depth = new_block.depth + 1
+        for i in range(0, self.num_longest_chains):
+            next_depth = max(next_depth, self.next_depths[i])
+        self.next_depths[choice] = next_depth
+        
+        return parent_block
+
+    def add_block_by_fork_choice_rule(self, block):
+        choice = np.random.randint(0, self.num_longest_chains)
+        chain = self.longest_chains[choice]
+        parent_block = chain.add_block_by_fork_choice_rule(block)
+
+        # the depth of the new block is parent's next_depth
+        block.set_depth(self.next_depths[choice])
+        
+        # the new block in OHIE always uses the 
+        # max next_depth on all chains as its next_depth
+        next_depth = block.depth + 1
+        for i in range(0, self.num_longest_chains):
+            next_depth = max(next_depth, self.next_depths[i])
+        self.next_depths[choice] = next_depth
+        
+        return parent_block
+
+    def fork_choice_rule(self, chain):
+        return self.longest_chains[chain].fork_choice_rule()
+
+    def main_chains(self):
+        main_chains = []
+        for i in range(0, self.num_longest_chains):
+            # longest_chain = []
+            # for chain in self.longest_chains[i].main_chains():
+            #     if len(chain) > len(longest_chain):
+            #         longest_chain = chain
+            main_chains.append(self.longest_chains[i].main_chains())
+        return main_chains
+
+    def random_main_chain(self):
+        random_main_chains = []
+        for longest_chain in self.longest_chains:
+            random_main_chains.append(longest_chain.random_main_chain())
+        return random_main_chains
+
+    def graph_to_str(self):
+        ret = ''
+        for i in range(0, self.num_longest_chains):
+            ret += self.longest_chains[i].graph_to_str()
+            ret += '\n'
+        return ret
