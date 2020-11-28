@@ -37,6 +37,8 @@ def get_params(filename):
             params['locations'] = d['Locations file']
         if 'Longest chains' in d:
             params['longest_chains'] = d['Longest chains']
+        else:
+            params['longest_chains'] = 1
     return params
 
 if __name__=='__main__':
@@ -68,7 +70,10 @@ if __name__=='__main__':
         # generate num_nodes nodes
         for node_id in range(0, num_nodes): 
             n = Node(node_id, params['fork_choice_rule'],
-                    params['transaction_schedule'], params['max_block_size'], locations[node_id], params['longest_chains'])
+                    params['transaction_schedule'],
+                    params['max_block_size'],
+                    params['longest_chains'],
+                    locations[node_id])
             nodes[node_id] = n
             c.add_node(n)
 
@@ -82,7 +87,8 @@ if __name__=='__main__':
         for node_id in range(0, num_nodes): 
             n = Node(node_id, params['fork_choice_rule'],
                     params['transaction_schedule'],
-                    params['max_block_size'])
+                    params['max_block_size'],
+                    params['longest_chains'])
             nodes[node_id] = n
             c.add_node(n)
         

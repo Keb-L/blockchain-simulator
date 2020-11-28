@@ -6,7 +6,7 @@ from algorithms import *
 from constants import TX_SIZE
 
 class Node():
-    def __init__(self, node_id, algorithm, tx_rule, max_block_size, location=None, longest_chains=10):
+    def __init__(self, node_id, algorithm, tx_rule, max_block_size, longest_chains, location=None):
         self.node_id = node_id
 
         if algorithm=='longest-chain-with-pool':
@@ -101,12 +101,24 @@ class Node():
                 # blocktree
                 # if parent block is not found, then the block is deemed an
                 # orphan
-                parent_block = self.local_blocktree.get_block_by_id(copied_block.parent_id)
-                if parent_block==None:
-                    self.orphans = np.append(self.orphans, copied_block)
+                if self.algorithm=='OHIE':
+                    orphan = True
+                    for longest_chain in self.local_blocktree.longest_chains:
+                        parent_block = longest_chain.get_block_by_id(copied_block.parent_id)
+                        if not parent_block==None:
+                            orphan = False
+                            longest_chain.add_block_by_parent(parent_block=parent_block,
+                                    new_block=copied_block)
+                            break
+                    if orphan:
+                        self.orphans = np.append(self.orphans, copued_block)
                 else:
-                    self.local_blocktree.add_block_by_parent(parent_block=parent_block,
-                            new_block=copied_block)
+                    parent_block = self.local_blocktree.get_block_by_id(copied_block.parent_id)
+                    if parent_block==None:
+                        self.orphans = np.append(self.orphans, copied_block)
+                    else:
+                        self.local_blocktree.add_block_by_parent(parent_block=parent_block,
+                                new_block=copied_block)
             b_i+=1
 
         # remove already processed items in buffer

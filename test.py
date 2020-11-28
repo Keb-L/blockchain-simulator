@@ -162,18 +162,18 @@ class TestBlockchainSimulator(unittest.TestCase):
         o.add_block_to_chain(block_b, 0)
         self.assertEqual(2, block_b.depth)
         
-        self.assertEqual(3, o.next_depths[0])
-        self.assertEqual(1, o.next_depths[1])
+        self.assertEqual(3, o.next_depths[0][-1])
+        self.assertEqual(1, o.next_depths[1][-1])
 
         block_c = Block(id='c')
         o.add_block_to_chain(block_c, 1)
         self.assertEqual(1, block_c.depth)
-        self.assertEqual(3, o.next_depths[1])
+        self.assertEqual(3, o.next_depths[1][-1])
 
         block_d = Block(id='d')
         o.add_block_to_chain(block_d, 1)
         self.assertEqual(3, block_d.depth)
-        self.assertEqual(4, o.next_depths[1])
+        self.assertEqual(4, o.next_depths[1][-1])
 
         chains = o.main_chains()
         block_chain_0 = list(map(lambda block: block.id, chains[0][0]))

@@ -199,6 +199,7 @@ def draw_blocktree(params, proposals, common_blocks):
                     w = block_to_vertices[block.parent_id]
                     g.add_edge(v, w)
                     proposal.added = True
+                # check all genesis blocks in OHIE
                 elif params['fork_choice_rule']=='OHIE':
                     for gen_block in genesis:
                         if block.parent_id==text_vp[gen_block]:

@@ -423,7 +423,7 @@ def binary_search(list, block):
     return low
 
 class OHIE(Algorithm):
-    def __init__(self, num_longest_chains=10):
+    def __init__(self, num_longest_chains):
         super(OHIE, self).__init__()
         # OHIE is a protocol formed by combining multiple longest chains
         self.num_longest_chains = num_longest_chains
@@ -433,7 +433,7 @@ class OHIE(Algorithm):
         for i in range(0, self.num_longest_chains):
             longest_chain = LongestChain(id='Genesis'+str(i))
             self.longest_chains.append(longest_chain)
-            self.next_depths.append(1)
+            self.next_depths.append([1])
 
     '''
     This method is just for test only
@@ -460,14 +460,14 @@ class OHIE(Algorithm):
         parent_block = chain.add_block_by_fork_choice_rule(block)
 
         # the depth of the new block is parent's next_depth
-        block.set_depth(self.next_depths[choice])
+        block.set_depth(self.next_depths[choice][-1])
         
         # the new block in OHIE always uses the 
         # max next_depth on all chains as its next_depth
         next_depth = block.depth + 1
         for i in range(0, self.num_longest_chains):
-            next_depth = max(next_depth, self.next_depths[i])
-        self.next_depths[choice] = next_depth
+            next_depth = max(next_depth, self.next_depths[i][-1])
+        self.next_depths[choice].append(next_depth)
         
         return parent_block
 
