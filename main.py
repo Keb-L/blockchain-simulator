@@ -45,7 +45,7 @@ if __name__=='__main__':
     parser = OptionParser(usage=usage)
 
     parser.add_option('-f', '--filename', type='string',
-            action='store', dest='filename', default='results/longest_chain.json',#''results/bitcoin_ng.json', #'params.json', 'results/longest_chain.json', #
+            action='store', dest='filename', default='results/bitcoin_ng.json', #'params.json', 'results/longest_chain.json', #
             help='filename to set parameters; default parameters are in params.json')
 
     (options, args) = parser.parse_args(sys.argv[1:])

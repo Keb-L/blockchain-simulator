@@ -2,7 +2,7 @@ import numpy as np, uuid
 
 class Block():
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'tree', depth=0):
+            block_type = 'tree', depth=0, micro_parent_id=None):
         if txs is None:
             self.txs = np.array([])
         else:
@@ -14,6 +14,10 @@ class Block():
 
         self.proposal_timestamp = proposal_timestamp
         self.parent_id = parent_id 
+        if micro_parent_id is None:
+            self.micro_parent_id = parent_id
+        else:
+            self.micro_parent_id = micro_parent_id
         self.finalization_timestamp = None
         self.depth = depth
         self.weight = 1
@@ -68,12 +72,32 @@ class PrismBlock(LinkedBlock):
 
 class BitcoinNGBlock(Block):
     def __init__(self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
-            block_type = 'key', depth=0):
+            block_type = 'key', depth=0, micro_parent_id=None, micro_blocks=None):
         
         super(BitcoinNGBlock, self).__init__(txs, id, parent_id, proposal_timestamp,
-                block_type, depth)
+                block_type, depth, micro_parent_id)
+
+        if micro_blocks is None:
+            self.micro_blocks = np.array([])
+        else:
+            self.micro_blocks = micro_blocks.copy()
+
+        # Micro blocks inherit their parent id, pass on the micro_parent_id
+        # Key blocks parent id is the previous key block        
         if block_type == 'micro':
             self.weight = 0
 
     def set_block_type(self, block_type):
         self.block_type = block_type
+
+    def set_micro_parent_id(self, micro_parent_id):
+        self.micro_parent_id = micro_parent_id
+
+    def add_micro_block(self, micro_block):
+        self.micro_blocks = np.append(self.micro_blocks,
+                micro_block)
+
+    def get_tx(self):
+        for block in self.micro_blocks:
+            self.add_tx(block.txs)
+

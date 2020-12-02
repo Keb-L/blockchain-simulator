@@ -156,6 +156,7 @@ class Node():
                     block_type=proposal.proposal_type)
 
         # find all txs in main chain
+        # TODO: infinite loop here!
         main_chain = self.local_blocktree.random_main_chain()
         main_chain_txs = np.concatenate([b.txs for b in main_chain]).ravel()
 
@@ -172,10 +173,10 @@ class Node():
                         # there are potential txs left on the table
                         continue
                     if tx not in main_chain_txs:
-                        self.add_block_by_tx_rule(new_block, tx)
+                        self.add_block_by_tx_rule(new_block, tx)           
                         added_txs+=1
 
         proposal.set_block(new_block)
         self.local_blocktree.add_block_by_fork_choice_rule(new_block)
-    
+
         return proposal

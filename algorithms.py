@@ -430,3 +430,78 @@ class BitcoinNG(LongestChain):
             it.iternext()
 
         return parent_blocks
+
+    def add_block_by_parent(self, new_block, parent_block):
+        # Only add to the tree if both blocks are not microblocks
+        # new_vertex = self.tree.add_vertex()
+        # self.vertex_to_blocks[new_vertex] = new_block
+        # self.block_to_vertices[new_block.id] = new_vertex
+
+        # parent_vertex = self.block_to_vertices[parent_block.id]
+
+        # self.tree.add_edge(parent_vertex, new_vertex)
+        # self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+
+        # Assign parent ids
+        # Key to key block
+        # New block.parent_id = parent.id
+        # New block.micro parent_id = parent.id
+
+        # Key parent to micro new block
+        # New block.parent_id = parent.id
+        # New block.micro parent_id = parent.id
+
+        # Micro parent to key new block
+        # new_block.parent_id = parent.parent_id
+        # new_block.micro_parent_id = parent.id
+
+        # Micro parent to micro new
+        # new block.parent_id = parent.parent_id
+        # new block.micro_parent_id = parent.id
+
+        new_block.set_micro_parent_id(parent_block.id)
+        if parent_block.block_type is 'micro':
+            # Micro parents pass on their parent_id
+            new_block.set_parent_id(parent_block.parent_id)
+        else: # key or genesis
+            new_block.set_parent_id(parent_block.id)
+
+        # Add weight to depth (microblocks have a weight of 0)
+        new_block.set_depth(parent_block.depth + new_block.weight)
+
+        # Only add key blocks to the main tree
+        if new_block.block_type is 'key':
+            new_vertex = self.tree.add_vertex()
+            self.vertex_to_blocks[new_vertex] = new_block
+            self.block_to_vertices[new_block.id] = new_vertex
+
+            parent_id = parent_block.id if parent_block.block_type is not 'micro' else parent_block.parent_id
+
+            parent_vertex = self.block_to_vertices[parent_id]
+
+            self.tree.add_edge(parent_vertex, new_vertex)
+            self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+
+        # Microblocks are added to the previous key block's referenced blocks
+        elif new_block.block_type is 'micro':
+            prev_key_id = parent_block.id if parent_block.block_type is not 'micro' else parent_block.parent_id
+            prev_key_vertex = self.block_to_vertices[prev_key_id]
+            prev_key_block  = self.vertex_to_blocks[prev_key_vertex]
+
+            prev_key_block.add_micro_block(new_block)
+
+        return parent_block
+
+    def main_chains(self):
+        # call LongestChain's main_chains function
+        key_main_chains = super(LongestChain, self).main_chains()
+
+        main_chains = []
+        for main_chain in key_main_chains:
+            main_chains.append([])
+            for key_block in main_chain:
+                if self.block_to_vertices[key_block.id]!=self.root:
+                    main_chains[-1]+=list(key_block.micro_blocks)
+                main_chains[-1].append(key_block)
+
+        return main_chains

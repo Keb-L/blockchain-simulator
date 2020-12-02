@@ -56,7 +56,7 @@ class Coordinator():
                 micro_timestamp = self.params['microblock_proposal_rate']
 
                 # Generate microblocks 
-                while (micro_timestamp + self.params['microblock_proposal_rate']) < next_arrival:
+                while (micro_timestamp + self.params['microblock_proposal_rate']) < min(next_arrival, self.params['duration']):
                     if timestamp + micro_timestamp > self.params['duration']:
                         break
                     proposal = Proposal(timestamp + micro_timestamp, proposal_type='micro') 
@@ -95,6 +95,10 @@ class Coordinator():
                  block.depth<=common_block.depth-finalization_depth,
                 global_main_chain)
             for finalized_block in finalized_blocks:
+                
+                # if finalized_block.block_type is 'key':
+                #     finalized_block.get_tx()
+
                 finalized_block.set_finalization_timestamp(common_block.proposal_timestamp)
                 for tx in finalized_block.txs:
                     # transaction arrives to main chain when finalized block
@@ -112,6 +116,19 @@ class Coordinator():
                         for tx in ref_block.txs:
                             tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
                             tx.add_finalization_timestamp(finalized_block.finalization_timestamp)
+                
+                if hasattr(finalized_block, 'micro_blocks'):
+                    # referenced blocks have a finalization timestamp and
+                    # proposal timestamp equal
+                    # to the finalized block on the main chain
+                    for micro_block in finalized_block.micro_blocks:
+                        micro_block.set_finalization_timestamp(finalized_block.finalization_timestamp)
+
+                        for tx in micro_block.txs:
+                            tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
+                            tx.set_complete()
+                            tx.add_finalization_timestamp(finalized_block.finalization_timestamp)
+                        
 
 
     def global_main_chain(self):
@@ -126,6 +143,9 @@ class Coordinator():
             if self.params['fork_choice_rule']=='Prism':
                 main_chain = list(filter(lambda block:
                 block.block_type!='voter', main_chain))
+            elif self.params['fork_choice_rule'] =='BitcoinNG':
+                main_chain = list(filter(lambda block:
+                block.block_type!='micro', main_chain))
             main_chains.append(main_chain)
             main_chain_ids.append(list(map(lambda block: block.id,
                 main_chains[-1])))
@@ -153,6 +173,27 @@ class Coordinator():
             common_blocks = updated_common_blocks
 
         return common_blocks 
+
+    def finalize_proposals(self, common_blocks):
+        # For each proposal
+        common_blocks_ids = [x.id for x in common_blocks]
+
+        for i in range(0, len(self.proposals)):
+            prop = self.proposals[i]
+
+            # Get its block
+            block = prop.block
+            block_id = block.id
+
+            if block.block_type is 'micro':
+                block_id = block.parent_id
+
+            # Find corresponding block in common blocks
+            if block_id in common_blocks_ids:
+                self.proposals[i].block.finalization_timestamp = common_blocks[common_blocks_ids.index(block_id)].finalization_timestamp
+
+
+
 
     '''
     Main simulation function
@@ -234,6 +275,9 @@ class Coordinator():
 
         common_blocks = self.global_main_chain() 
         self.set_timestamps(common_blocks)
+
+        # Finalize proposals
+        self.finalize_proposals(common_blocks)
 
         end = time.time()
 

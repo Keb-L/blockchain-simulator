@@ -141,7 +141,7 @@ def draw_blocktree(params, proposals, main_chain):
 
     main_chain_ids = list(map(lambda block: block.id, main_chain))
 
-    type_filter = lambda proposal: proposal.block.block_type=='tree' or proposal.block.block_type=='proposer' or proposal.block.block_type=='key' or proposal.block.block_type == 'micro'
+    type_filter = lambda proposal: proposal.block.block_type=='tree' or proposal.block.block_type=='proposer' or proposal.block.block_type=='key' #or proposal.block.block_type == 'micro'
     added_filter = lambda proposal: not proposal.added 
 
     filtered_proposals = list(filter(type_filter, proposals))
