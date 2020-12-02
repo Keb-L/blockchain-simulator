@@ -49,32 +49,68 @@ class Coordinator():
         finalization_depth = compute_finalization_depth(self.params['tx_error_prob'],
                 self.params['num_nodes'], self.params['num_adversaries'])
 
-        # For each common block
-        # iterate through all transactions and set to complete and add
-        # finalization, main chain arrival timestamps
-        for common_block in global_main_chain:
-            # finalized blocks are finalization depth above common block
-            finalized_blocks = filter(lambda block:
-                 block.depth<=common_block.depth-finalization_depth,
-                global_main_chain)
-            for finalized_block in finalized_blocks:
-                finalized_block.set_finalization_timestamp(common_block.proposal_timestamp)
-                for tx in finalized_block.txs:
-                    # transaction arrives to main chain when finalized block
-                    # is proposed
-                    tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
-                    # transaction is finalized when common block is proposed
-                    tx.set_complete()
-                    tx.add_finalization_timestamp(common_block.proposal_timestamp)
-                if hasattr(finalized_block, 'referenced_blocks'):
-                    # referenced blocks have a finalization timestamp and
-                    # proposal timestamp equal
-                    # to the finalized block on the main chain
-                    for ref_block in finalized_block.referenced_blocks:
-                        ref_block.set_finalization_timestamp(finalized_block.finalization_timestamp)
-                        for tx in ref_block.txs:
+        # OHIE uses min next depth within the finalization depth across
+        # all the longest chains as the confirmation bar
+        if self.params['fork_choice_rule'] == 'OHIE':
+            finalization_next_depth = None
+            for common_chain in global_main_chain:
+                if len(common_chain) > finalization_depth:
+                    if finalization_next_depth == None:
+                        finalization_next_depth = common_chain[len(common_chain) - 1 - finalization_depth].next_depth
+                    else:
+                        finalization_next_depth = min(finalization_next_depth,
+                            common_chain[len(common_chain) - 1 - finalization_depth].next_depth)
+            for common_chain in global_main_chain:
+                for common_block in common_chain:
+                    # finalized blocks are finalization depth above common block
+                    finalized_blocks = filter(lambda block:
+                        block.depth < finalization_next_depth,
+                        common_chain)
+                    for finalized_block in finalized_blocks:
+                        finalized_block.set_finalization_timestamp(common_block.proposal_timestamp)
+                        for tx in finalized_block.txs:
+                            # transaction arrives to main chain when finalized block
+                            # is proposed
                             tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
-                            tx.add_finalization_timestamp(finalized_block.finalization_timestamp)
+                            # transaction is finalized when common block is proposed
+                            tx.set_complete()
+                            tx.add_finalization_timestamp(common_block.proposal_timestamp)
+                        if hasattr(finalized_block, 'referenced_blocks'):
+                            # referenced blocks have a finalization timestamp and
+                            # proposal timestamp equal
+                            # to the finalized block on the main chain
+                            for ref_block in finalized_block.referenced_blocks:
+                                ref_block.set_finalization_timestamp(finalized_block.finalization_timestamp)
+                                for tx in ref_block.txs:
+                                    tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
+                                    tx.add_finalization_timestamp(finalized_block.finalization_timestamp)
+        else:
+            # For each common block
+            # iterate through all transactions and set to complete and add
+            # finalization, main chain arrival timestamps
+            for common_block in global_main_chain:
+                # finalized blocks are finalization depth above common block
+                finalized_blocks = filter(lambda block:
+                    block.depth<=common_block.depth-finalization_depth,
+                    global_main_chain)
+                for finalized_block in finalized_blocks:
+                    finalized_block.set_finalization_timestamp(common_block.proposal_timestamp)
+                    for tx in finalized_block.txs:
+                        # transaction arrives to main chain when finalized block
+                        # is proposed
+                        tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
+                        # transaction is finalized when common block is proposed
+                        tx.set_complete()
+                        tx.add_finalization_timestamp(common_block.proposal_timestamp)
+                    if hasattr(finalized_block, 'referenced_blocks'):
+                        # referenced blocks have a finalization timestamp and
+                        # proposal timestamp equal
+                        # to the finalized block on the main chain
+                        for ref_block in finalized_block.referenced_blocks:
+                            ref_block.set_finalization_timestamp(finalized_block.finalization_timestamp)
+                            for tx in ref_block.txs:
+                                tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
+                                tx.add_finalization_timestamp(finalized_block.finalization_timestamp)
 
 
     def global_main_chain(self):
@@ -218,11 +254,7 @@ class Coordinator():
             node.process_buffer(self.params['duration'])
 
         common_blocks = self.global_main_chain() 
-        if self.params['fork_choice_rule']=='OHIE':
-            for common_chain in common_blocks:
-                self.set_timestamps(common_chain)
-        else:
-            self.set_timestamps(common_blocks)
+        self.set_timestamps(common_blocks)
 
         end = time.time()
         if self.params['logging']:

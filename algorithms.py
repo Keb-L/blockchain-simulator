@@ -428,12 +428,10 @@ class OHIE(Algorithm):
         # OHIE is a protocol formed by combining multiple longest chains
         self.num_longest_chains = num_longest_chains
         self.longest_chains = []
-        self.next_depths = []
 
         for i in range(0, self.num_longest_chains):
             longest_chain = LongestChain(id='Genesis'+str(i))
             self.longest_chains.append(longest_chain)
-            self.next_depths.append([1])
 
     '''
     This method is just for test only
@@ -443,14 +441,14 @@ class OHIE(Algorithm):
         parent_block = chain.add_block_by_fork_choice_rule(new_block)
 
         # the depth of the new block is parent's next_depth
-        new_block.set_depth(self.next_depths[choice])
+        new_block.set_depth(parent_block.next_depth)
         
         # the new block in OHIE always uses the 
         # max next_depth on all chains as its next_depth
         next_depth = new_block.depth + 1
-        for i in range(0, self.num_longest_chains):
-            next_depth = max(next_depth, self.next_depths[i])
-        self.next_depths[choice] = next_depth
+        for longest_chain in self.longest_chains:
+            next_depth = max(next_depth, longest_chain.fork_choice_rule()[-1].next_depth)
+        new_block.set_next_depth(next_depth)
         
         return parent_block
 
@@ -460,14 +458,14 @@ class OHIE(Algorithm):
         parent_block = chain.add_block_by_fork_choice_rule(block)
 
         # the depth of the new block is parent's next_depth
-        block.set_depth(self.next_depths[choice][-1])
+        block.set_depth(parent_block.next_depth)
         
         # the new block in OHIE always uses the 
         # max next_depth on all chains as its next_depth
         next_depth = block.depth + 1
-        for i in range(0, self.num_longest_chains):
-            next_depth = max(next_depth, self.next_depths[i][-1])
-        self.next_depths[choice].append(next_depth)
+        for longest_chain in self.longest_chains:
+            next_depth = max(next_depth, longest_chain.fork_choice_rule()[-1].next_depth)
+        block.set_next_depth(next_depth)
         
         return parent_block
 

@@ -99,7 +99,14 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
             main_chain = list(filter(lambda block: block.block_type=='tree' or
                 block.block_type=='proposer',
                 global_main_chain))
-        main_chain_length = len(main_chain)
+        '''
+        I made a small modification on the main_chain_length
+        I do not think the genesis block should be considered
+        when calculating the number of added blocks
+        In a protocol with many chains in parallel (like OHIE)
+        there are many genesis blocks and that may cause an issue
+        '''
+        main_chain_length = len(main_chain) - params['longest_chains']
         num_orphan_blocks = num_blocks - main_chain_length 
         csvfile.write(f'Number of blocks,{num_blocks}\n')
         csvfile.write(f'Main chain length,{main_chain_length}\n')

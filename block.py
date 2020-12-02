@@ -16,11 +16,15 @@ class Block():
         self.parent_id = parent_id 
         self.finalization_timestamp = None
         self.depth = depth
+        self.next_depth = depth + 1
 
         self.block_type = block_type 
 
     def set_depth(self, depth):
         self.depth = depth 
+
+    def set_next_depth(self, next_depth):
+        self.next_depth = next_depth
 
     def add_tx(self, tx):
         self.txs = np.append(self.txs, tx)
