@@ -1,0 +1,15 @@
+{"num_nodes": 100, "num_adversaries": 1, "max_block_size": 50, "tx_error_prob": 0.01, "fork_choice_rule": "GHOST", "tree_proposal_rate": 0.5, "transaction_schedule": "FIFO", "dataset": "poisson", "model": "Decker-Wattenhorf", "duration": 1000, "logging": true}
+Time elapsed,13.52169394493103
+Average network latency for blocks (sec),1.5833333333333335
+Average network latency for txs (sec),0.03166666666666667
+Finalization depth,2
+Number of blocks,465
+Main chain length,54
+Fraction of main blocks,0.11612903225806452
+Number of orphan blocks,411
+Fraction of orphan blocks,0.8838709677419355
+Expected fraction of main blocks,0.3870967741935484
+Expected fraction of orphan blocks,0.6129032258064516
+Expected arrival rate,0.1935483870967742
+Expected arrival latency,5.166666666666667
+Expected finalization latency,10.333333333333334
