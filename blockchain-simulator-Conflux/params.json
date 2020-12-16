@@ -1,0 +1,69 @@
+{
+  "setting-name": "Conflux",
+  "longest-chain":  {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.01, 
+    "Block proposal rate parameter": 0.1, 
+    "Transaction dataset": "poisson",
+    "Transaction scheduling rule": "FIFO",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "longest-chain",
+    "Duration (sec)": 1000,
+    "Logging enabled": true
+  },
+  "GHOST":  {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block proposal rate parameter": 0.1, 
+    "Transaction dataset": "poisson",
+    "Transaction scheduling rule": "FIFO",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "GHOST",
+    "Duration (sec)": 1000,
+    "Logging enabled": true
+  },
+  "longest-chain-with-pool":  {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block tree proposal rate parameter": 0.1, 
+    "Block pool proposal rate parameter": 0.1, 
+    "Transaction dataset": "poisson",
+    "Transaction scheduling rule": "FIFO",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "longest-chain-with-pool",
+    "Duration (sec)": 1000,
+    "Logging enabled": true
+  },
+  "Prism": {
+    "Number of nodes": 5, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block proposal rate parameter": 2, 
+    "Transaction dataset": "poisson",
+    "Transaction scheduling rule": "FIFO",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "Prism",
+    "Duration (sec)": 100,
+    "Logging enabled": true
+  },
+  "Conflux": {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block proposal rate parameter": 0.01, 
+    "Transaction dataset": "poisson",
+    "Transaction scheduling rule": "FIFO",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "Conflux",
+    "Duration (sec)": 1000,
+    "Logging enabled": true
+  }
+}
