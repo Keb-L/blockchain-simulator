@@ -27,7 +27,8 @@ class Block():
 
     def set_parent_id(self, parent_id):
         self.parent_id = parent_id
-
+            
+    
     def set_finalization_timestamp(self, finalization_timestamp):
         self.finalization_timestamp = finalization_timestamp
 
@@ -64,3 +65,23 @@ class PrismBlock(LinkedBlock):
 
     def set_max_voted_block_depth(self, max_voted_block_depth):
         self.max_voted_block_depth = max_voted_block_depth
+
+
+class ConfluxBlock(Block):
+    def __init__(
+        self, txs=None, id=None, parent_id=None, proposal_timestamp=0,
+        block_type = 'tree', ref_ids=None):
+        super(ConfluxBlock, self).__init__(txs, id, parent_id, proposal_timestamp)
+        self.ref_ids = ref_ids
+            
+    # ref_ids is a nparray with shape=[n_ref_block]
+
+    def set_ref_ids(self, ref_blocks):
+        ref_ids = []
+        for ref_block in ref_blocks:
+            ref_ids.append(ref_block.id)
+        self.ref_ids = ref_ids
+
+    def add_referenced_block(self, referenced_block):
+        self.referenced_blocks = np.append(self.referenced_blocks,
+                referenced_block)

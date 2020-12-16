@@ -6,11 +6,11 @@ from algorithms import *
 
 class Coordinator():
     def __init__(self, params):
-        self.proposals = np.array([])
-        self.nodes = np.array([])
+        self.proposals = np.array([])    
+        self.nodes = np.array([])   #
         self.txs = np.array([])
 
-        self.params = params
+        self.params = params   
 
     def add_node(self, node):
         self.nodes = np.append(self.nodes, node)
@@ -38,25 +38,36 @@ class Coordinator():
                 timestamp = timestamp + np.random.exponential(1.0/self.params['pool_proposal_rate'])
                 proposal = Proposal(timestamp, proposal_type='pool') 
                 proposals.append(proposal)
-
+        
+        '''
+        elif self.params['fork_choice_rule']=='Conflux':
+            timestamp = 0
+            # generate pool proposal events
+            while timestamp<self.params['duration']:
+                timestamp = timestamp + np.random.exponential(1.0/self.params['pool_proposal_rate'])
+                proposal = Proposal(timestamp, proposal_type='tree')
+                proposals.append(proposal)
+        '''
+        
         self.proposals = np.asarray(sorted(proposals, key = lambda
             proposal: proposal.timestamp))
 
     def set_transactions(self, dataset):
+
         self.txs = np.asarray(dataset)
 
     def set_timestamps(self, global_main_chain):
+        #print('gmc, coor 68', global_main_chain)
         finalization_depth = compute_finalization_depth(self.params['tx_error_prob'],
                 self.params['num_nodes'], self.params['num_adversaries'])
-
         # For each common block
         # iterate through all transactions and set to complete and add
         # finalization, main chain arrival timestamps
         for common_block in global_main_chain:
             # finalized blocks are finalization depth above common block
-            finalized_blocks = filter(lambda block:
-                 block.depth<=common_block.depth-finalization_depth,
-                global_main_chain)
+            #print('type b.depth, coor76', type(common_block.depth))
+            #print('b.depth, coor77', common_block.depth)
+            finalized_blocks = filter(lambda block: block.depth<=common_block.depth-finalization_depth, global_main_chain)
             for finalized_block in finalized_blocks:
                 finalized_block.set_finalization_timestamp(common_block.proposal_timestamp)
                 for tx in finalized_block.txs:
@@ -117,6 +128,40 @@ class Coordinator():
 
         return common_blocks 
 
+    ######### recheck!!!!!!! ##########
+    def global_block_order(self):
+        common_blocks_order = self.nodes[0].local_block_order
+        for node in self.nodes:
+            common_blocks_order = [i for i in common_blocks_order if i in node.local_block_order]
+        blocks_order_nodes = []
+        for node in self.nodes:
+            #blocks_order_node_i
+            blocks_order_nodes.append([i for i in node.local_block_order if i in common_blocks_order])
+
+        #for i, block in enumerate(common_blocks_order):
+        #    for blocks_order_node_i in blocks_order_nodes:
+        
+        common_blocks = []
+        for block_id in common_blocks_order:
+            block = self.nodes[0].local_blocktree.get_block_by_id(block_id)
+            common_blocks.append(block)
+        return common_blocks
+
+
+    def node_pivot_chain(self):
+        pivot_chains = []
+        pivot_chain_ids = []
+
+        # Get block ids in all main chains
+        for node in self.nodes:
+            pivot_chain = node.local_blocktree.random_pivot_chain()
+            pivot_chains.append(pivot_chain)
+            pivot_chain_ids.append(list(map(lambda block: block.id,
+                pivot_chains[-1])))
+
+
+
+
     '''
     Main simulation function
     Coordinator checks head of proposal and tx queue and processes earlier
@@ -157,8 +202,9 @@ class Coordinator():
                 # proposal before transaction
                 else:
                     # choose proposer uniformly at random
-                    proposer = random.choice(self.nodes)
-                    proposal = proposer.propose(self.proposals[p_i],
+                    proposer = random.choice(self.nodes)   ## Node Class
+                    ## self.proposals[p_i] 是个proposal
+                    proposal = proposer.propose(self.proposals[p_i],   
                         self.params['max_block_size'],
                         self.params['fork_choice_rule'],
                         self.params['model'])
@@ -185,11 +231,26 @@ class Coordinator():
                 proposer.broadcast(proposal, self.params['max_block_size'],
                         self.params['model'])
                 p_i+=1
-
+        
+ 
+        #print('# nodes, coor 270', len(self.nodes))
         for node in self.nodes:
+            #print('coor 272-')
             node.process_buffer(self.params['duration'])
 
-        common_blocks = self.global_main_chain() 
+            if node.algorithm == 'Conflux':
+                #print('coor 278-')
+                node.local_pivot_chain = node.local_blocktree.random_pivot_chain()
+                #print('coor 281-')
+                node.local_epochs, node.local_block_order = node.local_blocktree.topology_sorting(
+                    node.local_pivot_chain)
+                #print('coor 284-')
+                conflux = True
+
+        if conflux:
+            common_blocks = self.global_block_order() 
+        else:
+            common_blocks = self.global_main_chain() 
         self.set_timestamps(common_blocks)
 
         end = time.time()

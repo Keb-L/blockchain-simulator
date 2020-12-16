@@ -54,7 +54,6 @@ if __name__=='__main__':
     os.mkdir('./logs')
 
     c = Coordinator(params) 
-
     nodes = np.empty(params['num_nodes'], dtype=Node)
 
     if 'topology' in params and 'locations' in params:
@@ -77,11 +76,11 @@ if __name__=='__main__':
     else:
         # generate num_nodes nodes
         num_nodes = params['num_nodes']
-        for node_id in range(0, num_nodes): 
+        for node_id in range(0, num_nodes):   
             n = Node(node_id, params['fork_choice_rule'],
                     params['transaction_schedule'],
                     params['max_block_size'])
-            nodes[node_id] = n
+            nodes[node_id] = n    
             c.add_node(n)
         
         # every node is a neighbor of the other for right now
@@ -89,6 +88,7 @@ if __name__=='__main__':
             for j in range(0, len(nodes)):
                 if i!=j:
                     nodes[i].add_neighbor(nodes[j])
+    
 
     tx_rate = TX_RATE if 'transaction_rate' not in params else params['transaction_rate']
     
@@ -106,9 +106,10 @@ if __name__=='__main__':
     c.set_transactions(tx_dataset)
 
     # create arrays to store proposals and transactions
-    for node_id in range(0, num_nodes):
-        nodes[node_id].create_arrays(len(tx_dataset))
+    for node_id in range(0, num_nodes):  # 
+        nodes[node_id].create_arrays(len(tx_dataset))  ##### nodes[node_id]是Node类
 
 
     # run simulation
     c.run()
+

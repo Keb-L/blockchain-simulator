@@ -1,5 +1,5 @@
 {
-  "setting-name": "Prism",
+  "setting-name": "Conflux",
   "longest-chain":  {
     "Number of nodes": 100, 
     "Number of adversaries": 1,
@@ -51,6 +51,19 @@
     "Network model": "Decker-Wattenhorf",
     "Fork choice rule": "Prism",
     "Duration (sec)": 100,
+    "Logging enabled": true
+  },
+  "Conflux": {
+    "Number of nodes": 100, 
+    "Number of adversaries": 1,
+    "Block size (txs)": 50, 
+    "Probability of error in transaction confirmation": 0.1, 
+    "Block proposal rate parameter": 0.01, 
+    "Transaction dataset": "poisson",
+    "Transaction scheduling rule": "FIFO",
+    "Network model": "Decker-Wattenhorf",
+    "Fork choice rule": "Conflux",
+    "Duration (sec)": 1000,
     "Logging enabled": true
   }
 }

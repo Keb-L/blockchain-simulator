@@ -3,9 +3,11 @@ from itertools import takewhile
 from graph_tool import *
 import graph_tool.all as gt
 from math import e, factorial
-from block import Block
+from block import Block, ConfluxBlock
 from abc import ABC, abstractmethod
 from constants import FINALIZATION_DEPTH
+import sys
+sys.setrecursionlimit(10000)
 
 def compute_finalization_depth(epsilon, num_nodes, num_adversaries):
     # compute finalization depth
@@ -51,6 +53,33 @@ class Algorithm():
             main_chains = self.main_chains()
 
         return random.choice(main_chains)
+    
+    def random_pivot_chain(self, pivot_chains=None):
+        if pivot_chains is None:
+            pivot_chains = self.pivot_chains()
+
+        return random.choice(pivot_chains)
+    
+    @abstractmethod
+    def pivot_chains(self): 
+        # find leaf blocks via fork choice rule
+        leaf_blocks = self.fork_choice_rule()
+        pivot_chains = []
+
+        # traverse from leaf vertices up to root and add to main chain
+        root_block = self.vertex_to_blocks[self.root]
+        for leaf_block in leaf_blocks: 
+            pivot_chains.append([])
+            block = leaf_block
+            while block.id!=root_block.id:
+                pivot_chains[-1].append(block)
+                parent_vertex = self.block_to_vertices[block.parent_id]
+                block = self.vertex_to_blocks[parent_vertex]
+            pivot_chains[-1].append(root_block)
+            # reverse the path
+            pivot_chains[-1] = pivot_chains[-1][::-1]
+
+        return pivot_chains
 
     @abstractmethod
     def fork_choice_rule(self):
@@ -101,6 +130,7 @@ class Algorithm():
 
         return parent_block
 
+
     # add block based on fork choice rule
     def add_block_by_fork_choice_rule(self, new_block):
         parent_block = self.fork_choice_rule()[0]
@@ -132,7 +162,6 @@ class LongestChain(Algorithm):
         while not it.finished:
             parent_blocks[it.index] = self.vertex_to_blocks[self.tree.vertex(it[0])]
             it.iternext()
-
         return parent_blocks
 
 '''
@@ -375,6 +404,7 @@ class GHOST(Algorithm):
 
         # increment subtree size for all blocks along path from root to new leaf
         # vertex
+        #####
         while vertex!=self.root:
             block = self.vertex_to_blocks[vertex]
             vertex = self.block_to_vertices[block.parent_id]
@@ -408,3 +438,176 @@ class GHOST(Algorithm):
 
         return parent_blocks
 
+
+class Conflux(GHOST):
+    def __init__(self, validate_length=False):
+        self.tree = Graph()
+        # maps vertex to block
+        self.vertex_to_blocks = self.tree.new_vertex_property('object')
+        # maps block to vertex
+        self.block_to_vertices = {}
+        # create a new vertex property corresponding to depth
+        self.depth = self.tree.new_vertex_property('int')
+
+        # add genesis block and vertex
+        self.root = self.tree.add_vertex()
+        genesis = ConfluxBlock(id='Genesis')
+        self.vertex_to_blocks[self.root] = genesis
+        self.block_to_vertices[genesis.id] = self.root
+        self.depth[self.root] = 0
+        self.subtree_size = self.tree.new_vertex_property('int')
+        self.subtree_size[self.root] = 0
+        self.validate_length = validate_length
+
+    def pivot_chains(self):
+        # call Algorithm's main_chains function
+        #main_chains = super(Conflux, self).main_chains()
+        pivot_chains = super(Conflux, self).pivot_chains()
+
+        if self.validate_length:
+            depths = self.depth.get_array()
+            max_depth = np.amax(depths)
+            assert max_depth+1==len(pivot_chains[0]), 'Mismatch between Longest Chain Main Chain and GHOST Main Chain'
+        return pivot_chains
+
+
+    def add_block_by_parent_references(self, new_block, parent_block, ref_blocks):
+        new_vertex = self.tree.add_vertex()
+        self.vertex_to_blocks[new_vertex] = new_block
+        self.block_to_vertices[new_block.id] = new_vertex
+
+        parent_vertex = self.block_to_vertices[parent_block.id]
+        
+        new_block.set_ref_ids(ref_blocks)
+        self.tree.add_edge(parent_vertex, new_vertex)
+        self.depth[new_vertex] = self.depth[self.tree.vertex(parent_vertex)]+1
+        new_block.set_parent_id(parent_block.id)
+        new_block.set_depth(parent_block.depth+1)
+
+        return parent_block
+
+
+    def get_unlinked_blocks(self):
+        blocks_parent_ref_ids = np.array([])
+        blocks = []
+        vertices = [self.root]    #
+        root_block = self.vertex_to_blocks[self.root]
+        blocks.append(root_block)
+        children = []
+        children+=list(self.root.out_edges())
+        for edge in children:
+            target = edge.target()
+            if target not in vertices:
+                vertices.append(target)
+                children+=list(target.out_edges())
+                block_i = self.vertex_to_blocks[target]
+                blocks.append(block_i)
+                blocks_parent_ref_ids = np.append(
+                    blocks_parent_ref_ids, block_i.parent_id)
+                blocks_parent_ref_ids = np.append(
+                    blocks_parent_ref_ids, block_i.ref_ids)
+        
+        unlinked_blocks = []
+        for block in blocks:
+            if block.id not in blocks_parent_ref_ids:
+                unlinked_blocks.append(block)
+        #print('len unlinked blocks',len(unlinked_blocks))
+        #print(unlinked_blocks[-1].id)
+        return unlinked_blocks
+
+
+    def add_block_by_fork_choice_rule_conflux(self, new_block):
+
+        parent_block = self.fork_choice_rule()[0]
+        ref_blocks = self.get_unlinked_blocks()
+        #print('abbfcrc', len(ref_blocks))
+        if parent_block in ref_blocks:
+            ref_blocks.remove(parent_block)
+        self.add_block_by_parent_references(new_block, parent_block, ref_blocks)
+        #if len(ref_blocks) != 0:
+            #print('1')
+            #print('abbfcrc ref_ids', ref_blocks[0].ref_ids)
+        # set subtree size of leaf vertex to be 0
+        vertex = self.block_to_vertices[new_block.id]
+        self.subtree_size[vertex] = 0
+
+        # increment subtree size for all blocks along path from root to new leaf
+        # vertex
+        #####
+        while vertex!=self.root:
+            block = self.vertex_to_blocks[vertex]
+            vertex = self.block_to_vertices[block.parent_id]
+            self.subtree_size[vertex]+=1
+            
+        return parent_block
+    
+    
+    
+    def topology_sorting(self, local_pivot_chain):
+        b_i = 0
+        epochs = []   ### [[epoch],[epoch]...]
+        print('start topo, alg577')
+        while b_i < len(local_pivot_chain):
+ 
+            epoch_i = self.DFS(local_pivot_chain[b_i], epoch_i=[], epochs=epochs, dfs_depth=0)
+            #print('dfs+')
+            epochs.append(epoch_i)
+            b_i += 1
+
+        # topological sorting
+        remn_block_ids = []
+        sorted_block_ids = []
+        #print('start epo, alg591')
+        for epoch in epochs:
+            for block in epoch:
+                remn_block_ids.append(block.id)
+        num_block = len(remn_block_ids)   # total number of blocks
+        count = 0
+        #print('finish epo, alg597')
+        while count != num_block:
+            for block_id in remn_block_ids:
+                block = self.get_block_by_id(block_id)
+                flag_refInRemn = False
+                if block.ref_ids is not None:
+                    for ref_id in block.ref_ids:
+                        if ref_id in remn_block_ids:
+                            flag_refInRemn = True
+                            break
+                if (block.parent_id not in remn_block_ids) and not flag_refInRemn:
+                    remn_block_ids.remove(block_id)
+                    sorted_block_ids.append(block_id)
+                    count += 1
+        print('finish topo, alg612')
+        return epochs, sorted_block_ids       
+
+
+    # use depth first search to add blocks to epoch_i 
+    def DFS(self, block, epoch_i, epochs, dfs_depth):
+        #print('ref_ids algorithms615', block.ref_ids)
+        max_dfs_depth = 10
+        if dfs_depth > max_dfs_depth:
+            return epoch_i
+        flag_notInEpochs = True
+        for i, epoch in enumerate(epochs):
+            if block in epoch:
+                flag_notInEpochs = False
+                break
+
+        if flag_notInEpochs:   #
+            #print('num epoch, alg623', len(epochs))
+            #print('num block epoch_i, alg624', len(epoch_i))
+            epoch_i.append(block)   
+            parent_id = block.parent_id
+            
+            if parent_id is not None:
+                parent_block = self.get_block_by_id(block.parent_id)
+                epoch_i = self.DFS(parent_block, epoch_i=epoch_i, epochs=epochs, dfs_depth=dfs_depth+1)
+            ref_ids = block.ref_ids
+            if ref_ids is not None:
+                #ref_ids = block.ref_ids
+                for i, ref_id in enumerate(ref_ids):
+                    ref_block = self.get_block_by_id(ref_id)
+                    epoch_i = self.DFS(ref_block, epoch_i=epoch_i, epochs=epochs, dfs_depth=dfs_depth+1)
+            return epoch_i
+        else:
+            return epoch_i
