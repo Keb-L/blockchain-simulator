@@ -40,21 +40,14 @@ def get_params(filename):
             params['locations'] = d['Locations file']
     return params
 
-if __name__=='__main__':
-    usage = 'usage: python %prog [options]'
-    parser = OptionParser(usage=usage)
-
-    parser.add_option('-f', '--filename', type='string',
-            action='store', dest='filename', default='results/bitcoin_ng.json', #'params.json', 'results/longest_chain.json', #
-            help='filename to set parameters; default parameters are in params.json')
-
-    (options, args) = parser.parse_args(sys.argv[1:])
-
-    params = get_params(options.filename)
+def main(filename):
+    params = get_params(filename)
 
     # Setup logging directory 
-    shutil.rmtree('./logs')
-    os.mkdir('./logs')
+    # logdir = './logs_{0}_{1}'.format(params['fork_choice_rule'], params['tree_proposal_rate'])
+    logdir = './logs'
+    shutil.rmtree(logdir, ignore_errors=True)
+    os.mkdir(logdir)
 
     c = Coordinator(params) 
 
@@ -115,3 +108,19 @@ if __name__=='__main__':
 
     # run simulation
     c.run()
+
+if __name__=='__main__':
+    usage = 'usage: python %prog [options]'
+    parser = OptionParser(usage=usage)
+
+    # parser.add_option('-f', '--filename', type='string',
+    #         action='store', dest='filename', default='results/longest_chain.json', #results/bitcoin_ng.json', #'params.json', 'results/longest_chain.json', #
+    #         help='filename to set parameters; default parameters are in params.json')
+
+    parser.add_option('-f', '--filename', type='string',
+        action='store', dest='filename', default='results/bitcoin_ng.json', #'params.json', 'results/longest_chain.json', #
+        help='filename to set parameters; default parameters are in params.json')
+
+    (options, args) = parser.parse_args(sys.argv[1:])
+
+    main(options.filename)

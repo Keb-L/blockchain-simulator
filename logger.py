@@ -5,7 +5,9 @@ from network import constant_decker_wattenhorf
 from constants import TX_SIZE
 
 def log_blocks(params, proposals):
-    with open('./logs/blocks.csv', 'w', newline='') as csvfile:
+    # filename = './logs_{0}_{1}/blocks_{0}_{1}.csv'.format(params['fork_choice_rule'], params['tree_proposal_rate'])
+    filename = './logs/blocks.csv'
+    with open(filename, 'w', newline='') as csvfile:
         fieldnames = ['id', 
                     'parent id', 
                     'block type',
@@ -43,8 +45,10 @@ def log_blocks(params, proposals):
                         'transactions': f'{ref_block_tx_str}'
                         })
 
-def log_txs(txs):
-    with open('./logs/transactions.csv', 'w', newline='') as csvfile:
+def log_txs(params, txs):
+    # filename = './logs_{0}_{1}/transactions_{0}_{1}.csv'.format(params['fork_choice_rule'], params['tree_proposal_rate'])
+    filename = './logs/transactions.csv'
+    with open(filename, 'w', newline='') as csvfile:
         fieldnames = ['id', 'source node', 'generated timestamp', 'complete', 
                 'main chain arrival timestamp', 
                 'finalization timestamps']
@@ -64,8 +68,10 @@ def log_txs(txs):
                 f'finalization timestamps':
                 f'{finalization_timestamp_str}'})
 
-def log_statistics(params, global_main_chain, proposals, time_elapsed):
-    with open('./logs/stats.csv', 'w+') as csvfile:
+def log_statistics(params, global_main_chain, proposals, txs, time_elapsed):
+    # filename = './logs_{0}_{1}/stats_{0}_{1}.csv'.format(params['fork_choice_rule'], params['tree_proposal_rate'])
+    filename = './logs/stats.csv'
+    with open(filename, 'w+') as csvfile:
         csvfile.write(json.dumps(params)+'\n')
         csvfile.write(f'Time elapsed,{time_elapsed}\n')
 
@@ -95,6 +101,7 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
             global_main_chain))
         main_chain_length = len(main_chain)
         num_orphan_blocks = num_blocks - main_chain_length 
+
         csvfile.write(f'Number of blocks,{num_blocks}\n')
         csvfile.write(f'Main chain length,{main_chain_length}\n')
         csvfile.write(f'Fraction of main blocks,{float(main_chain_length)/num_blocks}\n')
@@ -105,11 +112,74 @@ def log_statistics(params, global_main_chain, proposals, time_elapsed):
         if params['fork_choice_rule']=='longest-chain':
             # These numbers can be found in https://eprint.iacr.org/2013/881.pdf
             # Expect the main chain to grow at a rate of f/(1+f*delta)
+            n_tx_finalized = sum([x.complete for x in txs])
+
             csvfile.write(f'Expected fraction of main blocks,{1.0/(1+f*delta_blocks)}\n')
             csvfile.write(f'Expected fraction of orphan blocks,{float(f*delta_blocks)/(1+f*delta_blocks)}\n')
             csvfile.write(f'Expected arrival rate,{float(f)/(1+f*delta_blocks)}\n')
             csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+f*delta_blocks))}\n')
             csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
+
+            # D = delta_txs*n_tx_finalized/main_chain_length
+            # T = n_tx_finalized / main_chain_length
+            # lambdah = main_chain_length/params['duration']
+            # C = 10
+
+            # R = lambdah*T/(1+lambdah*(D + T/C))
+
+            # csvfile.write(f'Block network delay D,{D}\n')
+            # csvfile.write(f'Transactions per block T,{T}\n')
+            # csvfile.write(f'Main chain growth per second lambda,{lambdah}\n')
+
+            # csvfile.write(f'Expected Throughput R,{R}\n')
+            # csvfile.write(f'Actual Throughput Rt,{Rt}\n')
+
+
+        elif params['fork_choice_rule']=='BitcoinNG':
+            # n_tx_finalized = sum([x.complete for x in txs])
+            # run_duration = params['duration']
+            # num_micro_blocks = 0
+            # num_empty_blocks = 0
+            # num_nonempty_blocks = 0
+            # for b in main_chain:
+            #     if b.block_type == 'key':
+            #         for mb in b.micro_blocks:
+            #             if len(mb.txs) == 0:
+            #                 num_empty_blocks = num_empty_blocks + 1
+            #             else:
+            #                 num_nonempty_blocks = num_nonempty_blocks + 1
+            #         num_micro_blocks = num_micro_blocks + len(b.micro_blocks)
+
+            # D = delta_txs*n_tx_finalized/num_nonempty_blocks
+            # T = n_tx_finalized / num_nonempty_blocks
+            # lambdah = main_chain_length/run_duration
+            # C = 10
+
+            # R1 = lambdah*T/(1+lambdah*(D + T/C))
+            # R2 = (n_tx_finalized/run_duration)/(1+num_nonempty_blocks/run_duration*D+(n_tx_finalized/run_duration)/C)
+
+            # csvfile.write(f'Microblocks total,{num_micro_blocks}\n')
+            # csvfile.write(f'Empty microblocks,{num_empty_blocks}\n')
+            # csvfile.write(f'Non-empty microblocks,{num_nonempty_blocks}\n')
+
+            # csvfile.write(f'Transactions total,{n_tx_finalized}\n')
+            # csvfile.write(f'Transactions fraction,{n_tx_finalized/len(txs)}\n')
+            # csvfile.write(f'Transactions per second,{n_tx_finalized/run_duration}\n')
+            # csvfile.write(f'Transactions per non-empty microblock,{n_tx_finalized/num_nonempty_blocks}\n')
+
+            csvfile.write(f'Expected fraction of main blocks,{1.0/(1+f*delta_blocks)}\n')
+            csvfile.write(f'Expected fraction of orphan blocks,{float(f*delta_blocks)/(1+f*delta_blocks)}\n')
+            csvfile.write(f'Expected arrival rate,{float(f)/(1+f*delta_blocks)}\n')
+            csvfile.write(f'Expected arrival latency,{1/(float(f)/(1+f*delta_blocks))}\n')
+            csvfile.write(f'Expected finalization latency,{finalization_depth * float(1+f*delta_blocks)/f}\n')
+
+            # csvfile.write(f'Block network delay D,{D}\n')
+            # csvfile.write(f'Transactions per block T,{T}\n')
+            # csvfile.write(f'Main chain growth per second lambda,{lambdah}\n')
+
+            # csvfile.write(f'Throughput R,{R1}\n')
+            # csvfile.write(f'Throughput R2,{R2}\n')
+
         elif params['fork_choice_rule']=='GHOST':
             csvfile.write(f'Expected fraction of main blocks,{1.0/(1+2.0*f*delta_blocks)}\n')
             csvfile.write(f'Expected fraction of orphan blocks,{float(2.0*f*delta_blocks)/(1+2.0*f*delta_blocks)}\n')
@@ -190,7 +260,8 @@ def draw_blocktree(params, proposals, main_chain):
             vertex_text=text_vp,
             vertex_shape=shape_vp,
             vertex_fill_color =color_vp,
-            vertex_font_size=15, output_size=(4200, 4200),
-            edge_pen_width=1.0,
+            vertex_font_size=15, output_size=(2000, 2000),
+            edge_pen_width=5.0,
             output="./logs/blocktree.png")
+
 

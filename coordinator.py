@@ -3,6 +3,7 @@ import logger
 from node import Node
 from events import Proposal
 from algorithms import *
+from tqdm import tqdm
 
 class Coordinator():
     def __init__(self, params):
@@ -125,7 +126,7 @@ class Coordinator():
                         micro_block.set_finalization_timestamp(finalized_block.finalization_timestamp)
 
                         for tx in micro_block.txs:
-                            tx.set_main_chain_arrival_timestamp(finalized_block.proposal_timestamp)
+                            tx.set_main_chain_arrival_timestamp(micro_block.proposal_timestamp)
                             tx.set_complete()
                             tx.add_finalization_timestamp(finalized_block.finalization_timestamp)
                         
@@ -212,12 +213,14 @@ class Coordinator():
 
         tx_i = 0
         p_i = 0
+        pbar = tqdm(total=self.txs.shape[0]+self.proposals.shape[0])
 
         # run main loop
         while tx_i<self.txs.shape[0] or p_i<self.proposals.shape[0]:
             # Print the current progress
-            if (tx_i+p_i)%100==0:
-                print(float(tx_i+p_i)/(self.txs.shape[0]+self.proposals.shape[0]))
+            # if (tx_i+p_i)%100==0:
+                # print(float(tx_i+p_i)/(self.txs.shape[0]+self.proposals.shape[0]))
+
             # still have valid txs and proposals
             if tx_i<self.txs.shape[0] and p_i<self.proposals.shape[0]:
                 # transaction before proposal
@@ -233,6 +236,7 @@ class Coordinator():
                     source_node.broadcast(tx, self.params['max_block_size'],
                             self.params['model'])
                     tx_i+=1
+                    pbar.update(1)
                 # proposal before transaction
                 else:
                     # choose proposer uniformly at random (for key proposals)
@@ -250,6 +254,7 @@ class Coordinator():
                     proposer.broadcast(proposal, self.params['max_block_size'],
                             self.params['model'])
                     p_i+=1
+                    pbar.update(1)
             # out of all proposals
             elif p_i==self.proposals.shape[0]:
                 tx = self.txs[tx_i]
@@ -257,6 +262,7 @@ class Coordinator():
                 source_node.broadcast(tx, self.params['max_block_size'],
                         self.params['model'])
                 tx_i+=1
+                pbar.update(1)
             # out of all transactions
             elif tx_i==self.txs.shape[0]:
                 # choose proposer uniformly at random
@@ -269,6 +275,9 @@ class Coordinator():
                 proposer.broadcast(proposal, self.params['max_block_size'],
                         self.params['model'])
                 p_i+=1
+                pbar.update(1)
+
+        pbar.close()
 
         for node in self.nodes:
             node.process_buffer(self.params['duration'])
@@ -284,9 +293,9 @@ class Coordinator():
         print("Complete! Logging results")
 
         if self.params['logging']:
-            logger.log_txs(self.txs)
+            logger.log_txs(self.params, self.txs)
             logger.log_blocks(self.params, self.proposals)
-            logger.log_statistics(self.params, common_blocks, self.proposals, end-start)
-            logger.draw_blocktree(self.params, self.proposals, common_blocks)
+            logger.log_statistics(self.params, common_blocks, self.proposals, self.txs, end-start)
+            # logger.draw_blocktree(self.params, self.proposals, common_blocks)
 
-            os.system('cat ./logs/stats.csv')
+            # os.system('cat ./logs/stats.csv')
