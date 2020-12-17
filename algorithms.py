@@ -446,6 +446,7 @@ class OHIE(Algorithm):
         # the new block in OHIE always uses the 
         # max next_depth on all chains as its next_depth
         next_depth = new_block.depth + 1
+        print(next_depth)
         for longest_chain in self.longest_chains:
             next_depth = max(next_depth, longest_chain.fork_choice_rule()[-1].next_depth)
         new_block.set_next_depth(next_depth)
@@ -454,20 +455,19 @@ class OHIE(Algorithm):
 
     def add_block_by_fork_choice_rule(self, block):
         choice = np.random.randint(0, self.num_longest_chains)
-        chain = self.longest_chains[choice]
-        parent_block = chain.add_block_by_fork_choice_rule(block)
+        # chain = self.longest_chains[choice]
+        # parent_block = chain.add_block_by_fork_choice_rule(block)
 
-        # the depth of the new block is parent's next_depth
-        block.set_depth(parent_block.next_depth)
+        # # the depth of the new block is parent's next_depth
+        # block.set_depth(parent_block.next_depth)
+        # # the new block in OHIE always uses the 
+        # # max next_depth on all chains as its next_depth
+        # next_depth = block.depth + 1
+        # for longest_chain in self.longest_chains:
+        #     next_depth = max(next_depth, longest_chain.fork_choice_rule()[-1].next_depth)
+        # block.set_next_depth(next_depth)
         
-        # the new block in OHIE always uses the 
-        # max next_depth on all chains as its next_depth
-        next_depth = block.depth + 1
-        for longest_chain in self.longest_chains:
-            next_depth = max(next_depth, longest_chain.fork_choice_rule()[-1].next_depth)
-        block.set_next_depth(next_depth)
-        
-        return parent_block
+        return self.add_block_to_chain(block, choice)
 
     def fork_choice_rule(self, chain):
         return self.longest_chains[chain].fork_choice_rule()
