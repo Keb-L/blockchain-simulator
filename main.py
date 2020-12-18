@@ -54,7 +54,8 @@ if __name__=='__main__':
     params = get_params(options.filename)
 
     # Setup logging directory 
-    shutil.rmtree('./logs')
+    if (os.path.exists('./logs')):
+        shutil.rmtree('./logs')
     os.mkdir('./logs')
 
     c = Coordinator(params) 

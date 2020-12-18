@@ -52,14 +52,12 @@ class Coordinator():
         # OHIE uses min next depth within the finalization depth across
         # all the longest chains as the confirmation bar
         if self.params['fork_choice_rule'] == 'OHIE':
-            finalization_next_depth = None
+            finalization_next_depth = float('inf')
             for common_chain in global_main_chain:
                 if len(common_chain) > finalization_depth:
-                    if finalization_next_depth == None:
-                        finalization_next_depth = common_chain[len(common_chain) - 1 - finalization_depth].next_depth
-                    else:
-                        finalization_next_depth = min(finalization_next_depth,
-                            common_chain[len(common_chain) - 1 - finalization_depth].next_depth)
+                    finalization_next_depth = min(finalization_next_depth,
+                        common_chain[len(common_chain) - 1 - finalization_depth].next_depth)
+            print(finalization_next_depth)
             for common_chain in global_main_chain:
                 for common_block in common_chain:
                     # finalized blocks are finalization depth above common block
@@ -153,6 +151,9 @@ class Coordinator():
                         common_chain.append(common_block)
                     
                     common_blocks.append(common_chain)
+
+                for common_chain in common_blocks:
+                    common_chain.sort(key=lambda block: block.next_depth)
             else:
                 main_chains.append(main_chain)
                 main_chain_ids.append(list(map(lambda block: block.id,
@@ -180,6 +181,43 @@ class Coordinator():
                     common_blocks = updated_common_blocks
 
         return common_blocks 
+
+    def finalize_proposals(self, common_blocks):
+        if self.params['fork_choice_rule']=='OHIE':
+            for common_chain in common_blocks:
+                # For each proposal
+                common_blocks_ids = [x.id for x in common_chain]
+
+                for i in range(0, len(self.proposals)):
+                    prop = self.proposals[i]
+
+                    # Get its block
+                    block = prop.block
+                    block_id = block.id
+
+                    if block.block_type == 'micro':
+                        block_id = block.parent_id
+
+                    # Find corresponding block in common blocks
+                    if block_id in common_blocks_ids:
+                        self.proposals[i].block.finalization_timestamp = common_chain[common_blocks_ids.index(block_id)].finalization_timestamp
+        else:
+            # For each proposal
+            common_blocks_ids = [x.id for x in common_blocks]
+
+            for i in range(0, len(self.proposals)):
+                prop = self.proposals[i]
+
+                # Get its block
+                block = prop.block
+                block_id = block.id
+
+                if block.block_type == 'micro':
+                    block_id = block.parent_id
+
+                # Find corresponding block in common blocks
+                if block_id in common_blocks_ids:
+                    self.proposals[i].block.finalization_timestamp = common_blocks[common_blocks_ids.index(block_id)].finalization_timestamp
 
     '''
     Main simulation function
@@ -255,6 +293,8 @@ class Coordinator():
 
         common_blocks = self.global_main_chain() 
         self.set_timestamps(common_blocks)
+        # Finalize proposals
+        self.finalize_proposals(common_blocks)
 
         end = time.time()
         if self.params['logging']:

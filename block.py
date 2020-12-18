@@ -21,7 +21,8 @@ class Block():
         self.block_type = block_type 
 
     def set_depth(self, depth):
-        self.depth = depth 
+        self.depth = depth
+        self.next_depth = max(self.next_depth, self.depth + 1)
 
     def set_next_depth(self, next_depth):
         self.next_depth = next_depth
